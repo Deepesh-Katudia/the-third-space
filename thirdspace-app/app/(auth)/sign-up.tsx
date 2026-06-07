@@ -50,7 +50,7 @@ export default function SignUp() {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(user, { displayName: name.trim() })
-      router.replace('/(app)/')
+      router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       const messages: Record<string, string> = {
@@ -76,7 +76,7 @@ export default function SignUp() {
       })
       const provider = new OAuthProvider('apple.com')
       await signInWithCredential(auth, provider.credential({ idToken: credential.identityToken!, rawNonce: raw }))
-      router.replace('/(app)/')
+      router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
       if (code === 'ERR_CANCELED') return

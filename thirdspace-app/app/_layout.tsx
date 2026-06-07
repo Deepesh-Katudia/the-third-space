@@ -7,10 +7,11 @@ import { useAuth } from '../hooks/useAuth'
 
 interface AuthRedirectProps {
   user: import('firebase/auth').User | null
+  role: 'attender' | 'hoster' | null
   loading: boolean
 }
 
-function AuthRedirect({ user, loading }: AuthRedirectProps) {
+function AuthRedirect({ user, role, loading }: AuthRedirectProps) {
   const segments = useSegments()
   const router = useRouter()
 
@@ -18,12 +19,16 @@ function AuthRedirect({ user, loading }: AuthRedirectProps) {
     if (loading) return
     const inAuthGroup = segments[0] === '(auth)'
     const inAppGroup = segments[0] === '(app)'
+    const onRoleSelect = segments[1] === 'role-select'
+
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/onboarding')
-    } else if (user && !inAppGroup) {
+    } else if (user && !role && !onRoleSelect) {
+      router.replace('/(auth)/role-select')
+    } else if (user && role && !inAppGroup) {
       router.replace('/(app)/')
     }
-  }, [user, loading, segments])
+  }, [user, role, loading, segments])
 
   return null
 }
@@ -36,7 +41,7 @@ export default function RootLayout() {
     DMSans_400Regular,
     DMSans_500Medium,
   })
-  const { user, loading } = useAuth()
+  const { user, role, loading } = useAuth()
 
   if (!fontsLoaded || loading) {
     return (
@@ -48,7 +53,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <AuthRedirect user={user} loading={loading} />
+      <AuthRedirect user={user} role={role} loading={loading} />
       <Stack screenOptions={{ headerShown: false }} />
     </>
   )
