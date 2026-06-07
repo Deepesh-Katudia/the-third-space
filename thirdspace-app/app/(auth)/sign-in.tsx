@@ -1,15 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { signInWithEmailAndPassword, OAuthProvider, signInWithCredential } from 'firebase/auth'
+import { signInWithEmailAndPassword, OAuthProvider, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import * as Google from 'expo-auth-session/providers/google'
+import * as WebBrowser from 'expo-web-browser'
 import { auth } from '../../firebase/config'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
 import { validateEmail } from '../../utils/validation'
 import { generateNonce } from '../../utils/crypto'
 import { StatusBar } from 'expo-status-bar'
+
+WebBrowser.maybeCompleteAuthSession()
 
 export default function SignIn() {
   const router = useRouter()
@@ -18,6 +22,23 @@ export default function SignIn() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [banner, setBanner] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  })
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const idToken = googleResponse.params?.id_token
+      if (!idToken) return
+      const credential = GoogleAuthProvider.credential(idToken)
+      setLoading(true)
+      signInWithCredential(auth, credential)
+        .then(() => router.replace('/(app)/'))
+        .catch(() => setBanner('Google sign-in failed. Try again.'))
+        .finally(() => setLoading(false))
+    }
+  }, [googleResponse, router])
 
   const handleEmailSignIn = async () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -41,9 +62,7 @@ export default function SignIn() {
     } finally { setLoading(false) }
   }
 
-  const handleGoogleSignIn = async () => {
-    setBanner('Google sign-in requires a development build. Use email sign-in for now.')
-  }
+  const handleGoogleSignIn = () => promptGoogleAsync()
 
   const handleAppleSignIn = async () => {
     setLoading(true)

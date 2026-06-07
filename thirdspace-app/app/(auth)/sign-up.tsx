@@ -1,15 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider } from 'firebase/auth'
+import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider, GoogleAuthProvider } from 'firebase/auth'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import * as Google from 'expo-auth-session/providers/google'
+import * as WebBrowser from 'expo-web-browser'
 import { auth } from '../../firebase/config'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
 import { validateSignUpForm, SignUpFormErrors } from '../../utils/validation'
 import { generateNonce } from '../../utils/crypto'
 import { StatusBar } from 'expo-status-bar'
+
+WebBrowser.maybeCompleteAuthSession()
 
 export default function SignUp() {
   const router = useRouter()
@@ -20,6 +24,23 @@ export default function SignUp() {
   const [errors, setErrors] = useState<SignUpFormErrors>({})
   const [banner, setBanner] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  })
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const idToken = googleResponse.params?.id_token
+      if (!idToken) return
+      const credential = GoogleAuthProvider.credential(idToken)
+      setLoading(true)
+      signInWithCredential(auth, credential)
+        .then(() => router.replace('/(auth)/role-select'))
+        .catch(() => setBanner('Google sign-in failed. Try again.'))
+        .finally(() => setLoading(false))
+    }
+  }, [googleResponse, router])
 
   const handleEmailSignUp = async () => {
     const formErrors = validateSignUpForm({ name, email, password, confirmPassword })
@@ -43,9 +64,7 @@ export default function SignUp() {
     } finally { setLoading(false) }
   }
 
-  const handleGoogleSignUp = async () => {
-    setBanner('Google sign-in requires a development build. Use email sign-up for now.')
-  }
+  const handleGoogleSignUp = () => promptGoogleAsync()
 
   const handleAppleSignUp = async () => {
     setLoading(true)
