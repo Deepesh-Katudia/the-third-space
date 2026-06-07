@@ -56,7 +56,11 @@ export default function SignIn() {
       const provider = new OAuthProvider('apple.com')
       await signInWithCredential(auth, provider.credential({ idToken: credential.identityToken!, rawNonce: raw }))
       router.replace('/(app)/')
-    } catch { setBanner('Apple sign-in failed. Try again.') }
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code
+      if (code === 'ERR_CANCELED') return
+      setBanner('Apple sign-in failed. Try again.')
+    }
     finally { setLoading(false) }
   }
 
