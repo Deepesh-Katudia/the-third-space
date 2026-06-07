@@ -34,7 +34,7 @@ export default function SignIn() {
       const credential = GoogleAuthProvider.credential(idToken)
       setLoading(true)
       signInWithCredential(auth, credential)
-        .then(() => router.replace('/(app)/'))
+        .then(() => router.replace('/(auth)/role-select'))
         .catch(() => setBanner('Google sign-in failed. Try again.'))
         .finally(() => setLoading(false))
     }
