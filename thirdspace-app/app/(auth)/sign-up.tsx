@@ -31,8 +31,15 @@ export default function SignUp() {
       await updateProfile(user, { displayName: name.trim() })
       router.replace('/(app)/')
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code
-      setBanner(code === 'auth/email-already-in-use' ? 'An account with this email already exists. Sign in instead.' : 'Something went wrong. Check your connection and try again.')
+      const code = (err as { code?: string }).code ?? ''
+      const messages: Record<string, string> = {
+        'auth/email-already-in-use': 'An account with this email already exists. Sign in instead.',
+        'auth/network-request-failed': 'No connection. Check your internet and try again.',
+        'auth/operation-not-allowed': 'Email sign-up is not enabled. Contact support.',
+        'auth/weak-password': 'Password must be at least 6 characters.',
+        'auth/too-many-requests': 'Too many attempts. Try again later.',
+      }
+      setBanner(messages[code] ?? 'Something went wrong. Try again.')
     } finally { setLoading(false) }
   }
 
