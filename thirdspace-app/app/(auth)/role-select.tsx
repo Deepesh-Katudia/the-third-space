@@ -41,7 +41,7 @@ export default function RoleSelect() {
         role,
         createdAt: serverTimestamp(),
       })
-      router.replace('/(app)/')
+      router.replace('/(app)')
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(null)

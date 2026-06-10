@@ -1,5 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { Auth, initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth'
+import { Auth, initializeAuth, getAuth } from 'firebase/auth'
+// @ts-expect-error -- getReactNativePersistence exists in the React Native
+// bundle of firebase/auth but is missing from the browser type declarations.
+import { getReactNativePersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 

@@ -26,7 +26,7 @@ function AuthRedirect({ user, role, loading }: AuthRedirectProps) {
     } else if (user && !role && !onRoleSelect) {
       router.replace('/(auth)/role-select')
     } else if (user && role && !inAppGroup) {
-      router.replace('/(app)/')
+      router.replace('/(app)')
     }
   }, [user, role, loading, segments])
 
