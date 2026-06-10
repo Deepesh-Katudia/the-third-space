@@ -1,0 +1,9 @@
+{
+  "name": "the-third-space-root",
+  "private": true,
+  "scripts": {
+    "start": "cd thirdspace-app && npx expo start",
+    "start:clear": "cd thirdspace-app && npx expo start --clear",
+    "test": "cd thirdspace-app && npx jest"
+  }
+}
