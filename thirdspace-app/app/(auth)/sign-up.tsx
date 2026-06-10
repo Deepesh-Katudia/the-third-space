@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider, GoogleAuthProvider } from 'firebase/auth'
+import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider } from 'firebase/auth'
 import * as AppleAuthentication from 'expo-apple-authentication'
-import * as Google from 'expo-auth-session/providers/google'
 import * as WebBrowser from 'expo-web-browser'
 import { auth } from '../../firebase/config'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
 import { validateSignUpForm, SignUpFormErrors } from '../../utils/validation'
 import { generateNonce } from '../../utils/crypto'
+import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { StatusBar } from 'expo-status-bar'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -25,22 +25,10 @@ export default function SignUp() {
   const [banner, setBanner] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  const { promptGoogleSignIn, isGoogleLoading } = useGoogleAuth({
+    onSuccess: () => router.replace('/(auth)/role-select'),
+    onError: setBanner,
   })
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const idToken = googleResponse.params?.id_token
-      if (!idToken) return
-      const credential = GoogleAuthProvider.credential(idToken)
-      setLoading(true)
-      signInWithCredential(auth, credential)
-        .then(() => router.replace('/(auth)/role-select'))
-        .catch(() => setBanner('Google sign-in failed. Try again.'))
-        .finally(() => setLoading(false))
-    }
-  }, [googleResponse, router])
 
   const handleEmailSignUp = async () => {
     const formErrors = validateSignUpForm({ name, email, password, confirmPassword })
@@ -63,8 +51,6 @@ export default function SignUp() {
       setBanner(messages[code] ?? 'Something went wrong. Try again.')
     } finally { setLoading(false) }
   }
-
-  const handleGoogleSignUp = () => promptGoogleAsync()
 
   const handleAppleSignUp = async () => {
     setLoading(true)
@@ -103,14 +89,14 @@ export default function SignUp() {
           <FormInput label="Confirm password" value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} secureTextEntry placeholder="Re-enter password" />
 
           <View style={styles.buttons}>
-            <AuthButton label="Create account" onPress={handleEmailSignUp} variant="primary" loading={loading} />
+            <AuthButton label="Create account" onPress={handleEmailSignUp} variant="primary" loading={loading || isGoogleLoading} />
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or continue with</Text>
               <View style={styles.dividerLine} />
             </View>
-            <AuthButton label="Continue with Google" onPress={handleGoogleSignUp} variant="google" loading={loading} />
-            <AuthButton label="Continue with Apple" onPress={handleAppleSignUp} variant="apple" loading={loading} />
+            <AuthButton label="Continue with Google" onPress={promptGoogleSignIn} variant="google" loading={loading || isGoogleLoading} />
+            <AuthButton label="Continue with Apple" onPress={handleAppleSignUp} variant="apple" loading={loading || isGoogleLoading} />
           </View>
 
           <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={styles.footer}>
