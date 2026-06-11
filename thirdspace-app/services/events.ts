@@ -17,14 +17,15 @@ import {
   where,
   writeBatch,
   DocumentData,
-  QueryDocumentSnapshot,
+  DocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { AgeRequirement, CommunityEvent, EventCategory, Registration, Venue } from '../types/models'
 
 const DELETE_BATCH_SIZE = 400
 
-function toEvent(snap: QueryDocumentSnapshot<DocumentData>): CommunityEvent {
+// Accepts both QueryDocumentSnapshot and already-exists-checked DocumentSnapshot.
+function toEvent(snap: DocumentSnapshot<DocumentData>): CommunityEvent {
   return { id: snap.id, ...(snap.data() as Omit<CommunityEvent, 'id'>) }
 }
 
@@ -57,6 +58,8 @@ export function subscribeUpcomingEvents(
   onChange: (events: CommunityEvent[]) => void,
   onError: () => void
 ): () => void {
+  // Timestamp.now() is captured at subscribe time: events that start while the
+  // feed stays open remain visible until resubscribe. Accepted trade-off for v1.
   const upcoming = query(
     collection(db, 'events'),
     where('startsAt', '>=', Timestamp.now()),
@@ -90,7 +93,7 @@ export function subscribeEvent(
 ): () => void {
   return onSnapshot(
     doc(db, 'events', eventId),
-    (snap) => onChange(snap.exists() ? { id: snap.id, ...(snap.data() as Omit<CommunityEvent, 'id'>) } : null),
+    (snap) => onChange(snap.exists() ? toEvent(snap) : null),
     onError
   )
 }
@@ -156,7 +159,7 @@ export async function getMyRegisteredEvents(uid: string): Promise<CommunityEvent
   const missingIds: string[] = []
   snaps.forEach((snap, i) => {
     if (snap.exists()) {
-      events.push({ id: snap.id, ...(snap.data() as Omit<CommunityEvent, 'id'>) })
+      events.push(toEvent(snap))
     } else {
       missingIds.push(ids[i])
     }
@@ -164,7 +167,8 @@ export async function getMyRegisteredEvents(uid: string): Promise<CommunityEvent
 
   // Prune ids for events the venue cancelled (spec: silently skip and clean up).
   if (missingIds.length > 0) {
-    await updateDoc(doc(db, 'users', uid), { registeredEventIds: arrayRemove(...missingIds) })
+    // Best-effort cleanup — a prune failure must not discard the events we already fetched.
+    await updateDoc(doc(db, 'users', uid), { registeredEventIds: arrayRemove(...missingIds) }).catch(() => {})
   }
 
   events.sort((a, b) => a.startsAt.toMillis() - b.startsAt.toMillis())
