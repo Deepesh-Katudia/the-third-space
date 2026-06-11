@@ -1,4 +1,4 @@
-import { EventCategory } from '../types/models'
+import { Borough, EventCategory } from '../types/models'
 
 export const EVENT_CATEGORIES: EventCategory[] = [
   'Creative Arts',
@@ -24,4 +24,4 @@ export const CATEGORY_COLORS: Record<EventCategory, string> = {
   Wellness: '#588B8B',
 }
 
-export const BOROUGHS = ['Brooklyn', 'Manhattan', 'Queens', 'Bronx', 'Staten Island']
+export const BOROUGHS: Borough[] = ['Brooklyn', 'Manhattan', 'Queens', 'Bronx', 'Staten Island']
