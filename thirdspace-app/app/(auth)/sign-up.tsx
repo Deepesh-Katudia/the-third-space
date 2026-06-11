@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider, GoogleAuthProvider } from 'firebase/auth'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import * as Google from 'expo-auth-session/providers/google'
-import * as WebBrowser from 'expo-web-browser'
-import { auth } from '../../firebase/config'
-import { FormInput } from '../../components/FormInput'
-import { AuthButton } from '../../components/AuthButton'
-import { validateSignUpForm, SignUpFormErrors } from '../../utils/validation'
-import { generateNonce } from '../../utils/crypto'
+import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as WebBrowser from 'expo-web-browser'
+import { createUserWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { useEffect, useState } from 'react'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { AuthButton } from '../../components/AuthButton'
+import { FormInput } from '../../components/FormInput'
+import { auth } from '../../firebase/config'
+import { generateNonce } from '../../utils/crypto'
+import { SignUpFormErrors, validateSignUpForm } from '../../utils/validation'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -28,8 +29,7 @@ export default function SignUp() {
   const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   })
-
-  useEffect(() => {
+ useEffect(() => {
     if (googleResponse?.type === 'success') {
       const idToken = googleResponse.params?.id_token
       if (!idToken) return
@@ -48,9 +48,19 @@ export default function SignUp() {
     setErrors({})
     setLoading(true)
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(user, { displayName: name.trim() })
-      router.replace('/(auth)/role-select')
+      const { user } = await createUserWithEmailAndPassword(auth,email,password)
+
+        await updateProfile(user, {displayName: name.trim(),})
+
+        // Save user in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+                        uid: user.uid,
+                        displayName: name.trim(),
+                        email: user.email,
+                        createdAt: serverTimestamp(),
+                        })
+
+        router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       const messages: Record<string, string> = {
