@@ -34,6 +34,9 @@ export default function HosterLayout() {
         name="venue"
         options={{ title: 'Venue', tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" size={size} color={color} /> }}
       />
+      {/* Detail route reached from Events — hidden from the tab bar. */}
+      <Tabs.Screen name="announcement/[id]" options={{ href: null }} />
     </Tabs>
+
   )
 }

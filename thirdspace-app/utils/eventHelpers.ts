@@ -21,3 +21,25 @@ export function formatEventDate(date: Date): string {
   const minutes = date.getMinutes().toString().padStart(2, '0')
   return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()} · ${hours12}:${minutes} ${period}`
 }
+
+export function formatTime(date: Date): string {
+  const hours24 = date.getHours()
+  const period = hours24 >= 12 ? 'PM' : 'AM'
+  const hours12 = hours24 % 12 || 12
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours12}:${minutes} ${period}`
+}
+
+export function formatDayDate(date: Date): string {
+  return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
+}
+
+// Compact date block used by list rows: { weekday: 'FRI', day: '14' }.
+export function dateBlock(date: Date): { weekday: string; day: string } {
+  return { weekday: DAY_NAMES[date.getDay()].toUpperCase(), day: `${date.getDate()}` }
+}
+
+export function daysUntil(startsAt: Date, now: Date): number {
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  return Math.round((startOfDay(startsAt) - startOfDay(now)) / (24 * 60 * 60 * 1000))
+}

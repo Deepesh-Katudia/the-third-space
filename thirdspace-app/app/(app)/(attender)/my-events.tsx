@@ -1,21 +1,27 @@
-import React, { useCallback, useState } from 'react'
-import { View, Text, SectionList, StyleSheet } from 'react-native'
+import React, { useCallback, useMemo, useState } from 'react'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../hooks/useAuth'
 import { getMyRegisteredEvents } from '../../../services/events'
-import { EventCard } from '../../../components/EventCard'
+import { CompactEventRow } from '../../../components/CompactEventRow'
+import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { EmptyState } from '../../../components/EmptyState'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
+import { formatDayDate, formatTime, daysUntil } from '../../../utils/eventHelpers'
+
+type TabKey = 'upcoming' | 'hosting' | 'past'
 
 export default function MyEvents() {
   const router = useRouter()
   const { user } = useAuth()
   const [events, setEvents] = useState<CommunityEvent[] | null>(null)
   const [error, setError] = useState('')
+  const [tab, setTab] = useState<TabKey>('upcoming')
 
   const load = useCallback(async () => {
     if (!user) return
@@ -33,49 +39,162 @@ export default function MyEvents() {
     }, [load])
   )
 
+  const now = Date.now()
+  const { upcoming, past } = useMemo(() => {
+    const list = events ?? []
+    return {
+      upcoming: list.filter((e) => e.startsAt.toMillis() >= now).sort((a, b) => a.startsAt.toMillis() - b.startsAt.toMillis()),
+      past: list.filter((e) => e.startsAt.toMillis() < now).sort((a, b) => b.startsAt.toMillis() - a.startsAt.toMillis()),
+    }
+  }, [events, now])
+
   if (!events && !error) return <LoadingView />
 
-  const now = Date.now()
-  const upcoming = (events ?? []).filter((e) => e.startsAt.toMillis() >= now)
-  const past = (events ?? []).filter((e) => e.startsAt.toMillis() < now).reverse()
-  const sections = [
-    { title: 'Upcoming', data: upcoming },
-    { title: 'Past', data: past },
-  ].filter((s) => s.data.length > 0)
+  const tabs: { key: TabKey; label: string; count: number | null }[] = [
+    { key: 'upcoming', label: 'Upcoming', count: upcoming.length },
+    { key: 'hosting', label: 'Hosting', count: 0 },
+    { key: 'past', label: 'Past', count: null },
+  ]
+
+  const goEvent = (id: string) => router.push({ pathname: '/(app)/event/[id]', params: { id } })
+
+  const [next, ...restUpcoming] = upcoming
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      <Text style={styles.title}>My Events</Text>
+      <Text style={styles.title}>My events</Text>
+
+      <View style={styles.tabRow}>
+        {tabs.map((t) => {
+          const active = tab === t.key
+          return (
+            <TouchableOpacity key={t.key} onPress={() => setTab(t.key)} style={[styles.tabPill, active && styles.tabPillActive]}>
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                {t.label}
+                {t.count !== null ? ` · ${t.count}` : ''}
+              </Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+
       {error ? <View style={styles.bannerWrap}><Banner message={error} /></View> : null}
-      <SectionList
-        sections={sections}
-        keyExtractor={(e) => e.id}
-        renderItem={({ item }) => (
-          <EventCard event={item} onPress={() => router.push(`/(app)/event/${item.id}`)} />
-        )}
-        renderSectionHeader={({ section }) => <Text style={styles.sectionTitle}>{section.title}</Text>}
-        contentContainerStyle={styles.list}
-        onRefresh={load}
-        refreshing={false}
-        ListEmptyComponent={
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {tab === 'upcoming' &&
+          (upcoming.length === 0 ? (
+            <EmptyState
+              emoji="🎟️"
+              title="Nothing on the calendar"
+              body="Events you register for show up here."
+              actionLabel="Browse events"
+              onAction={() => router.push('/(app)/(attender)')}
+            />
+          ) : (
+            <>
+              <TouchableOpacity activeOpacity={0.92} onPress={() => goEvent(next.id)}>
+                <LinearGradient colors={['#2C1810', '#3a1e12']} style={styles.nextCard}>
+                  <Text style={styles.nextLabel}>NEXT UP · {nextUpLabel(next, now)}</Text>
+                  <Text style={styles.nextTitle}>{next.title}</Text>
+                  <Text style={styles.nextMeta}>{formatDayDate(next.startsAt.toDate())} · {formatTime(next.startsAt.toDate())}</Text>
+                  <Text style={styles.nextMeta}>{next.venueName} · {next.neighborhood}</Text>
+                  <View style={styles.nextFooter}>
+                    <AttendeeAvatarStack
+                      uids={Array.from({ length: Math.min(next.registeredCount, 4) }, (_, i) => `${next.id}:${i}`)}
+                      count={next.registeredCount}
+                      size={28}
+                      ringColor="#2C1810"
+                    />
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: next.id } })}
+                    >
+                      <Text style={styles.chatBtnText}>Open chat</Text>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {restUpcoming.length > 0 ? (
+                <>
+                  <Text style={styles.sectionLabel}>Also coming up</Text>
+                  {restUpcoming.map((e) => (
+                    <CompactEventRow key={e.id} event={e} onPress={() => goEvent(e.id)} trailing={<GoingBadge />} />
+                  ))}
+                </>
+              ) : null}
+            </>
+          ))}
+
+        {tab === 'hosting' && (
           <EmptyState
-            emoji="🎟️"
-            title="No events yet"
-            body="Events you register for show up here."
-            actionLabel="Browse events"
-            onAction={() => router.push('/(app)/(attender)')}
+            emoji="✦"
+            title="You're not hosting yet"
+            body="Become a host to create events and gather your own community."
+            actionLabel="Become a host"
+            onAction={() => router.push('/(app)/(attender)/profile')}
           />
-        }
-      />
+        )}
+
+        {tab === 'past' &&
+          (past.length === 0 ? (
+            <EmptyState emoji="🕊️" title="No past events" body="Once you've attended events, they'll appear here." />
+          ) : (
+            past.map((e) => (
+              <CompactEventRow key={e.id} event={e} onPress={() => goEvent(e.id)} trailing={<RateAction />} />
+            ))
+          ))}
+      </ScrollView>
     </SafeAreaView>
+  )
+}
+
+function nextUpLabel(event: CommunityEvent, now: number): string {
+  const d = daysUntil(event.startsAt.toDate(), new Date(now))
+  if (d <= 0) return 'today'
+  if (d === 1) return 'tomorrow'
+  return `in ${d} days`
+}
+
+function GoingBadge() {
+  return (
+    <View style={styles.goingBadge}>
+      <Text style={styles.goingBadgeText}>Going</Text>
+    </View>
+  )
+}
+
+function RateAction() {
+  return (
+    <TouchableOpacity style={styles.rateBtn}>
+      <Text style={styles.rateText}>Rate ★</Text>
+    </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FBF7F2' },
   title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5, paddingHorizontal: 24, paddingTop: 12, marginBottom: 16 },
-  bannerWrap: { paddingHorizontal: 24 },
-  sectionTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 20, color: '#2C1810', marginBottom: 12, marginTop: 8 },
-  list: { paddingHorizontal: 24, paddingBottom: 24 },
+  tabRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, marginBottom: 8 },
+  tabPill: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
+  tabPillActive: { backgroundColor: '#2C1810', borderColor: '#2C1810' },
+  tabText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
+  tabTextActive: { color: 'white' },
+  bannerWrap: { paddingHorizontal: 24, paddingTop: 8 },
+  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24 },
+
+  nextCard: { borderRadius: 20, padding: 20, marginBottom: 8 },
+  nextLabel: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#F2C5A0', letterSpacing: 0.8, marginBottom: 10 },
+  nextTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#FBF7F2', marginBottom: 8, letterSpacing: -0.5 },
+  nextMeta: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: 'rgba(251,247,242,0.75)', marginBottom: 2 },
+  nextFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
+  chatBtn: { backgroundColor: '#C4614A', borderRadius: 100, paddingHorizontal: 18, paddingVertical: 9 },
+  chatBtnText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: 'white' },
+
+  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, marginTop: 20 },
+  goingBadge: { backgroundColor: 'rgba(122,140,110,0.18)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
+  goingBadgeText: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#5c6e51' },
+  rateBtn: { borderWidth: 1, borderColor: 'rgba(242,197,160,0.8)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
+  rateText: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#C4614A' },
 })

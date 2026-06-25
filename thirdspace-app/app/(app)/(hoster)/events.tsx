@@ -44,7 +44,16 @@ export default function HosterEvents() {
         data={ordered}
         keyExtractor={(e) => e.id}
         renderItem={({ item }) => (
-          <EventCard event={item} onPress={() => router.push(`/(app)/event/${item.id}`)} />
+          <View style={styles.eventItem}>
+            <EventCard event={item} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
+            <TouchableOpacity
+              style={styles.announceBtn}
+              onPress={() => router.push({ pathname: '/(app)/(hoster)/announcement/[id]', params: { id: item.id } })}
+            >
+              <Ionicons name="megaphone-outline" size={15} color="#C4614A" />
+              <Text style={styles.announceText}>Send announcement</Text>
+            </TouchableOpacity>
+          </View>
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
@@ -68,4 +77,7 @@ const styles = StyleSheet.create({
   createButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#C4614A', alignItems: 'center', justifyContent: 'center' },
   bannerWrap: { paddingHorizontal: 24 },
   list: { paddingHorizontal: 24, paddingBottom: 24 },
+  eventItem: { marginBottom: 12 },
+  announceBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: -4, paddingVertical: 6, paddingHorizontal: 4 },
+  announceText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#C4614A' },
 })
