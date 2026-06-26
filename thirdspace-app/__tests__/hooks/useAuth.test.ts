@@ -28,6 +28,7 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth())
     expect(result.current.user).toBeNull()
     expect(result.current.role).toBeNull()
+    expect(result.current.hasProfile).toBe(false)
     expect(result.current.loading).toBe(true)
   })
 
@@ -37,10 +38,13 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ role: 'hoster' }) })
+    ;(getDoc as jest.Mock)
+      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'hoster' }) }) // users
+      .mockResolvedValueOnce({ exists: () => false }) // profiles
     const { result } = renderHook(() => useAuth())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.role).toBe('hoster')
+    expect(result.current.hasProfile).toBe(false)
   })
 
   test('role is null when user has no Firestore document', async () => {
@@ -49,10 +53,13 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => false })
+    ;(getDoc as jest.Mock)
+      .mockResolvedValueOnce({ exists: () => false }) // users
+      .mockResolvedValueOnce({ exists: () => false }) // profiles
     const { result } = renderHook(() => useAuth())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.role).toBeNull()
+    expect(result.current.hasProfile).toBe(false)
   })
 
   test('clears user and role on sign-out', async () => {
@@ -64,5 +71,21 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.user).toBeNull()
     expect(result.current.role).toBeNull()
+    expect(result.current.hasProfile).toBe(false)
+  })
+
+  test('exposes hasProfile=true when the profile doc exists', async () => {
+    const mockUser = { uid: 'user456' }
+    ;(onAuthStateChanged as jest.Mock).mockImplementation((_auth: unknown, cb: (user: unknown) => void) => {
+      cb(mockUser)
+      return jest.fn()
+    })
+    ;(getDoc as jest.Mock)
+      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'attender' }) }) // users
+      .mockResolvedValueOnce({ exists: () => true }) // profiles
+    const { result } = renderHook(() => useAuth())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.hasProfile).toBe(true)
+    expect(result.current.role).toBe('attender')
   })
 })

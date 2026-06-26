@@ -8,10 +8,11 @@ import { useAuth } from '../hooks/useAuth'
 interface AuthRedirectProps {
   user: import('firebase/auth').User | null
   role: 'attender' | 'hoster' | null
+  hasProfile: boolean
   loading: boolean
 }
 
-function AuthRedirect({ user, role, loading }: AuthRedirectProps) {
+function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
   const segments = useSegments()
   const router = useRouter()
 
@@ -20,15 +21,20 @@ function AuthRedirect({ user, role, loading }: AuthRedirectProps) {
     const inAuthGroup = segments[0] === '(auth)'
     const inAppGroup = segments[0] === '(app)'
     const onRoleSelect = segments[1] === 'role-select'
+    // @ts-expect-error – create-profile route does not exist until Task 8
+    const onCreateProfile = segments[1] === 'create-profile'
 
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/onboarding')
     } else if (user && !role && !onRoleSelect) {
       router.replace('/(auth)/role-select')
-    } else if (user && role && !inAppGroup) {
+    } else if (user && role === 'attender' && !hasProfile && !onCreateProfile) {
+      // @ts-expect-error – /(auth)/create-profile does not exist until Task 8
+      router.replace('/(auth)/create-profile')
+    } else if (user && role && (role !== 'attender' || hasProfile) && !inAppGroup) {
       router.replace('/(app)')
     }
-  }, [user, role, loading, segments])
+  }, [user, role, hasProfile, loading, segments])
 
   return null
 }
@@ -41,7 +47,7 @@ export default function RootLayout() {
     DMSans_400Regular,
     DMSans_500Medium,
   })
-  const { user, role, loading } = useAuth()
+  const { user, role, hasProfile, loading } = useAuth()
 
   if (!fontsLoaded || loading) {
     return (
@@ -53,7 +59,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <AuthRedirect user={user} role={role} loading={loading} />
+      <AuthRedirect user={user} role={role} hasProfile={hasProfile} loading={loading} />
       <Stack screenOptions={{ headerShown: false }} />
     </>
   )

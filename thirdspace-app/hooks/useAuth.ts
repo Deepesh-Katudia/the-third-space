@@ -8,20 +8,26 @@ type Role = 'attender' | 'hoster' | null
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<Role>(null)
+  const [hasProfile, setHasProfile] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       if (firebaseUser) {
-        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-        setRole(snap.exists() ? (snap.data().role as 'attender' | 'hoster') : null)
+        const [userSnap, profileSnap] = await Promise.all([
+          getDoc(doc(db, 'users', firebaseUser.uid)),
+          getDoc(doc(db, 'profiles', firebaseUser.uid)),
+        ])
+        setRole(userSnap.exists() ? (userSnap.data().role as 'attender' | 'hoster') : null)
+        setHasProfile(profileSnap.exists())
       } else {
         setRole(null)
+        setHasProfile(false)
       }
       setLoading(false)
     })
   }, [])
 
-  return { user, role, loading }
+  return { user, role, hasProfile, loading }
 }
