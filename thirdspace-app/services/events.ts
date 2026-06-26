@@ -115,7 +115,19 @@ export function subscribeRegistrations(
   return onSnapshot(
     collection(db, 'events', eventId, 'registrations'),
     (snap) =>
-      onChange(snap.docs.map((d) => ({ uid: d.id, displayName: (d.data().displayName as string) ?? 'Member' }))),
+      onChange(
+        snap.docs.map((d) => {
+          const data = d.data()
+          return {
+            uid: d.id,
+            displayName: (data.displayName as string) ?? 'Member',
+            photoURL: (data.photoURL as string | null | undefined) ?? null,
+            age: (data.age as number | undefined) ?? undefined,
+            neighborhood: (data.neighborhood as string | undefined) ?? undefined,
+            interestsPreview: (data.interestsPreview as string[] | undefined) ?? [],
+          }
+        })
+      ),
     onError
   )
 }
