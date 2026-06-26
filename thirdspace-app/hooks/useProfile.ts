@@ -17,6 +17,7 @@ export function useProfile(uid: string | undefined) {
     }
     setLoading(true)
     setHasError(false)
+    setProfile(null)
 
     // Self: realtime so edits reflect immediately. Others: one-shot read.
     if (user && uid === user.uid) {

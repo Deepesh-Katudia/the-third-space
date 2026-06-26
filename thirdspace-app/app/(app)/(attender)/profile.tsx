@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, Switch, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
@@ -7,18 +7,36 @@ import { useRouter } from 'expo-router'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../../firebase/config'
 import { useAuth } from '../../../hooks/useAuth'
+import { useProfile } from '../../../hooks/useProfile'
+import { getMyRegisteredEvents } from '../../../services/events'
+import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
-
-// Phase 1: stats and preferences are placeholders; name/email/sign-out are real.
-// Phase 2 swap: read the user's profile doc for stats, neighborhood, interests.
-const MOCK_STATS = { attended: 12, hosted: 0, connections: 28 }
-const MOCK_NEIGHBORHOOD = 'Williamsburg, Brooklyn'
 
 export default function Profile() {
   const router = useRouter()
   const { user } = useAuth()
+  const { profile, loading } = useProfile(user?.uid)
   const [notifications, setNotifications] = useState(true)
-  const name = user?.displayName ?? 'Member'
+  const [attendedCount, setAttendedCount] = useState(0)
+
+  const name = profile?.displayName ?? user?.displayName ?? 'Member'
+  const neighborhood = profile?.neighborhood ?? ''
+
+  // Attended = registered events whose start time is in the past.
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    getMyRegisteredEvents(user.uid)
+      .then((events) => {
+        if (cancelled) return
+        const now = Date.now()
+        setAttendedCount(events.filter((e) => e.startsAt.toMillis() < now).length)
+      })
+      .catch(() => { if (!cancelled) setAttendedCount(0) })
+    return () => { cancelled = true }
+  }, [user])
+
+  if (loading) return <LoadingView />
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -32,28 +50,32 @@ export default function Profile() {
         </View>
 
         <View style={styles.identity}>
-          <View style={[styles.avatar, { backgroundColor: avatarColor(name) }]}>
-            <Text style={styles.avatarText}>{initials(name)}</Text>
-          </View>
+          {profile?.photoURL ? (
+            <Image source={{ uri: profile.photoURL }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: avatarColor(name) }]}>
+              <Text style={styles.avatarText}>{initials(name)}</Text>
+            </View>
+          )}
           <View style={styles.identityText}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>{name}</Text>
-              <Ionicons name="checkmark-circle" size={18} color="#7A8C6E" />
+              {profile?.verified ? <Ionicons name="checkmark-circle" size={18} color="#7A8C6E" /> : null}
             </View>
-            <Text style={styles.neighborhood}>{MOCK_NEIGHBORHOOD}</Text>
+            {neighborhood ? <Text style={styles.neighborhood}>{neighborhood}</Text> : null}
           </View>
         </View>
 
-        <TouchableOpacity style={styles.editBtn}>
+        <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/(app)/edit-profile')}>
           <Text style={styles.editText}>Edit profile & photos</Text>
         </TouchableOpacity>
 
         <View style={styles.statsRow}>
-          <Stat value={MOCK_STATS.attended} label="Attended" />
+          <Stat value={attendedCount} label="Attended" />
           <View style={styles.statDivider} />
-          <Stat value={MOCK_STATS.hosted} label="Hosted" />
+          <Stat value={0} label="Hosted" />
           <View style={styles.statDivider} />
-          <Stat value={MOCK_STATS.connections} label="Connections" />
+          <Stat value={0} label="Connections" />
         </View>
 
         <Text style={styles.sectionLabel}>Account</Text>
@@ -131,7 +153,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5 },
 
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 18 },
-  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarText: { fontFamily: 'DMSans_500Medium', fontSize: 24, color: 'white' },
   identityText: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
