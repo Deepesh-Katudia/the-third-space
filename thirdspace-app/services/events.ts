@@ -52,6 +52,7 @@ export async function createEvent(venueId: string, venue: Venue, input: CreateEv
     registeredCount: 0,
     createdAt: serverTimestamp(),
   })
+  await updateDoc(doc(db, 'venues', venueId), { eventsCount: increment(1) })
 }
 
 export function subscribeUpcomingEvents(
@@ -120,13 +121,21 @@ export function subscribeRegistrations(
 }
 
 export async function registerForEvent(eventId: string, uid: string, displayName: string): Promise<void> {
+  const profileSnap = await getDoc(doc(db, 'profiles', uid))
+  const p = profileSnap.exists() ? profileSnap.data() : undefined
+
   const batch = writeBatch(db)
   batch.set(doc(db, 'events', eventId, 'registrations', uid), {
     displayName,
+    photoURL: (p?.photoURL as string | null) ?? null,
+    age: (p?.age as number | undefined) ?? null,
+    neighborhood: (p?.neighborhood as string | undefined) ?? null,
+    interestsPreview: ((p?.interests as string[] | undefined) ?? []).slice(0, 3),
     registeredAt: serverTimestamp(),
   })
   batch.update(doc(db, 'events', eventId), { registeredCount: increment(1) })
   batch.update(doc(db, 'users', uid), { registeredEventIds: arrayUnion(eventId) })
+  batch.set(doc(db, 'profiles', uid), { eventsCount: increment(1) }, { merge: true })
   await batch.commit()
 }
 
@@ -135,10 +144,14 @@ export async function cancelRegistration(eventId: string, uid: string): Promise<
   batch.delete(doc(db, 'events', eventId, 'registrations', uid))
   batch.update(doc(db, 'events', eventId), { registeredCount: increment(-1) })
   batch.update(doc(db, 'users', uid), { registeredEventIds: arrayRemove(eventId) })
+  batch.set(doc(db, 'profiles', uid), { eventsCount: increment(-1) }, { merge: true })
   await batch.commit()
 }
 
 export async function deleteEventWithRegistrations(eventId: string): Promise<void> {
+  const eventSnap = await getDoc(doc(db, 'events', eventId))
+  const venueId = eventSnap.exists() ? (eventSnap.data().venueId as string) : undefined
+
   const registrations = await getDocs(collection(db, 'events', eventId, 'registrations'))
   const docs = registrations.docs
   for (let i = 0; i < docs.length; i += DELETE_BATCH_SIZE) {
@@ -147,6 +160,7 @@ export async function deleteEventWithRegistrations(eventId: string): Promise<voi
     await batch.commit()
   }
   await deleteDoc(doc(db, 'events', eventId))
+  if (venueId) await updateDoc(doc(db, 'venues', venueId), { eventsCount: increment(-1) })
 }
 
 export async function getMyRegisteredEvents(uid: string): Promise<CommunityEvent[]> {

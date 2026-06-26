@@ -1,4 +1,4 @@
-import { writeBatch } from 'firebase/firestore'
+import { writeBatch, getDoc } from 'firebase/firestore'
 import { registerForEvent, cancelRegistration } from '../../services/events'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
@@ -39,12 +39,13 @@ describe('registerForEvent', () => {
   it('atomically creates the registration, bumps the count, and tracks it on the user', async () => {
     const batch = mockBatch()
     ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => false, data: () => undefined })
 
     await registerForEvent('e1', 'u1', 'Maya')
 
     expect(batch.set).toHaveBeenCalledWith(
       { path: 'events/e1/registrations/u1' },
-      { displayName: 'Maya', registeredAt: '__serverTimestamp' }
+      expect.objectContaining({ displayName: 'Maya', registeredAt: '__serverTimestamp' })
     )
     expect(batch.update).toHaveBeenCalledWith(
       { path: 'events/e1' },
@@ -55,6 +56,28 @@ describe('registerForEvent', () => {
       { registeredEventIds: { __arrayUnion: 'e1' } }
     )
     expect(batch.commit).toHaveBeenCalledTimes(1)
+  })
+
+  it('writes a denormalized profile snippet and bumps the profile eventsCount', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ photoURL: 'http://x/a.jpg', age: 27, neighborhood: 'Bushwick', interests: ['Art', 'Coffee', 'Film', 'Music'] }),
+    })
+
+    await registerForEvent('e1', 'u1', 'Maya')
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'events/e1/registrations/u1' },
+      expect.objectContaining({
+        displayName: 'Maya', photoURL: 'http://x/a.jpg', age: 27,
+        neighborhood: 'Bushwick', interestsPreview: ['Art', 'Coffee', 'Film'],
+      })
+    )
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' }, { eventsCount: { __increment: 1 } }, { merge: true }
+    )
   })
 })
 
