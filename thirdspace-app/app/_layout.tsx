@@ -21,16 +21,14 @@ function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
     const inAuthGroup = segments[0] === '(auth)'
     const inAppGroup = segments[0] === '(app)'
     const onRoleSelect = segments[1] === 'role-select'
-    // @ts-expect-error – create-profile route does not exist until Task 8
-    const onCreateProfile = segments[1] === 'create-profile'
+    const onCreateProfile = (segments[1] as string) === 'create-profile'
 
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/onboarding')
     } else if (user && !role && !onRoleSelect) {
       router.replace('/(auth)/role-select')
     } else if (user && role === 'attender' && !hasProfile && !onCreateProfile) {
-      // @ts-expect-error – /(auth)/create-profile does not exist until Task 8
-      router.replace('/(auth)/create-profile')
+      ;(router.replace as (href: string) => void)('/(auth)/create-profile')  // Task 8 adds this route
     } else if (user && role && (role !== 'attender' || hasProfile) && !inAppGroup) {
       router.replace('/(app)')
     }

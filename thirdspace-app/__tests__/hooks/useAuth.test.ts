@@ -74,6 +74,21 @@ describe('useAuth', () => {
     expect(result.current.hasProfile).toBe(false)
   })
 
+  test('role is attender and hasProfile is false when profile doc is absent', async () => {
+    const mockUser = { uid: 'attender789' }
+    ;(onAuthStateChanged as jest.Mock).mockImplementation((_auth: unknown, cb: (user: unknown) => void) => {
+      cb(mockUser)
+      return jest.fn()
+    })
+    ;(getDoc as jest.Mock)
+      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'attender' }) }) // users
+      .mockResolvedValueOnce({ exists: () => false }) // profiles
+    const { result } = renderHook(() => useAuth())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.role).toBe('attender')
+    expect(result.current.hasProfile).toBe(false)
+  })
+
   test('exposes hasProfile=true when the profile doc exists', async () => {
     const mockUser = { uid: 'user456' }
     ;(onAuthStateChanged as jest.Mock).mockImplementation((_auth: unknown, cb: (user: unknown) => void) => {

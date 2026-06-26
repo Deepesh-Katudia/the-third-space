@@ -15,17 +15,24 @@ export function useAuth() {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       if (firebaseUser) {
-        const [userSnap, profileSnap] = await Promise.all([
-          getDoc(doc(db, 'users', firebaseUser.uid)),
-          getDoc(doc(db, 'profiles', firebaseUser.uid)),
-        ])
-        setRole(userSnap.exists() ? (userSnap.data().role as 'attender' | 'hoster') : null)
-        setHasProfile(profileSnap.exists())
+        try {
+          const [userSnap, profileSnap] = await Promise.all([
+            getDoc(doc(db, 'users', firebaseUser.uid)),
+            getDoc(doc(db, 'profiles', firebaseUser.uid)),
+          ])
+          setRole(userSnap.exists() ? (userSnap.data().role as 'attender' | 'hoster') : null)
+          setHasProfile(profileSnap.exists())
+        } catch {
+          setRole(null)
+          setHasProfile(false)
+        } finally {
+          setLoading(false)
+        }
       } else {
         setRole(null)
         setHasProfile(false)
+        setLoading(false)
       }
-      setLoading(false)
     })
   }, [])
 
