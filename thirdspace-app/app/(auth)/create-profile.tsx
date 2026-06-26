@@ -42,12 +42,16 @@ export default function CreateProfile() {
     setInterests((prev) => (prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]))
 
   const handlePickPhoto = async () => {
-    const uri = await pickImage('avatar')
-    if (uri) setPhotoUri(uri)
+    try {
+      const uri = await pickImage('avatar')
+      if (uri) setPhotoUri(uri)
+    } catch {
+      // user cancelled or denied permission — ignore
+    }
   }
 
   const handleSubmit = async () => {
-    if (!user || !canSubmit) return
+    if (!user || !canSubmit || busy) return
     setBusy(true)
     setError('')
     try {
@@ -77,7 +81,7 @@ export default function CreateProfile() {
           <Text style={styles.subtitle}>A photo and a few interests help people recognize you at events.</Text>
 
           <View style={styles.photoWrap}>
-            <TouchableOpacity style={styles.photoSlot} onPress={handlePickPhoto}>
+            <TouchableOpacity style={styles.photoSlot} onPress={handlePickPhoto} accessibilityRole="button" accessibilityLabel="Pick a profile photo">
               {photoUri ? (
                 <Image source={{ uri: photoUri }} style={styles.photoImg} />
               ) : (
