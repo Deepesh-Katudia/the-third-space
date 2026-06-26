@@ -1,5 +1,5 @@
-import { writeBatch, getDoc } from 'firebase/firestore'
-import { registerForEvent, cancelRegistration } from '../../services/events'
+import { writeBatch, getDoc, addDoc, updateDoc, getDocs, deleteDoc } from 'firebase/firestore'
+import { registerForEvent, cancelRegistration, createEvent, deleteEventWithRegistrations } from '../../services/events'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
 
@@ -34,6 +34,10 @@ function mockBatch() {
     commit: jest.fn().mockResolvedValue(undefined),
   }
 }
+
+beforeEach(() => {
+  jest.clearAllMocks()
+})
 
 describe('registerForEvent', () => {
   it('atomically creates the registration, bumps the count, and tracks it on the user', async () => {
@@ -98,5 +102,40 @@ describe('cancelRegistration', () => {
       { registeredEventIds: { __arrayRemove: 'e1' } }
     )
     expect(batch.commit).toHaveBeenCalledTimes(1)
+  })
+
+  it('decrements the profile eventsCount', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+
+    await cancelRegistration('e1', 'u1')
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' }, { eventsCount: { __increment: -1 } }, { merge: true }
+    )
+  })
+})
+
+describe('createEvent', () => {
+  it('increments the venue eventsCount after creating the event', async () => {
+    ;(addDoc as jest.Mock).mockResolvedValue({ id: 'e1' })
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    const venue = { name: 'V', borough: 'Brooklyn' as const, neighborhood: 'N', description: 'd' }
+    await createEvent('v1', venue, {
+      title: 'T', description: 'd', category: 'Social' as const,
+      startsAt: new Date('2030-01-01'), capacity: 10, ageRequirement: '18+' as const,
+    })
+    expect(updateDoc).toHaveBeenCalledWith({ path: 'venues/v1' }, { eventsCount: { __increment: 1 } })
+  })
+})
+
+describe('deleteEventWithRegistrations', () => {
+  it('decrements the venue eventsCount after deleting the event', async () => {
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ venueId: 'v1' }) })
+    ;(getDocs as jest.Mock).mockResolvedValue({ docs: [] })
+    ;(deleteDoc as jest.Mock).mockResolvedValue(undefined)
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    await deleteEventWithRegistrations('e1')
+    expect(updateDoc).toHaveBeenCalledWith({ path: 'venues/v1' }, { eventsCount: { __increment: -1 } })
   })
 })
