@@ -19,6 +19,14 @@ service cloud.firestore {
       allow create, update: if signedIn() && request.auth.uid == uid;
     }
 
+    match /profiles/{uid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['verified', 'points', 'tier']);
+    }
+
     match /events/{eventId} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -33,7 +41,11 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.venueId == request.auth.uid;
 
       match /registrations/{uid} {
-        allow read: if signedIn() && (request.auth.uid == uid || isEventOwner(eventId));
+        allow read: if signedIn() && (
+          request.auth.uid == uid ||
+          isEventOwner(eventId) ||
+          exists(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid))
+        );
         allow create: if signedIn() && request.auth.uid == uid;
         // Registrant cancels their own; the venue owner deletes all when cancelling the event.
         allow delete: if signedIn() && (request.auth.uid == uid || isEventOwner(eventId));
