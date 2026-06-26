@@ -43,4 +43,36 @@ export interface CommunityEvent {
 export interface Registration {
   uid: string
   displayName: string
+  photoURL?: string | null
+  age?: number
+  neighborhood?: string
+  interestsPreview?: string[]
+}
+
+export interface Profile {
+  displayName: string
+  photoURL: string | null
+  vibePhotos: string[]
+  bio: string
+  interests: string[]
+  neighborhood: string
+  borough: Borough
+  age: number
+  eventsCount: number
+  points: number
+  tier: string
+  verified: boolean
+  joinedAt: Timestamp
+}
+
+// Fields the user supplies; service fills joinedAt + neutral defaults.
+export interface CreateProfileInput {
+  displayName: string
+  photoURL: string | null
+  vibePhotos: string[]
+  bio: string
+  interests: string[]
+  neighborhood: string
+  borough: Borough
+  age: number
 }
