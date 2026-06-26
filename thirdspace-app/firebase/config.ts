@@ -4,6 +4,7 @@ import { Auth, initializeAuth, getAuth } from 'firebase/auth'
 // bundle of firebase/auth but is missing from the browser type declarations.
 import { getReactNativePersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const firebaseConfig = {
@@ -27,4 +28,5 @@ try {
 export { auth }
 
 export const db = getFirestore(app)
+export const storage = getStorage(app)
 export default app
