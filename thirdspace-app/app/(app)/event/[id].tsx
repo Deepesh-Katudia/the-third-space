@@ -51,9 +51,11 @@ export default function EventDetail() {
   }, [id, user, isOwner])
 
   useEffect(() => {
-    if (!id || !isOwner) return
+    // Registrations are readable by the event owner and by co-attendees (security
+    // rules). Non-registered users keep the count-only blur gate below.
+    if (!id || (!isOwner && !isRegistered)) return
     return subscribeRegistrations(id, setAttendees, () => setBanner("Couldn't load attendees."))
-  }, [id, isOwner])
+  }, [id, isOwner, isRegistered])
 
   if (event === undefined) return <LoadingView />
 
@@ -71,9 +73,10 @@ export default function EventDetail() {
   const startsAt = event.startsAt.toDate()
   const soldOut = event.registeredCount >= event.capacity
   const tint = CATEGORY_COLORS[event.category]
-  // Phase 1: attender attendee list isn't readable, so avatars are seeded from
-  // the count for the "who's going" preview. Phase 2 swaps in real registrations.
-  const previewSeeds = Array.from({ length: Math.min(event.registeredCount, 5) }, (_, i) => `${event.id}:${i}`)
+  // Registered users (and the owner) see real attendee avatars from the
+  // subscription. Non-registered users only get count-driven blurred placeholders.
+  const attendeeSeeds = attendees.map((a) => a.uid)
+  const lockedSeeds = Array.from({ length: Math.min(event.registeredCount, 3) }, (_, i) => `${event.id}:${i}`)
 
   const handleRegister = async () => {
     if (!user) return
@@ -175,7 +178,7 @@ export default function EventDetail() {
             </View>
           ) : isRegistered ? (
             <View style={styles.whosGoing}>
-              <AttendeeAvatarStack uids={previewSeeds} count={event.registeredCount} size={36} />
+              <AttendeeAvatarStack uids={attendeeSeeds} count={event.registeredCount} size={36} />
               <Text style={styles.whosGoingText}>{event.registeredCount} going</Text>
               <TouchableOpacity onPress={() => router.push({ pathname: '/(app)/guest-list/[id]', params: { id: event.id } })}>
                 <Text style={styles.seeAll}>See all →</Text>
@@ -184,7 +187,7 @@ export default function EventDetail() {
           ) : (
             <View style={styles.whosGoingLocked}>
               <View style={styles.lockedAvatars}>
-                <AttendeeAvatarStack uids={previewSeeds.slice(0, 3)} count={3} size={36} max={3} />
+                <AttendeeAvatarStack uids={lockedSeeds} count={3} size={36} max={3} />
                 <View style={styles.blurredGroup}>
                   <View style={styles.blurredAvatar} />
                   <View style={[styles.blurredAvatar, { marginLeft: -11 }]} />
