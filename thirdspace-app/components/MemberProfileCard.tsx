@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { avatarColor, initials } from '../utils/avatar'
 
@@ -15,6 +15,7 @@ export interface Member {
   lookingToMeet: string
   interests: string[]
   vibePhotos: number
+  photoURL?: string | null
 }
 
 interface MemberProfileCardProps {
@@ -29,9 +30,13 @@ export function MemberProfileCard({ member, onMessage }: MemberProfileCardProps)
   return (
     <View style={styles.card}>
       <LinearGradient colors={[tint, '#2C1810']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover} />
-      <View style={[styles.avatar, { backgroundColor: tint }]}>
-        <Text style={styles.avatarText}>{initials(member.name)}</Text>
-      </View>
+      {member.photoURL ? (
+        <Image source={{ uri: member.photoURL }} style={styles.avatar} />
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: tint }]}>
+          <Text style={styles.avatarText}>{initials(member.name)}</Text>
+        </View>
+      )}
 
       <View style={styles.body}>
         <Text style={styles.name}>{member.name}, {member.age}</Text>
@@ -64,7 +69,7 @@ export function MemberProfileCard({ member, onMessage }: MemberProfileCardProps)
 const styles = StyleSheet.create({
   card: { backgroundColor: 'white', borderRadius: 22, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', overflow: 'hidden' },
   cover: { height: 140 },
-  avatar: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: '#FBF7F2', alignItems: 'center', justifyContent: 'center', marginTop: -48, marginLeft: 20 },
+  avatar: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: '#FBF7F2', alignItems: 'center', justifyContent: 'center', marginTop: -48, marginLeft: 20, overflow: 'hidden' },
   avatarText: { fontFamily: 'DMSans_500Medium', fontSize: 34, color: 'white' },
   body: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 },
   name: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 26, color: '#2C1810', letterSpacing: -0.5 },
