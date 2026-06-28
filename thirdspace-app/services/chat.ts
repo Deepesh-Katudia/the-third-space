@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy,
+  collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy,
   query, serverTimestamp, setDoc, updateDoc, where, writeBatch,
   DocumentData, QueryDocumentSnapshot,
 } from 'firebase/firestore'
@@ -7,6 +7,7 @@ import { db } from '../firebase/config'
 import { ChatRead, Conversation, EventChatMeta, Message } from '../types/models'
 
 const MESSAGE_PAGE = 50
+const DECLINE_BATCH_SIZE = 400
 
 export interface MessageAuthor { uid: string; name: string; photoURL: string | null }
 export interface ParticipantInfo { uid: string; name: string; photoURL: string | null }
@@ -141,10 +142,13 @@ export async function acceptRequest(convId: string): Promise<void> {
 
 export async function declineRequest(convId: string): Promise<void> {
   const msgs = await getDocs(collection(db, 'conversations', convId, 'messages'))
-  const batch = writeBatch(db)
-  msgs.docs.forEach((d) => batch.delete(d.ref))
-  batch.delete(doc(db, 'conversations', convId))
-  await batch.commit()
+  const docs = msgs.docs
+  for (let i = 0; i < docs.length; i += DECLINE_BATCH_SIZE) {
+    const batch = writeBatch(db)
+    docs.slice(i, i + DECLINE_BATCH_SIZE).forEach((d) => batch.delete(d.ref))
+    await batch.commit()
+  }
+  await deleteDoc(doc(db, 'conversations', convId))
 }
 
 export function subscribeMyConversations(
@@ -165,7 +169,10 @@ export function subscribeChatReads(
 ): () => void {
   return onSnapshot(
     collection(db, 'users', uid, 'chatReads'),
-    (snap) => onChange(snap.docs.map((d) => ({ id: d.id, readCount: (d.data().readCount as number) ?? 0, muted: (d.data().muted as boolean) ?? false }))),
+    (snap) => onChange(snap.docs.map((d) => {
+      const data = d.data()
+      return { id: d.id, readCount: (data.readCount as number) ?? 0, muted: (data.muted as boolean) ?? false }
+    })),
     onError
   )
 }
@@ -173,7 +180,8 @@ export function subscribeChatReads(
 export async function getThreadRead(uid: string, threadId: string): Promise<ChatRead | null> {
   const snap = await getDoc(doc(db, 'users', uid, 'chatReads', threadId))
   if (!snap.exists()) return null
-  return { readCount: (snap.data().readCount as number) ?? 0, muted: (snap.data().muted as boolean) ?? false }
+  const data = snap.data()
+  return { readCount: (data.readCount as number) ?? 0, muted: (data.muted as boolean) ?? false }
 }
 
 export async function markThreadRead(uid: string, threadId: string, count: number): Promise<void> {
