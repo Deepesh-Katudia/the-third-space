@@ -7,11 +7,14 @@ import { MemberProfileCard, Member } from '../../../components/MemberProfileCard
 import { LoadingView } from '../../../components/LoadingView'
 import { EmptyState } from '../../../components/EmptyState'
 import { useProfile } from '../../../hooks/useProfile'
+import { useAuth } from '../../../hooks/useAuth'
+import { dmConversationId } from '../../../utils/chat'
 
 export default function MemberProfile() {
   const { uid } = useLocalSearchParams<{ uid: string }>()
   const router = useRouter()
   const { profile, loading, hasError } = useProfile(uid)
+  const { user } = useAuth()
 
   if (loading) return <LoadingView />
 
@@ -54,7 +57,13 @@ export default function MemberProfile() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <MemberProfileCard member={member} onMessage={() => router.push('/(app)/message-requests')} />
+        <MemberProfileCard
+          member={member}
+          onMessage={() => {
+            if (!user?.uid || !uid || user.uid === uid) return
+            router.push({ pathname: '/(app)/chat/[id]', params: { id: dmConversationId(user.uid, uid), kind: 'dm', name: profile.displayName } })
+          }}
+        />
 
         {member.bio ? <Text style={styles.bio}>{member.bio}</Text> : null}
 

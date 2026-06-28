@@ -1,31 +1,19 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { EmptyState } from '../../components/EmptyState'
+import { LoadingView } from '../../components/LoadingView'
 import { avatarColor, initials } from '../../utils/avatar'
-
-// ── Phase 1 mock data ─────────────────────────────────────────────────────
-// Phase 2 swap: read pending message requests; Accept/Decline write to Firestore.
-interface MessageRequest {
-  id: string
-  name: string
-  sharedInterest: string
-  preview: string
-}
-
-const MOCK_REQUESTS: MessageRequest[] = [
-  { id: 'r1', name: 'Jordan Avery', sharedInterest: 'Both into Film', preview: "Hey! We were both at the rooftop sketching night — would love to swap studio recs." },
-  { id: 'r2', name: 'Priya Nair', sharedInterest: '3 shared interests', preview: 'Loved your take in the wine social chat. Are you going to the next one?' },
-]
-// ──────────────────────────────────────────────────────────────────────────
+import { useAuth } from '../../hooks/useAuth'
+import { useMessageRequests } from '../../hooks/useMessageRequests'
+import { acceptRequest, declineRequest } from '../../services/chat'
 
 export default function MessageRequests() {
   const router = useRouter()
-  const [requests, setRequests] = useState<MessageRequest[]>(MOCK_REQUESTS)
-
-  const resolve = (id: string) => setRequests((prev) => prev.filter((r) => r.id !== id))
+  const { user } = useAuth()
+  const { requests, loading } = useMessageRequests(user?.uid)
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -37,42 +25,49 @@ export default function MessageRequests() {
         <Text style={styles.title}>Requests</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <View style={styles.infoBanner}>
-          <Text style={styles.infoText}>
-            Requests stay here until you accept. Decline quietly — they're never notified.
-          </Text>
-        </View>
+      {loading ? (
+        <LoadingView />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+          <View style={styles.infoBanner}>
+            <Text style={styles.infoText}>
+              Requests stay here until you accept. Decline quietly — they're never notified.
+            </Text>
+          </View>
 
-        {requests.length === 0 ? (
-          <EmptyState emoji="✉" title="All caught up" body="You have no pending message requests." />
-        ) : (
-          requests.map((r) => (
-            <View key={r.id} style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={[styles.avatar, { backgroundColor: avatarColor(r.name) }]}>
-                  <Text style={styles.avatarText}>{initials(r.name)}</Text>
-                </View>
-                <View style={styles.cardHead}>
-                  <Text style={styles.name}>{r.name}</Text>
-                  <View style={styles.interestBadge}>
-                    <Text style={styles.interestText}>{r.sharedInterest}</Text>
+          {requests.length === 0 ? (
+            <EmptyState emoji="✉" title="All caught up" body="You have no pending message requests." />
+          ) : (
+            requests.map((r) => {
+              const name = r.names[r.requestedBy] ?? r.lastMessageAuthor ?? 'Member'
+              return (
+                <View key={r.id} style={styles.card}>
+                  <View style={styles.cardTop}>
+                    <View style={[styles.avatar, { backgroundColor: avatarColor(name) }]}>
+                      <Text style={styles.avatarText}>{initials(name)}</Text>
+                    </View>
+                    <View style={styles.cardHead}>
+                      <Text style={styles.name}>{name}</Text>
+                      <View style={styles.interestBadge}>
+                        <Text style={styles.interestText}>New request</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.preview}>{r.lastMessageText}</Text>
+                  <View style={styles.actions}>
+                    <TouchableOpacity style={styles.declineBtn} onPress={() => declineRequest(r.id)}>
+                      <Text style={styles.declineText}>Decline</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.acceptBtn} onPress={() => acceptRequest(r.id)}>
+                      <Text style={styles.acceptText}>Accept</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-              </View>
-              <Text style={styles.preview}>{r.preview}</Text>
-              <View style={styles.actions}>
-                <TouchableOpacity style={styles.declineBtn} onPress={() => resolve(r.id)}>
-                  <Text style={styles.declineText}>Decline</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.acceptBtn} onPress={() => resolve(r.id)}>
-                  <Text style={styles.acceptText}>Accept</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
+              )
+            })
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   )
 }
