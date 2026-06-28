@@ -5,31 +5,29 @@ import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ChatRow, ChatSummary } from '../../../components/ChatRow'
 import { EmptyState } from '../../../components/EmptyState'
-
-// ── Phase 1 mock data ─────────────────────────────────────────────────────
-// Phase 2 swap: subscribe to the user's chat threads.
-const MOCK_CHATS: ChatSummary[] = [
-  { id: 'feat-1', name: 'Sunset Rooftop Sketching', type: 'group', lastMessage: 'Devon: bringing extra charcoal if anyone needs', timestamp: '2m', unread: 3, muted: false },
-  { id: 'c1', name: 'Natural Wine Social', type: 'group', lastMessage: 'You: see you all Friday!', timestamp: '1h', unread: 0, muted: false },
-  { id: 'dm-1', name: 'Maya Chen', type: 'direct', lastMessage: 'That sounds great — count me in', timestamp: '3h', unread: 1, muted: false },
-  { id: 'dm-2', name: 'Liam Walsh', type: 'direct', lastMessage: 'Thanks for the rec!', timestamp: 'Tue', unread: 0, muted: true },
-]
+import { LoadingView } from '../../../components/LoadingView'
+import { useAuth } from '../../../hooks/useAuth'
+import { useChatList } from '../../../hooks/useChatList'
+import { useMessageRequests } from '../../../hooks/useMessageRequests'
+import { formatRelativeTime } from '../../../utils/chat'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'group', label: 'Event groups' },
-  { key: 'direct', label: 'Direct' },
+  { key: 'dm', label: 'Direct' },
 ] as const
 type FilterKey = (typeof FILTERS)[number]['key']
-// ──────────────────────────────────────────────────────────────────────────
 
 export default function Chats() {
   const router = useRouter()
+  const { user } = useAuth()
+  const { threads, loading } = useChatList(user?.uid)
+  const { requests } = useMessageRequests(user?.uid)
   const [filter, setFilter] = useState<FilterKey>('all')
 
   const visible = useMemo(
-    () => (filter === 'all' ? MOCK_CHATS : MOCK_CHATS.filter((c) => c.type === filter)),
-    [filter]
+    () => (filter === 'all' ? threads : threads.filter((t) => t.kind === filter)),
+    [filter, threads]
   )
 
   return (
@@ -37,9 +35,11 @@ export default function Chats() {
       <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>Chats</Text>
-        <TouchableOpacity onPress={() => router.push('/(app)/message-requests')} hitSlop={8}>
-          <Text style={styles.requestsLink}>Requests · 2</Text>
-        </TouchableOpacity>
+        {requests.length > 0 ? (
+          <TouchableOpacity onPress={() => router.push('/(app)/message-requests')} hitSlop={8}>
+            <Text style={styles.requestsLink}>Requests · {requests.length}</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <View style={styles.filterRow}>
@@ -53,19 +53,34 @@ export default function Chats() {
         })}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        {visible.length === 0 ? (
-          <EmptyState emoji="◈" title="No chats here" body="Register for an event to join its group chat." />
-        ) : (
-          visible.map((chat) => (
-            <ChatRow
-              key={chat.id}
-              chat={chat}
-              onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: chat.id } })}
-            />
-          ))
-        )}
-      </ScrollView>
+      {loading ? (
+        <LoadingView />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+          {visible.length === 0 ? (
+            <EmptyState emoji="◈" title="No chats here" body="Register for an event to join its group chat." />
+          ) : (
+            visible.map((t) => {
+              const summary: ChatSummary = {
+                id: t.id,
+                name: t.name,
+                type: t.kind === 'group' ? 'group' : 'direct',
+                lastMessage: t.lastMessageText || 'No messages yet',
+                timestamp: formatRelativeTime(t.lastMessageAt ? t.lastMessageAt.toDate() : null),
+                unread: t.unread,
+                muted: t.muted,
+              }
+              return (
+                <ChatRow
+                  key={t.id}
+                  chat={summary}
+                  onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: t.id, kind: t.kind, name: t.name } })}
+                />
+              )
+            })
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   )
 }
