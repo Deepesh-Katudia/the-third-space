@@ -10,6 +10,14 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/events/$(eventId)).data.venueId == request.auth.uid;
     }
 
+    function isRegistered(eventId) {
+      return exists(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid));
+    }
+
+    function isEventChatMember(eventId) {
+      return isRegistered(eventId) || isEventOwner(eventId);
+    }
+
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
@@ -50,6 +58,42 @@ service cloud.firestore {
         // Registrant cancels their own; the venue owner deletes all when cancelling the event.
         allow delete: if signedIn() && (request.auth.uid == uid || isEventOwner(eventId));
       }
+    }
+
+    match /eventChats/{eventId} {
+      allow read: if signedIn() && isEventChatMember(eventId);
+      allow create, update: if signedIn() && isEventChatMember(eventId);
+
+      match /messages/{messageId} {
+        allow read: if signedIn() && isEventChatMember(eventId);
+        allow create: if signedIn() && isEventChatMember(eventId)
+          && request.resource.data.authorUid == request.auth.uid;
+      }
+    }
+
+    match /conversations/{convId} {
+      allow read, update, delete: if signedIn() && request.auth.uid in resource.data.participants;
+      allow create: if signedIn()
+        && request.resource.data.participants.size() == 2
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.requestedBy == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
+        allow create: if signedIn()
+          && request.resource.data.authorUid == request.auth.uid
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants
+          && (
+            get(/databases/$(database)/documents/conversations/$(convId)).data.status == 'open' ||
+            get(/databases/$(database)/documents/conversations/$(convId)).data.requestedBy == request.auth.uid
+          );
+      }
+    }
+
+    match /users/{uid}/chatReads/{threadId} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
     }
   }
 }
