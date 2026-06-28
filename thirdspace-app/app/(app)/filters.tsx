@@ -1,17 +1,19 @@
-import React, { useState } from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { FilterSheet, EventFilters, EMPTY_FILTERS } from '../../components/FilterSheet'
-
-// Phase 1: filters live in local state and the result count is hardcoded.
-// Phase 2 swap: derive count from a filtered query and apply on dismiss.
-const MOCK_RESULT_COUNT = 18
+import { FilterSheet } from '../../components/FilterSheet'
+import { useDiscoverFilters } from '../../hooks/useDiscoverFilters'
+import { useUpcomingEvents } from '../../hooks/useUpcomingEvents'
+import { applyEventFilters } from '../../utils/eventFilters'
 
 export default function Filters() {
   const router = useRouter()
-  const [filters, setFilters] = useState<EventFilters>(EMPTY_FILTERS)
+  const { filters, query, setFilters, reset } = useDiscoverFilters()
+  const { events } = useUpcomingEvents()
+
+  const count = useMemo(() => applyEventFilters(events, filters, query).length, [events, filters, query])
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -31,11 +33,11 @@ export default function Filters() {
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity onPress={() => setFilters(EMPTY_FILTERS)} hitSlop={8}>
+        <TouchableOpacity onPress={() => reset()} hitSlop={8}>
           <Text style={styles.clear}>Clear all</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.applyBtn} onPress={() => router.back()}>
-          <Text style={styles.applyText}>Show {MOCK_RESULT_COUNT} events</Text>
+          <Text style={styles.applyText}>Show {count} event{count === 1 ? '' : 's'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
