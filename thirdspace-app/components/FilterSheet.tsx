@@ -2,30 +2,16 @@ import React from 'react'
 import { View, Text, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native'
 import { EventCategory } from '../types/models'
 import { EVENT_CATEGORIES } from '../constants/categories'
+import { DateFilter, EventFilters, EMPTY_FILTERS } from '../constants/filters'
 
-export type DateFilter = 'today' | 'weekend' | 'week' | 'custom' | null
-
-export interface EventFilters {
-  date: DateFilter
-  neighborhoods: string[]
-  freeOnly: boolean
-  hide21: boolean
-  categories: EventCategory[]
-}
-
-export const EMPTY_FILTERS: EventFilters = {
-  date: null,
-  neighborhoods: [],
-  freeOnly: false,
-  hide21: false,
-  categories: [],
-}
+// Re-exported so existing importers (filters screen) keep resolving these from here.
+export { EMPTY_FILTERS }
+export type { DateFilter, EventFilters }
 
 const DATE_OPTIONS: { label: string; value: DateFilter }[] = [
   { label: 'Today', value: 'today' },
   { label: 'This weekend', value: 'weekend' },
   { label: 'This week', value: 'week' },
-  { label: 'Pick dates', value: 'custom' },
 ]
 
 const NEIGHBORHOODS = ['Williamsburg', 'Bushwick', 'Park Slope', 'Greenpoint', 'Bed-Stuy', 'Sunset Park']
@@ -83,12 +69,7 @@ export function FilterSheet({ filters, onChange }: FilterSheetProps) {
         </View>
       </Section>
 
-      <Section title="Price & age">
-        <ToggleRow
-          label="Free events only"
-          value={filters.freeOnly}
-          onValueChange={(v) => onChange({ ...filters, freeOnly: v })}
-        />
+      <Section title="Age">
         <ToggleRow
           label="Hide 21+ events"
           value={filters.hide21}
