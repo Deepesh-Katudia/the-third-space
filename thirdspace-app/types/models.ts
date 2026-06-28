@@ -76,3 +76,52 @@ export interface CreateProfileInput {
   borough: Borough
   age: number
 }
+
+// ── Chat & Messaging (sub-project C) ──────────────────────────────────────
+// Messages denormalize their author; createdAt is null for the brief window
+// before serverTimestamp resolves in the local snapshot.
+export interface Message {
+  id: string
+  authorUid: string
+  authorName: string
+  authorPhotoURL: string | null
+  text: string
+  createdAt: Timestamp | null
+}
+
+export interface EventChatMeta {
+  lastMessageText: string
+  lastMessageAt: Timestamp | null
+  lastMessageAuthor: string
+  messageCount: number
+}
+
+export interface Conversation {
+  id: string
+  participants: string[]
+  names: Record<string, string>
+  photos: Record<string, string | null>
+  status: 'pending' | 'open'
+  requestedBy: string
+  lastMessageText: string
+  lastMessageAt: Timestamp | null
+  lastMessageAuthor: string
+  messageCount: number
+}
+
+// Unified row for the chat list (group + dm).
+export interface ChatThread {
+  id: string
+  kind: 'group' | 'dm'
+  name: string
+  photoURL: string | null
+  lastMessageText: string
+  lastMessageAt: Timestamp | null
+  unread: number
+  muted: boolean
+}
+
+export interface ChatRead {
+  readCount: number
+  muted: boolean
+}
