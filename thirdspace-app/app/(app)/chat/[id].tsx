@@ -44,6 +44,7 @@ export default function ChatThreadScreen() {
   const [muted, setMuted] = useState(false)
   const [draft, setDraft] = useState('')
   const scrollRef = useRef<ScrollView>(null)
+  const everExisted = useRef(false)
 
   const myName = profile?.displayName ?? user?.displayName ?? 'You'
   const author: MessageAuthor = { uid: myUid, name: myName, photoURL: profile?.photoURL ?? null }
@@ -77,9 +78,13 @@ export default function ChatThreadScreen() {
     if (messages.length > 0) scrollRef.current?.scrollToEnd({ animated: true })
   }, [messages.length])
 
+  // Track whether this conversation was ever non-null so brand-new threads don't
+  // incorrectly show the "no longer available" banner before any message is sent.
+  useEffect(() => { if (conversation !== null) everExisted.current = true }, [conversation])
+
   const isPendingOutgoing = kind === 'dm' && conversation?.status === 'pending' && conversation.requestedBy === myUid
   const isPendingIncoming = kind === 'dm' && conversation?.status === 'pending' && conversation.requestedBy !== myUid
-  const declined = kind === 'dm' && !loading && conversation === null && messages.length === 0
+  const declined = kind === 'dm' && !loading && conversation === null && everExisted.current
 
   const send = async () => {
     const text = draft.trim()

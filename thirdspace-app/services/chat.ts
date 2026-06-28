@@ -112,28 +112,35 @@ export async function sendDirectMessage(
   if (!trimmed) return
   const convRef = doc(db, 'conversations', convId)
   const snap = await getDoc(convRef)
-  const batch = writeBatch(db)
-  const msgRef = doc(collection(db, 'conversations', convId, 'messages'))
-  batch.set(msgRef, {
-    authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
-    text: trimmed, createdAt: serverTimestamp(),
-  })
   if (!snap.exists()) {
+    // Two sequential awaited writes: conversation doc first so Firestore security rules
+    // can resolve get(conversations/{convId}) when evaluating the message-create rule.
     const names: Record<string, string> = {}
     const photos: Record<string, string | null> = {}
     participants.forEach((p) => { names[p.uid] = p.name; photos[p.uid] = p.photoURL })
-    batch.set(convRef, {
+    await setDoc(convRef, {
       participants: participants.map((p) => p.uid),
       names, photos,
       status: 'pending', requestedBy: author.uid,
       lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: 1,
     })
+    await setDoc(doc(collection(db, 'conversations', convId, 'messages')), {
+      authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
+      text: trimmed, createdAt: serverTimestamp(),
+    })
   } else {
+    // Subsequent sends: conversation already exists, safe to batch.
+    const batch = writeBatch(db)
+    const msgRef = doc(collection(db, 'conversations', convId, 'messages'))
+    batch.set(msgRef, {
+      authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
+      text: trimmed, createdAt: serverTimestamp(),
+    })
     batch.update(convRef, {
       lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1),
     })
+    await batch.commit()
   }
-  await batch.commit()
 }
 
 export async function acceptRequest(convId: string): Promise<void> {
