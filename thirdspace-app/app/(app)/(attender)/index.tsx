@@ -1,90 +1,19 @@
-import React, { useMemo, useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import React, { useMemo } from 'react'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { Timestamp } from 'firebase/firestore'
-import { CommunityEvent, EventCategory } from '../../../types/models'
+import { EventCategory } from '../../../types/models'
 import { FeaturedEventCard } from '../../../components/FeaturedEventCard'
 import { CompactEventRow } from '../../../components/CompactEventRow'
+import { LoadingView } from '../../../components/LoadingView'
+import { EmptyState } from '../../../components/EmptyState'
+import { useAuth } from '../../../hooks/useAuth'
+import { useProfile } from '../../../hooks/useProfile'
+import { useUpcomingEvents } from '../../../hooks/useUpcomingEvents'
+import { useDiscoverFilters } from '../../../hooks/useDiscoverFilters'
+import { applyEventFilters, hasActiveFilters } from '../../../utils/eventFilters'
 import { avatarColor, initials } from '../../../utils/avatar'
-
-// ── Phase 1 mock data ─────────────────────────────────────────────────────
-// Phase 2 swap: const { events } = useUpcomingEvents()
-const ts = (daysFromNow: number, hour: number): Timestamp => {
-  const d = new Date()
-  d.setDate(d.getDate() + daysFromNow)
-  d.setHours(hour, 0, 0, 0)
-  return Timestamp.fromDate(d)
-}
-
-const MOCK_FEED_EVENTS: CommunityEvent[] = [
-  {
-    id: 'feat-1',
-    title: 'Sunset Rooftop Sketching',
-    description: '',
-    category: 'Creative Arts',
-    startsAt: ts(2, 18),
-    capacity: 30,
-    ageRequirement: '18+',
-    venueId: 'v1',
-    venueName: 'The Atrium',
-    neighborhood: 'Williamsburg',
-    registeredCount: 22,
-  },
-  {
-    id: 'c1',
-    title: 'Natural Wine Social',
-    description: '',
-    category: 'Nightlife',
-    startsAt: ts(3, 20),
-    capacity: 40,
-    ageRequirement: '21+',
-    venueId: 'v2',
-    venueName: 'Cellar 9',
-    neighborhood: 'Bushwick',
-    registeredCount: 31,
-  },
-  {
-    id: 'c2',
-    title: 'Morning Flow + Coffee',
-    description: '',
-    category: 'Wellness',
-    startsAt: ts(4, 8),
-    capacity: 20,
-    ageRequirement: '18+',
-    venueId: 'v3',
-    venueName: 'Prospect Studio',
-    neighborhood: 'Park Slope',
-    registeredCount: 14,
-  },
-  {
-    id: 'c3',
-    title: 'Vinyl Listening Night',
-    description: '',
-    category: 'Music',
-    startsAt: ts(5, 19),
-    capacity: 35,
-    ageRequirement: '18+',
-    venueId: 'v4',
-    venueName: 'Static Bar',
-    neighborhood: 'Greenpoint',
-    registeredCount: 27,
-  },
-  {
-    id: 'c4',
-    title: 'Dumpling Making Workshop',
-    description: '',
-    category: 'Food & Drink',
-    startsAt: ts(6, 17),
-    capacity: 16,
-    ageRequirement: '18+',
-    venueId: 'v5',
-    venueName: 'Kitchen Commons',
-    neighborhood: 'Sunset Park',
-    registeredCount: 12,
-  },
-]
 
 const CATEGORY_CHIPS: { label: string; value: EventCategory | 'All' }[] = [
   { label: 'All', value: 'All' },
@@ -96,56 +25,72 @@ const CATEGORY_CHIPS: { label: string; value: EventCategory | 'All' }[] = [
   { label: 'Social', value: 'Social' },
 ]
 
-const MOCK_USER_NAME = 'Maya'
-// ──────────────────────────────────────────────────────────────────────────
-
 export default function Discover() {
   const router = useRouter()
-  const [category, setCategory] = useState<EventCategory | 'All'>('All')
+  const { user } = useAuth()
+  const { profile } = useProfile(user?.uid)
+  const { events, loading, hasError } = useUpcomingEvents()
+  const { filters, query, setQuery, setFilters, reset } = useDiscoverFilters()
 
-  const visible = useMemo(
-    () => (category === 'All' ? MOCK_FEED_EVENTS : MOCK_FEED_EVENTS.filter((e) => e.category === category)),
-    [category]
-  )
+  const name = profile?.displayName ?? user?.displayName ?? 'Member'
+  const visible = useMemo(() => applyEventFilters(events, filters, query), [events, filters, query])
   const [featured, ...rest] = visible
+
+  const activeCategory: EventCategory | 'All' =
+    filters.categories.length === 1 ? filters.categories[0] : 'All'
+  const selectCategory = (value: EventCategory | 'All') =>
+    setFilters({ ...filters, categories: value === 'All' ? [] : [value] })
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.location}>Brooklyn, NY</Text>
             <Text style={styles.title}>Discover</Text>
           </View>
-          <TouchableOpacity
-            style={[styles.userAvatar, { backgroundColor: avatarColor(MOCK_USER_NAME) }]}
-            onPress={() => router.push('/(app)/(attender)/profile')}
-          >
-            <Text style={styles.userInitials}>{initials(MOCK_USER_NAME)}</Text>
+          <TouchableOpacity onPress={() => router.push('/(app)/(attender)/profile')}>
+            {profile?.photoURL ? (
+              <Image source={{ uri: profile.photoURL }} style={styles.userAvatar} />
+            ) : (
+              <View style={[styles.userAvatar, { backgroundColor: avatarColor(name) }]}>
+                <Text style={styles.userInitials}>{initials(name)}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.search}
-          onPress={() => router.push('/(app)/filters')}
-        >
-          <Text style={styles.searchIcon}>⌕</Text>
-          <Text style={styles.searchText}>Search events, venues, neighborhoods</Text>
-        </TouchableOpacity>
+        <View style={styles.searchRow}>
+          <View style={styles.search}>
+            <Text style={styles.searchIcon}>⌕</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search events, venues, neighborhoods"
+              placeholderTextColor="#8C7B70"
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+            />
+            {query.length > 0 ? (
+              <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
+                <Text style={styles.searchClear}>✕</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => router.push('/(app)/filters')}>
+            <Text style={styles.filterIcon}>⚙</Text>
+            {hasActiveFilters(filters) ? <View style={styles.filterDot} /> : null}
+          </TouchableOpacity>
+        </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
           {CATEGORY_CHIPS.map((chip) => {
-            const active = category === chip.value
+            const active = activeCategory === chip.value
             return (
               <TouchableOpacity
                 key={chip.label}
-                onPress={() => setCategory(chip.value)}
+                onPress={() => selectCategory(chip.value)}
                 style={[styles.chip, active && styles.chipActive]}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip.label}</Text>
@@ -154,25 +99,44 @@ export default function Discover() {
           })}
         </ScrollView>
 
-        {featured ? (
-          <FeaturedEventCard
-            event={featured}
-            onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: featured.id } })}
-          />
-        ) : null}
-
-        {rest.length > 0 ? (
+        {loading ? (
+          <LoadingView />
+        ) : hasError ? (
+          <EmptyState emoji="🛰️" title="Couldn't load events" body="Check your connection and try again." />
+        ) : visible.length === 0 ? (
+          events.length === 0 ? (
+            <EmptyState emoji="🗓️" title="Nothing coming up yet" body="New events will appear here as venues post them." />
+          ) : (
+            <EmptyState
+              emoji="🔍"
+              title="No events match"
+              body="Try clearing your search and filters."
+              actionLabel="Clear filters"
+              onAction={() => { reset() }}
+            />
+          )
+        ) : (
           <>
-            <Text style={styles.sectionLabel}>More this week</Text>
-            {rest.map((event) => (
-              <CompactEventRow
-                key={event.id}
-                event={event}
-                onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: event.id } })}
+            {featured ? (
+              <FeaturedEventCard
+                event={featured}
+                onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: featured.id } })}
               />
-            ))}
+            ) : null}
+            {rest.length > 0 ? (
+              <>
+                <Text style={styles.sectionLabel}>More this week</Text>
+                {rest.map((event) => (
+                  <CompactEventRow
+                    key={event.id}
+                    event={event}
+                    onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: event.id } })}
+                  />
+                ))}
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
       </ScrollView>
     </SafeAreaView>
   )
@@ -184,9 +148,11 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   location: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#C4614A', marginBottom: 2, letterSpacing: 0.3 },
   title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 34, color: '#2C1810', letterSpacing: -0.5 },
-  userAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  userAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginTop: 4, overflow: 'hidden' },
   userInitials: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: 'white' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   search: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -195,20 +161,16 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(242,197,160,0.5)',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
+    paddingVertical: 12,
   },
   searchIcon: { fontSize: 18, color: '#8C7B70' },
-  searchText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  searchInput: { flex: 1, fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#2C1810', paddingVertical: 0 },
+  searchClear: { fontSize: 14, color: '#8C7B70' },
+  filterBtn: { width: 48, height: 48, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  filterIcon: { fontSize: 18, color: '#2C1810' },
+  filterDot: { position: 'absolute', top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C4614A' },
   chipRow: { gap: 8, paddingBottom: 4, marginBottom: 16 },
-  chip: {
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(242,197,160,0.6)',
-    backgroundColor: 'white',
-  },
+  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', backgroundColor: 'white' },
   chipActive: { backgroundColor: '#2C1810', borderColor: '#2C1810' },
   chipText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
   chipTextActive: { color: 'white' },
