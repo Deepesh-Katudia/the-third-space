@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -8,7 +8,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '../../../firebase/config'
 import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
-import { getMyRegisteredEvents } from '../../../services/events'
+import { useAttendanceStats } from '../../../hooks/useAttendanceStats'
 import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
 
@@ -17,24 +17,10 @@ export default function Profile() {
   const { user } = useAuth()
   const { profile, loading } = useProfile(user?.uid)
   const [notifications, setNotifications] = useState(true)
-  const [attendedCount, setAttendedCount] = useState(0)
+  const { attendedEvents } = useAttendanceStats(user?.uid)
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
   const neighborhood = profile?.neighborhood ?? ''
-
-  // Attended = registered events whose start time is in the past.
-  useEffect(() => {
-    if (!user) return
-    let cancelled = false
-    getMyRegisteredEvents(user.uid)
-      .then((events) => {
-        if (cancelled) return
-        const now = Date.now()
-        setAttendedCount(events.filter((e) => e.startsAt.toMillis() < now).length)
-      })
-      .catch(() => { if (!cancelled) setAttendedCount(0) })
-    return () => { cancelled = true }
-  }, [user])
 
   if (loading) return <LoadingView />
 
@@ -71,7 +57,7 @@ export default function Profile() {
         </TouchableOpacity>
 
         <View style={styles.statsRow}>
-          <Stat value={attendedCount} label="Attended" />
+          <Stat value={attendedEvents.length} label="Attended" />
           <View style={styles.statDivider} />
           <Stat value={0} label="Hosted" />
           <View style={styles.statDivider} />
