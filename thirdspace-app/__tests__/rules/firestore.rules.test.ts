@@ -26,14 +26,33 @@ test('a user cannot write another user profile', async () => {
   await assertFails(setDoc(doc(me, 'profiles/other'), { displayName: 'x' }))
 })
 
-test('owner cannot escalate points/tier/verified on update', async () => {
+test('owner can update points/tier together with a valid earn/revoke delta', async () => {
   await env.withSecurityRulesDisabled(async (ctx) => {
     await setDoc(doc(ctx.firestore(), 'profiles/me'), { displayName: 'Me', points: 0, tier: 'Newcomer', verified: false })
   })
   const me = env.authenticatedContext('me').firestore()
   await assertSucceeds(updateDoc(doc(me, 'profiles/me'), { bio: 'updated' }))
-  await assertFails(updateDoc(doc(me, 'profiles/me'), { points: 9999 }))
+  await assertSucceeds(updateDoc(doc(me, 'profiles/me'), { points: 50, tier: 'Newcomer' }))
+})
+
+test('owner cannot set points to an arbitrary value, mismatch tier, or escalate verified', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'profiles/me'), { displayName: 'Me', points: 0, tier: 'Newcomer', verified: false })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(updateDoc(doc(me, 'profiles/me'), { points: 9999, tier: 'Insider' }))
+  await assertFails(updateDoc(doc(me, 'profiles/me'), { points: 50, tier: 'Insider' }))
   await assertFails(updateDoc(doc(me, 'profiles/me'), { verified: true }))
+})
+
+test('owner can create their own redemption log entry; a stranger cannot', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'profiles/me'), { displayName: 'Me', points: 500, tier: 'Regular', verified: false })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  const stranger = env.authenticatedContext('stranger').firestore()
+  await assertSucceeds(setDoc(doc(me, 'profiles/me/redemptions/r1'), { rewardId: 'rw1', label: 'Free drink', cost: 500 }))
+  await assertFails(setDoc(doc(stranger, 'profiles/me/redemptions/r2'), { rewardId: 'rw1', label: 'Free drink', cost: 500 }))
 })
 
 test('co-attendee can read the registration list; a stranger cannot', async () => {

@@ -18,6 +18,14 @@ service cloud.firestore {
       return isRegistered(eventId) || isEventOwner(eventId);
     }
 
+    function tierFor(points) {
+      return points >= 1500 ? 'Insider' : (points >= 500 ? 'Regular' : 'Newcomer');
+    }
+
+    function isValidPointsDelta(delta) {
+      return delta == 50 || delta == -50 || delta == -500 || delta == -800;
+    }
+
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
@@ -31,8 +39,18 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && request.auth.uid == uid
-        && !request.resource.data.diff(resource.data)
-             .affectedKeys().hasAny(['verified', 'points', 'tier']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['points', 'tier'])
+          || (
+            isValidPointsDelta(request.resource.data.points - resource.data.points)
+            && request.resource.data.tier == tierFor(request.resource.data.points)
+          )
+        );
+
+      match /redemptions/{redemptionId} {
+        allow read, create: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /events/{eventId} {
