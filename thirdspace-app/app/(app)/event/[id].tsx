@@ -14,6 +14,7 @@ import {
   deleteEventWithRegistrations,
 } from '../../../services/events'
 import { formatDayDate, formatTime, spotsLeftText } from '../../../utils/eventHelpers'
+import { POINTS_PER_EVENT } from '../../../utils/points'
 import { CATEGORY_COLORS } from '../../../constants/categories'
 import { Banner } from '../../../components/Banner'
 import { EmptyState } from '../../../components/EmptyState'
@@ -21,9 +22,6 @@ import { LoadingView } from '../../../components/LoadingView'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { RegistrationConfirmation } from '../../../components/RegistrationConfirmation'
 import { CommunityEvent, Registration } from '../../../types/models'
-
-// Points awarded for attending — Phase 2 will compute this server-side.
-const POINTS_PER_EVENT = 50
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
