@@ -49,6 +49,8 @@ export interface Registration {
   interestsPreview?: string[]
 }
 
+export type Tier = 'Newcomer' | 'Regular' | 'Insider'
+
 export interface Profile {
   displayName: string
   photoURL: string | null
@@ -60,7 +62,7 @@ export interface Profile {
   age: number
   eventsCount: number
   points: number
-  tier: string
+  tier: Tier
   verified: boolean
   joinedAt: Timestamp
 }
@@ -75,6 +77,24 @@ export interface CreateProfileInput {
   neighborhood: string
   borough: Borough
   age: number
+}
+
+// ── Points & Badges (sub-project D) ───────────────────────────────────────
+// The reward catalog is a hardcoded constant (constants/rewards.ts), not a
+// Firestore collection — Redemption is the only stored record, an
+// append-only log at profiles/{uid}/redemptions/{id}.
+export interface Reward {
+  id: string
+  label: string
+  cost: number
+}
+
+export interface Redemption {
+  id: string
+  rewardId: string
+  label: string
+  cost: number
+  redeemedAt: Timestamp
 }
 
 // ── Chat & Messaging (sub-project C) ──────────────────────────────────────
