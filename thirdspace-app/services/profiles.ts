@@ -1,8 +1,9 @@
 import {
-  doc, writeBatch, updateDoc, getDoc, onSnapshot, serverTimestamp, Timestamp,
+  doc, collection, writeBatch, updateDoc, getDoc, onSnapshot, serverTimestamp, increment, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { CreateProfileInput, Profile } from '../types/models'
+import { CreateProfileInput, Profile, Reward } from '../types/models'
+import { tierForPoints } from '../utils/points'
 
 export async function createProfile(uid: string, input: CreateProfileInput, birthdate: Date): Promise<void> {
   const batch = writeBatch(db)
@@ -37,4 +38,22 @@ export function subscribeProfile(
 export async function getProfile(uid: string): Promise<Profile | null> {
   const snap = await getDoc(doc(db, 'profiles', uid))
   return snap.exists() ? (snap.data() as Profile) : null
+}
+
+export async function redeemReward(uid: string, reward: Reward, currentPoints: number): Promise<void> {
+  const newPoints = currentPoints - reward.cost
+
+  const batch = writeBatch(db)
+  batch.set(
+    doc(db, 'profiles', uid),
+    { points: increment(-reward.cost), tier: tierForPoints(newPoints) },
+    { merge: true }
+  )
+  batch.set(doc(collection(db, 'profiles', uid, 'redemptions')), {
+    rewardId: reward.id,
+    label: reward.label,
+    cost: reward.cost,
+    redeemedAt: serverTimestamp(),
+  })
+  await batch.commit()
 }

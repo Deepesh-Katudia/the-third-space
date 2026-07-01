@@ -1,13 +1,20 @@
 import { writeBatch, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'
-import { createProfile, updateProfile, getProfile, subscribeProfile } from '../../services/profiles'
+import { createProfile, updateProfile, getProfile, subscribeProfile, redeemReward } from '../../services/profiles'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
 jest.mock('firebase/firestore', () => ({
-  doc: (_db: unknown, ...segments: string[]) => ({ path: segments.join('/') }),
+  doc: (dbOrRef: unknown, ...segments: string[]) => {
+    if (segments.length === 0 && typeof dbOrRef === 'object' && dbOrRef !== null && 'path' in (dbOrRef as { path?: string })) {
+      return { path: `${(dbOrRef as { path: string }).path}/auto-id` }
+    }
+    return { path: segments.join('/') }
+  },
+  collection: (_db: unknown, ...segments: string[]) => ({ path: segments.join('/') }),
   writeBatch: jest.fn(),
   updateDoc: jest.fn(),
   getDoc: jest.fn(),
   onSnapshot: jest.fn(),
+  increment: (n: number) => ({ __increment: n }),
   serverTimestamp: () => '__serverTimestamp',
   Timestamp: { fromDate: (d: Date) => ({ __ts: d.getTime() }) },
 }))
@@ -95,5 +102,26 @@ describe('updateProfile', () => {
     ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
     await updateProfile('u1', { bio: 'updated' })
     expect(updateDoc).toHaveBeenCalledWith({ path: 'profiles/u1' }, { bio: 'updated' })
+  })
+})
+
+describe('redeemReward', () => {
+  it('deducts points, recomputes tier, and logs the redemption', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    const reward = { id: 'rw1', label: 'Free drink at Cellar 9', cost: 500 }
+
+    await redeemReward('u1', reward, 600)
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' },
+      { points: { __increment: -500 }, tier: 'Newcomer' },
+      { merge: true }
+    )
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1/redemptions/auto-id' },
+      expect.objectContaining({ rewardId: 'rw1', label: 'Free drink at Cellar 9', cost: 500, redeemedAt: '__serverTimestamp' })
+    )
+    expect(batch.commit).toHaveBeenCalledTimes(1)
   })
 })
