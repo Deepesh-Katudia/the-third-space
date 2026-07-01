@@ -67,7 +67,7 @@ describe('registerForEvent', () => {
     ;(writeBatch as jest.Mock).mockReturnValue(batch)
     ;(getDoc as jest.Mock).mockResolvedValue({
       exists: () => true,
-      data: () => ({ photoURL: 'http://x/a.jpg', age: 27, neighborhood: 'Bushwick', interests: ['Art', 'Coffee', 'Film', 'Music'] }),
+      data: () => ({ photoURL: 'http://x/a.jpg', age: 27, neighborhood: 'Bushwick', interests: ['Art', 'Coffee', 'Film', 'Music'], points: 0 }),
     })
 
     await registerForEvent('e1', 'u1', 'Maya')
@@ -80,7 +80,23 @@ describe('registerForEvent', () => {
       })
     )
     expect(batch.set).toHaveBeenCalledWith(
-      { path: 'profiles/u1' }, { eventsCount: { __increment: 1 } }, { merge: true }
+      { path: 'profiles/u1' },
+      { eventsCount: { __increment: 1 }, points: { __increment: 50 }, tier: 'Newcomer' },
+      { merge: true }
+    )
+  })
+
+  it('awards points into the next tier when the resulting total crosses a threshold', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ points: 480 }) })
+
+    await registerForEvent('e1', 'u1', 'Maya')
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' },
+      { eventsCount: { __increment: 1 }, points: { __increment: 50 }, tier: 'Regular' },
+      { merge: true }
     )
   })
 })
@@ -89,6 +105,7 @@ describe('cancelRegistration', () => {
   it('atomically removes the registration, decrements the count, and untracks it', async () => {
     const batch = mockBatch()
     ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ points: 100 }) })
 
     await cancelRegistration('e1', 'u1')
 
@@ -104,14 +121,31 @@ describe('cancelRegistration', () => {
     expect(batch.commit).toHaveBeenCalledTimes(1)
   })
 
-  it('decrements the profile eventsCount', async () => {
+  it('decrements the profile eventsCount and revokes the points/tier it earned', async () => {
     const batch = mockBatch()
     ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ points: 550 }) })
 
     await cancelRegistration('e1', 'u1')
 
     expect(batch.set).toHaveBeenCalledWith(
-      { path: 'profiles/u1' }, { eventsCount: { __increment: -1 } }, { merge: true }
+      { path: 'profiles/u1' },
+      { eventsCount: { __increment: -1 }, points: { __increment: -50 }, tier: 'Regular' },
+      { merge: true }
+    )
+  })
+
+  it('treats a missing profile as zero points and never goes negative', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => false, data: () => undefined })
+
+    await cancelRegistration('e1', 'u1')
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' },
+      { eventsCount: { __increment: -1 }, points: { __increment: -50 }, tier: 'Newcomer' },
+      { merge: true }
     )
   })
 })

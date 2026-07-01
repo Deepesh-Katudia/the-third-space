@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { AgeRequirement, CommunityEvent, EventCategory, Registration, Venue } from '../types/models'
+import { POINTS_PER_EVENT, tierForPoints } from '../utils/points'
 
 const DELETE_BATCH_SIZE = 400
 
@@ -135,6 +136,8 @@ export function subscribeRegistrations(
 export async function registerForEvent(eventId: string, uid: string, displayName: string): Promise<void> {
   const profileSnap = await getDoc(doc(db, 'profiles', uid))
   const p = profileSnap.exists() ? profileSnap.data() : undefined
+  const currentPoints = (p?.points as number | undefined) ?? 0
+  const newPoints = currentPoints + POINTS_PER_EVENT
 
   const batch = writeBatch(db)
   batch.set(doc(db, 'events', eventId, 'registrations', uid), {
@@ -147,16 +150,28 @@ export async function registerForEvent(eventId: string, uid: string, displayName
   })
   batch.update(doc(db, 'events', eventId), { registeredCount: increment(1) })
   batch.update(doc(db, 'users', uid), { registeredEventIds: arrayUnion(eventId) })
-  batch.set(doc(db, 'profiles', uid), { eventsCount: increment(1) }, { merge: true })
+  batch.set(
+    doc(db, 'profiles', uid),
+    { eventsCount: increment(1), points: increment(POINTS_PER_EVENT), tier: tierForPoints(newPoints) },
+    { merge: true }
+  )
   await batch.commit()
 }
 
 export async function cancelRegistration(eventId: string, uid: string): Promise<void> {
+  const profileSnap = await getDoc(doc(db, 'profiles', uid))
+  const currentPoints = profileSnap.exists() ? ((profileSnap.data().points as number | undefined) ?? 0) : 0
+  const newPoints = Math.max(0, currentPoints - POINTS_PER_EVENT)
+
   const batch = writeBatch(db)
   batch.delete(doc(db, 'events', eventId, 'registrations', uid))
   batch.update(doc(db, 'events', eventId), { registeredCount: increment(-1) })
   batch.update(doc(db, 'users', uid), { registeredEventIds: arrayRemove(eventId) })
-  batch.set(doc(db, 'profiles', uid), { eventsCount: increment(-1) }, { merge: true })
+  batch.set(
+    doc(db, 'profiles', uid),
+    { eventsCount: increment(-1), points: increment(-POINTS_PER_EVENT), tier: tierForPoints(newPoints) },
+    { merge: true }
+  )
   await batch.commit()
 }
 
