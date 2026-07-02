@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react'
 import { getMyRegisteredEvents } from '../services/events'
 import { CommunityEvent } from '../types/models'
 
-export function useAttendanceStats(uid: string | undefined): { attendedEvents: CommunityEvent[]; loading: boolean } {
+export function useAttendanceStats(uid: string | undefined): { attendedEvents: CommunityEvent[]; loading: boolean; hasError: boolean } {
   const [attendedEvents, setAttendedEvents] = useState<CommunityEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     if (!uid) {
       setAttendedEvents([])
       setLoading(false)
+      setHasError(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
+    setHasError(false)
     getMyRegisteredEvents(uid)
       .then((events) => {
         if (cancelled) return
@@ -26,10 +29,11 @@ export function useAttendanceStats(uid: string | undefined): { attendedEvents: C
         if (cancelled) return
         setAttendedEvents([])
         setLoading(false)
+        setHasError(true)
       })
 
     return () => { cancelled = true }
   }, [uid])
 
-  return { attendedEvents, loading }
+  return { attendedEvents, loading, hasError }
 }

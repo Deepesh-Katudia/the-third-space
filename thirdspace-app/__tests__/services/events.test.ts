@@ -144,7 +144,21 @@ describe('cancelRegistration', () => {
 
     expect(batch.set).toHaveBeenCalledWith(
       { path: 'profiles/u1' },
-      { eventsCount: { __increment: -1 }, points: { __increment: -50 }, tier: 'Newcomer' },
+      { eventsCount: { __increment: -1 } },
+      { merge: true }
+    )
+  })
+
+  it('does not touch points/tier when the balance is already below one event\'s worth (e.g. spent via redemption)', async () => {
+    const batch = mockBatch()
+    ;(writeBatch as jest.Mock).mockReturnValue(batch)
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ points: 0 }) })
+
+    await cancelRegistration('e1', 'u1')
+
+    expect(batch.set).toHaveBeenCalledWith(
+      { path: 'profiles/u1' },
+      { eventsCount: { __increment: -1 } },
       { merge: true }
     )
   })

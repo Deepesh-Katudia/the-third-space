@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar'
 import { BadgeGrid } from '../../components/BadgeGrid'
 import { LoadingView } from '../../components/LoadingView'
 import { Banner } from '../../components/Banner'
+import { EmptyState } from '../../components/EmptyState'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { useAttendanceStats } from '../../hooks/useAttendanceStats'
@@ -18,12 +19,27 @@ import { REWARDS } from '../../constants/rewards'
 export default function Badges() {
   const router = useRouter()
   const { user } = useAuth()
-  const { profile, loading: profileLoading } = useProfile(user?.uid)
-  const { attendedEvents, loading: attendanceLoading } = useAttendanceStats(user?.uid)
+  const { profile, loading: profileLoading, hasError: profileHasError } = useProfile(user?.uid)
+  const { attendedEvents, loading: attendanceLoading, hasError: attendanceHasError } = useAttendanceStats(user?.uid)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
   const [banner, setBanner] = useState('')
 
-  if (profileLoading || attendanceLoading || !profile) return <LoadingView />
+  if (profileLoading || attendanceLoading) return <LoadingView />
+
+  if (profileHasError || !profile) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <StatusBar style="dark" />
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+            <Text style={styles.back}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Points & badges</Text>
+        </View>
+        <EmptyState emoji="🫥" title="Couldn't load your points" body="Check your connection and try again." />
+      </SafeAreaView>
+    )
+  }
 
   const progress = tierProgress(profile.points)
   const badges = computeBadges(attendedEvents, profile.tier)
@@ -68,7 +84,7 @@ export default function Badges() {
           </Text>
         </LinearGradient>
 
-        {banner ? <Banner message={banner} /> : null}
+        {banner ? <Banner message={banner} /> : attendanceHasError ? <Banner message="Couldn't load your attendance history — badges may be out of date." /> : null}
 
         <Text style={styles.sectionLabel}>Badges</Text>
         <BadgeGrid badges={badges} />

@@ -32,6 +32,7 @@ describe('useAttendanceStats', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.attendedEvents).toEqual([])
     expect(getMyRegisteredEvents).not.toHaveBeenCalled()
+    expect(result.current.hasError).toBe(false)
   })
 
   it('returns an empty array on fetch failure', async () => {
@@ -39,5 +40,6 @@ describe('useAttendanceStats', () => {
     const { result } = renderHook(() => useAttendanceStats('u1'))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.attendedEvents).toEqual([])
+    expect(result.current.hasError).toBe(true)
   })
 })

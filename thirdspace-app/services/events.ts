@@ -161,7 +161,7 @@ export async function registerForEvent(eventId: string, uid: string, displayName
 export async function cancelRegistration(eventId: string, uid: string): Promise<void> {
   const profileSnap = await getDoc(doc(db, 'profiles', uid))
   const currentPoints = profileSnap.exists() ? ((profileSnap.data().points as number | undefined) ?? 0) : 0
-  const newPoints = Math.max(0, currentPoints - POINTS_PER_EVENT)
+  const canRevokePoints = currentPoints >= POINTS_PER_EVENT
 
   const batch = writeBatch(db)
   batch.delete(doc(db, 'events', eventId, 'registrations', uid))
@@ -169,7 +169,9 @@ export async function cancelRegistration(eventId: string, uid: string): Promise<
   batch.update(doc(db, 'users', uid), { registeredEventIds: arrayRemove(eventId) })
   batch.set(
     doc(db, 'profiles', uid),
-    { eventsCount: increment(-1), points: increment(-POINTS_PER_EVENT), tier: tierForPoints(newPoints) },
+    canRevokePoints
+      ? { eventsCount: increment(-1), points: increment(-POINTS_PER_EVENT), tier: tierForPoints(currentPoints - POINTS_PER_EVENT) }
+      : { eventsCount: increment(-1) },
     { merge: true }
   )
   await batch.commit()
