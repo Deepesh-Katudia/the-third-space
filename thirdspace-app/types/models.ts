@@ -97,6 +97,15 @@ export interface Redemption {
   redeemedAt: Timestamp
 }
 
+// ── Social graph (sub-project E) ──────────────────────────────────────────
+// One doc per follow edge at follows/{followerUid_targetUid}. createdAt is
+// null in the local snapshot window before serverTimestamp resolves.
+export interface Follow {
+  follower: string
+  target: string
+  createdAt: Timestamp | null
+}
+
 // ── Chat & Messaging (sub-project C) ──────────────────────────────────────
 // Messages denormalize their author; createdAt is null for the brief window
 // before serverTimestamp resolves in the local snapshot.
