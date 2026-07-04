@@ -61,4 +61,15 @@ describe('useFollowStatus', () => {
     await waitFor(() => expect(result.current.hasError).toBe(true))
     expect(result.current.loading).toBe(false)
   })
+
+  it('clears hasError when the target becomes yourself', async () => {
+    const cb = captureStatusCallback()
+    const { result, rerender } = renderHook(({ uid }: { uid: string }) => useFollowStatus(uid), {
+      initialProps: { uid: 'you' },
+    })
+    act(() => cb.fail())
+    await waitFor(() => expect(result.current.hasError).toBe(true))
+    rerender({ uid: 'me' })
+    await waitFor(() => expect(result.current.hasError).toBe(false))
+  })
 })

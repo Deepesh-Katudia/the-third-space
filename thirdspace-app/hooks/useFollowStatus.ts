@@ -13,6 +13,7 @@ export function useFollowStatus(targetUid: string | undefined) {
     if (!myUid || !targetUid || myUid === targetUid) {
       setIsFollowing(false)
       setLoading(false)
+      setHasError(false)
       return
     }
     setLoading(true)
