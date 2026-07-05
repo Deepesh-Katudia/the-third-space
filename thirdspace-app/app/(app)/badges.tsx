@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { useAttendanceStats } from '../../hooks/useAttendanceStats'
+import { useConnections } from '../../hooks/useConnections'
 import { tierProgress } from '../../utils/points'
 import { computeBadges } from '../../utils/badges'
 import { redeemReward } from '../../services/profiles'
@@ -21,10 +22,11 @@ export default function Badges() {
   const { user } = useAuth()
   const { profile, loading: profileLoading, hasError: profileHasError } = useProfile(user?.uid)
   const { attendedEvents, loading: attendanceLoading, hasError: attendanceHasError } = useAttendanceStats(user?.uid)
+  const { connectionUids, loading: connectionsLoading } = useConnections(user?.uid)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
   const [banner, setBanner] = useState('')
 
-  if (profileLoading || attendanceLoading) return <LoadingView />
+  if (profileLoading || attendanceLoading || connectionsLoading) return <LoadingView />
 
   if (profileHasError || !profile) {
     return (
@@ -42,7 +44,7 @@ export default function Badges() {
   }
 
   const progress = tierProgress(profile.points)
-  const badges = computeBadges(attendedEvents, profile.tier)
+  const badges = computeBadges(attendedEvents, profile.tier, connectionUids.length)
 
   const handleRedeem = async (rewardId: string, cost: number) => {
     if (!user || profile.points < cost) return
