@@ -9,6 +9,7 @@ import { auth } from '../../../firebase/config'
 import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
 import { useAttendanceStats } from '../../../hooks/useAttendanceStats'
+import { useConnections } from '../../../hooks/useConnections'
 import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
 
@@ -18,6 +19,7 @@ export default function Profile() {
   const { profile, loading } = useProfile(user?.uid)
   const [notifications, setNotifications] = useState(true)
   const { attendedEvents } = useAttendanceStats(user?.uid)
+  const { connectionUids, loading: connectionsLoading, hasError: connectionsHasError } = useConnections(user?.uid)
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
   const neighborhood = profile?.neighborhood ?? ''
@@ -61,7 +63,11 @@ export default function Profile() {
           <View style={styles.statDivider} />
           <Stat value={0} label="Hosted" />
           <View style={styles.statDivider} />
-          <Stat value={0} label="Connections" />
+          <Stat
+            value={connectionsLoading || connectionsHasError ? '—' : connectionUids.length}
+            label="Connections"
+            onPress={() => router.push('/(app)/connections')}
+          />
         </View>
 
         <Text style={styles.sectionLabel}>Account</Text>
@@ -94,12 +100,12 @@ export default function Profile() {
   )
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({ value, label, onPress }: { value: number | string; label: string; onPress?: () => void }) {
   return (
-    <View style={styles.stat}>
+    <TouchableOpacity style={styles.stat} onPress={onPress} disabled={!onPress}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </TouchableOpacity>
   )
 }
 
