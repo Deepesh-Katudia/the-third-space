@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { avatarColor, initials } from '../utils/avatar'
@@ -20,11 +20,13 @@ export interface Member {
 
 interface MemberProfileCardProps {
   member: Member
+  isFollowing: boolean
+  onToggleFollow: () => void
   onMessage: () => void
+  showActions: boolean
 }
 
-export function MemberProfileCard({ member, onMessage }: MemberProfileCardProps) {
-  const [following, setFollowing] = useState(false)
+export function MemberProfileCard({ member, isFollowing, onToggleFollow, onMessage, showActions }: MemberProfileCardProps) {
   const tint = avatarColor(member.name)
 
   return (
@@ -48,19 +50,21 @@ export function MemberProfileCard({ member, onMessage }: MemberProfileCardProps)
           <View style={styles.chip}><Text style={styles.chipText}>{member.eventCount} events</Text></View>
         </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.followBtn, following && styles.followingBtn]}
-            onPress={() => setFollowing((f) => !f)}
-          >
-            <Text style={[styles.followText, following && styles.followingText]}>
-              {following ? 'Following' : 'Follow'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.messageBtn} onPress={onMessage}>
-            <Text style={styles.messageText}>Message request</Text>
-          </TouchableOpacity>
-        </View>
+        {showActions ? (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.followBtn, isFollowing && styles.followingBtn]}
+              onPress={onToggleFollow}
+            >
+              <Text style={[styles.followText, isFollowing && styles.followingText]}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.messageBtn} onPress={onMessage}>
+              <Text style={styles.messageText}>Message request</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
     </View>
   )

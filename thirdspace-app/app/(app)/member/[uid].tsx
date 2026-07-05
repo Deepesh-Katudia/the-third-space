@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -9,12 +9,25 @@ import { EmptyState } from '../../../components/EmptyState'
 import { useProfile } from '../../../hooks/useProfile'
 import { useAuth } from '../../../hooks/useAuth'
 import { dmConversationId } from '../../../utils/chat'
+import { Banner } from '../../../components/Banner'
+import { useFollowStatus } from '../../../hooks/useFollowStatus'
 
 export default function MemberProfile() {
   const { uid } = useLocalSearchParams<{ uid: string }>()
   const router = useRouter()
   const { profile, loading, hasError } = useProfile(uid)
   const { user } = useAuth()
+  const { isFollowing, toggle } = useFollowStatus(uid)
+  const [banner, setBanner] = useState('')
+
+  const handleToggleFollow = async () => {
+    setBanner('')
+    try {
+      await toggle()
+    } catch {
+      setBanner("Couldn't update follow. Check your connection and try again.")
+    }
+  }
 
   if (loading) return <LoadingView />
 
@@ -57,8 +70,12 @@ export default function MemberProfile() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {banner ? <Banner message={banner} /> : null}
         <MemberProfileCard
           member={member}
+          isFollowing={isFollowing}
+          onToggleFollow={handleToggleFollow}
+          showActions={Boolean(user?.uid && uid && user.uid !== uid)}
           onMessage={() => {
             if (!user?.uid || !uid || user.uid === uid) return
             router.push({ pathname: '/(app)/chat/[id]', params: { id: dmConversationId(user.uid, uid), kind: 'dm', name: profile.displayName } })
