@@ -115,5 +115,14 @@ service cloud.firestore {
     match /users/{uid}/chatReads/{threadId} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
+
+    match /follows/{followId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.follower == request.auth.uid
+        && request.resource.data.target != request.auth.uid
+        && followId == request.auth.uid + '_' + request.resource.data.target;
+      allow delete: if signedIn() && resource.data.follower == request.auth.uid;
+    }
   }
 }
