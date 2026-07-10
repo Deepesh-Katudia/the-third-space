@@ -76,6 +76,13 @@ service cloud.firestore {
         // Registrant cancels their own; the venue owner deletes all when cancelling the event.
         allow delete: if signedIn() && (request.auth.uid == uid || isEventOwner(eventId));
       }
+
+      match /announcements/{announcementId} {
+        allow read: if signedIn() && isEventChatMember(eventId);
+        allow create: if signedIn() && isEventOwner(eventId)
+          && request.resource.data.authorUid == request.auth.uid;
+        // No update/delete this sub-project.
+      }
     }
 
     match /eventChats/{eventId} {
