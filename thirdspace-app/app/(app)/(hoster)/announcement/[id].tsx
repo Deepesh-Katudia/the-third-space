@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -10,14 +10,15 @@ import {
   StyleSheet,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-
-// ── Phase 1 mock data ─────────────────────────────────────────────────────
-// Phase 2 swap: read the event + registration count; Send writes a message fan-out.
-const MOCK_EVENT_TITLE = 'Sunset Rooftop Sketching'
-const MOCK_EVENT_WHEN = 'Fri, Jun 27 · 6:00 PM'
-const MOCK_ATTENDEES = 22
+import { useAuth } from '../../../../hooks/useAuth'
+import { useProfile } from '../../../../hooks/useProfile'
+import { subscribeEvent } from '../../../../services/events'
+import { sendAnnouncement, subscribeAnnouncements, AnnouncementAuthor } from '../../../../services/announcements'
+import { formatSentSummary } from '../../../../utils/announcementHelpers'
+import { formatDayDate, formatTime } from '../../../../utils/eventHelpers'
+import { CommunityEvent, Announcement } from '../../../../types/models'
 
 const TEMPLATES = [
   { label: 'What to bring', text: 'A quick reminder to bring: ' },
@@ -26,19 +27,48 @@ const TEMPLATES = [
   { label: 'Thank you', text: 'Thank you all for coming — it was a wonderful evening!' },
 ]
 
-const MOCK_RECENT = {
-  text: 'Doors open at 5:30, golden hour starts around 6. See you on the roof!',
-  stats: 'Sent 2 days ago · 22 delivered · 18 read',
-}
-// ──────────────────────────────────────────────────────────────────────────
-
 export default function Announcement() {
   const router = useRouter()
-  const [message, setMessage] = useState('')
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const { user } = useAuth()
+  const { profile } = useProfile(user?.uid || undefined)
 
-  const send = () => {
-    // Phase 1: no write — just confirm and dismiss.
-    router.back()
+  const [event, setEvent] = useState<CommunityEvent | null | undefined>(undefined)
+  const [latest, setLatest] = useState<Announcement | null>(null)
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!id) return
+    return subscribeEvent(id, setEvent, () => setError("Couldn't load this event."))
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    return subscribeAnnouncements(id, (list) => setLatest(list[0] ?? null), () => {})
+  }, [id])
+
+  const recipientCount = event?.registeredCount ?? 0
+  const whenLine = event ? `${formatDayDate(event.startsAt.toDate())} · ${formatTime(event.startsAt.toDate())}` : ''
+
+  const send = async () => {
+    const text = message.trim()
+    if (!text || !user || sending) return
+    setSending(true)
+    setError('')
+    const author: AnnouncementAuthor = {
+      uid: user.uid,
+      name: profile?.displayName ?? user.displayName ?? 'Host',
+      photoURL: profile?.photoURL ?? null,
+    }
+    try {
+      await sendAnnouncement(id, author, text, recipientCount)
+      router.back()
+    } catch {
+      setError('Could not send. Try again.')
+      setSending(false)
+    }
   }
 
   return (
@@ -50,15 +80,15 @@ export default function Announcement() {
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>Send announcement</Text>
-          <Text style={styles.subtitle}>To {MOCK_ATTENDEES} registered attendees</Text>
+          <Text style={styles.subtitle}>To {recipientCount} registered {recipientCount === 1 ? 'attendee' : 'attendees'}</Text>
         </View>
       </View>
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           <View style={styles.eventCard}>
-            <Text style={styles.eventTitle}>{MOCK_EVENT_TITLE}</Text>
-            <Text style={styles.eventWhen}>{MOCK_EVENT_WHEN}</Text>
+            <Text style={styles.eventTitle}>{event?.title ?? '…'}</Text>
+            <Text style={styles.eventWhen}>{whenLine}</Text>
           </View>
 
           <TextInput
@@ -70,7 +100,8 @@ export default function Announcement() {
             multiline
             textAlignVertical="top"
           />
-          <Text style={styles.caption}>Sends as push + in-app message</Text>
+          <Text style={styles.caption}>Posts to the event chat as a pinned notice</Text>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Text style={styles.sectionLabel}>Quick templates</Text>
           <View style={styles.templateWrap}>
@@ -81,16 +112,26 @@ export default function Announcement() {
             ))}
           </View>
 
-          <Text style={styles.sectionLabel}>Most recent</Text>
-          <View style={styles.recentCard}>
-            <Text style={styles.recentText}>{MOCK_RECENT.text}</Text>
-            <Text style={styles.recentStats}>{MOCK_RECENT.stats}</Text>
-          </View>
+          {latest ? (
+            <>
+              <Text style={styles.sectionLabel}>Most recent</Text>
+              <View style={styles.recentCard}>
+                <Text style={styles.recentText}>{latest.text}</Text>
+                <Text style={styles.recentStats}>
+                  {formatSentSummary(latest.createdAt ? latest.createdAt.toDate() : null, latest.recipientCount)}
+                </Text>
+              </View>
+            </>
+          ) : null}
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={[styles.sendBtn, !message.trim() && styles.sendBtnDisabled]} onPress={send} disabled={!message.trim()}>
-            <Text style={styles.sendText}>Send to {MOCK_ATTENDEES} attendees</Text>
+          <TouchableOpacity
+            style={[styles.sendBtn, (!message.trim() || sending) && styles.sendBtnDisabled]}
+            onPress={send}
+            disabled={!message.trim() || sending}
+          >
+            <Text style={styles.sendText}>{sending ? 'Sending…' : `Send to ${recipientCount} ${recipientCount === 1 ? 'attendee' : 'attendees'}`}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -111,6 +152,7 @@ const styles = StyleSheet.create({
   eventWhen: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
   textarea: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 16, padding: 16, minHeight: 130, fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 22 },
   caption: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 8, marginBottom: 24 },
+  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginTop: 8 },
   sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
   templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
   templateChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
