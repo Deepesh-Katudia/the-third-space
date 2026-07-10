@@ -21,7 +21,9 @@ import { EmptyState } from '../../../components/EmptyState'
 import { LoadingView } from '../../../components/LoadingView'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { RegistrationConfirmation } from '../../../components/RegistrationConfirmation'
-import { CommunityEvent, Registration } from '../../../types/models'
+import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
+import { subscribeAnnouncements } from '../../../services/announcements'
+import { CommunityEvent, Registration, Announcement } from '../../../types/models'
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -35,6 +37,7 @@ export default function EventDetail() {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [latestAnnouncement, setLatestAnnouncement] = useState<Announcement | null>(null)
 
   const isOwner = !!user && !!event && event.venueId === user.uid
 
@@ -53,6 +56,12 @@ export default function EventDetail() {
     // rules). Non-registered users keep the count-only blur gate below.
     if (!id || (!isOwner && !isRegistered)) return
     return subscribeRegistrations(id, setAttendees, () => setBanner("Couldn't load attendees."))
+  }, [id, isOwner, isRegistered])
+
+  useEffect(() => {
+    // Announcement reads are gated to owner/registered by security rules.
+    if (!id || (!isOwner && !isRegistered)) return
+    return subscribeAnnouncements(id, (list) => setLatestAnnouncement(list[0] ?? null), () => {})
   }, [id, isOwner, isRegistered])
 
   if (event === undefined) return <LoadingView />
@@ -161,6 +170,13 @@ export default function EventDetail() {
           </View>
 
           {banner ? <Banner message={banner} /> : null}
+
+          {latestAnnouncement && (isOwner || isRegistered) ? (
+            <AnnouncementBanner
+              announcement={latestAnnouncement}
+              onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: event.id } })}
+            />
+          ) : null}
 
           {/* Who's going */}
           <Text style={styles.sectionTitle}>Who's going</Text>
