@@ -1,6 +1,6 @@
 # The Third Space — Progress Report for the Founder
 
-_Last updated: 28 June 2026 · Branch: `feature/role-dashboards`_
+_Last updated: 10 July 2026 · Branch: `feature/role-dashboards`_
 
 This report is written in plain language. No engineering background needed. It explains **what the app is, what works today, and what's left before launch.** Diagrams are included wherever a picture makes things clearer.
 
@@ -21,7 +21,7 @@ flowchart LR
     B --> C["Launch-ready app"]
 ```
 
-**Where we are right now:** Stage 2 is **50% complete** (3 of 6 areas live). The three that are live are the core of the everyday experience: **your profile, finding events, and chatting.**
+**Where we are right now:** Stage 2 is **code-complete — all 6 of 6 areas built and connected to live data.** The everyday experience is whole: your profile, finding events, chatting, rewards for showing up, connecting with people you meet, and hosts broadcasting announcements. What remains before real users is a short, non-coding checklist (see Section 7).
 
 ---
 
@@ -70,33 +70,31 @@ The everyday experience is made of six areas. We're building them one at a time 
 
 | # | Area | What it does | Status |
 |---|------|--------------|--------|
-| A | **Profiles & Identity** | Who you are: your photo, bio, interests, neighbourhood | ✅ **Live** |
-| B | **Discover & Filters** | Finding events: search, categories, filters | ✅ **Live** |
-| C | **Chat & Messaging** | Group chats for events + private messages | ✅ **Live** |
-| D | Points & Badges | Rewards for showing up and taking part | ⏳ Planned |
-| E | Connections | Following and connecting with people you meet | ⏳ Planned |
-| F | Venue Announcements | Hosters broadcasting updates to attendees | ⏳ Planned |
+| A | **Profiles & Identity** | Who you are: your photo, bio, interests, neighbourhood | ✅ **Done** |
+| B | **Discover & Filters** | Finding events: search, categories, filters | ✅ **Done** |
+| C | **Chat & Messaging** | Group chats for events + private messages | ✅ **Done** |
+| D | **Points & Badges** | Rewards for showing up and taking part | ✅ **Done** |
+| E | **Connections** | Following and connecting with people you meet | ✅ **Done** |
+| F | **Venue Announcements** | Hosters broadcasting updates to attendees | ✅ **Done** |
 
 ```mermaid
 flowchart LR
-    subgraph Done["✅ Live today"]
+    subgraph Done["✅ All six built & connected"]
         A["Profiles"]
         B["Discover"]
         C["Chat"]
-    end
-    subgraph Next["⏳ Coming next"]
         D["Points & Badges"]
         E["Connections"]
         F["Announcements"]
     end
-    Done --> Next
+    Done --> Launch["Launch checklist<br/>(Section 7)"]
 ```
 
-The three live areas are the heart of the app — a person can sign up, build a profile, find an event, join it, and start chatting with the group. **That full loop works today.**
+All six areas are the heart of the app — a person can sign up, build a profile, find an event, join it, chat with the group, earn points for showing up, connect with people they meet, and receive the host's announcements. **That full loop is built today.**
 
 ---
 
-## 5. The three areas that are now live
+## 5. The six areas, area by area
 
 ### A. Profiles & Identity ✅
 
@@ -143,6 +141,18 @@ This "ask once, then it's open" approach keeps the app friendly and safe without
 
 **3. Unread counts and mute.** Every chat shows an accurate unread badge, and any chat can be muted — exactly what people expect from a messaging experience.
 
+### D. Points & Badges ✅
+
+Members earn points for taking part — for example, joining an event. As points add up, a member moves through tiers (Newcomer → Regular → Insider), which recognises the people who show up and keep the community alive. Points and tier are stored in the cloud and update instantly, and the rules are written so points can only change in the ways we allow (no tampering).
+
+### E. Connections ✅
+
+Members can **follow** the people they meet. When two people follow each other, they're **connected** — turning a one-off meetup into a lasting link. A member's profile shows a real, tappable connections count, and a "Connector" badge recognises the people who bring others together.
+
+### F. Venue Announcements ✅ _(just completed)_
+
+A host can broadcast a text update to everyone registered for one of their events. Each announcement appears in **two places** for attenders: a pinned banner at the top of the event's page, and a highlighted note in the event's group chat. The host sees an honest summary of their last announcement — when it was sent and how many people it reached. (This is **in-app only** for now — see Section 8 on push notifications.)
+
 ---
 
 ## 6. A note on safety and privacy
@@ -160,31 +170,33 @@ These protections are written and in place. They switch on the moment we publish
 
 ## 7. What's left before this can go live to real users
 
-The code for the three live areas is **complete and tested**. Two practical, non-coding steps remain before real users can use the chat features on their phones:
+The code for all six areas is **complete and tested** (every automated test passes). What remains is a short, non-coding checklist:
 
 ```mermaid
 flowchart LR
-    Built["Code complete<br/>& tested ✅"] --> Publish["Step 1:<br/>Publish the cloud safety rules<br/>(a one-command, routine action)"]
-    Publish --> Smoke["Step 2:<br/>Real-device test with two accounts<br/>(send messages, join events,<br/>accept/decline requests)"]
-    Smoke --> Ready["Ready for users"]
+    Built["All six areas<br/>code complete & tested ✅"] --> Rules["Publish the cloud safety rules<br/>(routine, one command each)"]
+    Rules --> Smoke["Real-device test with two accounts<br/>across all features"]
+    Smoke --> Merge["Fold the work into<br/>the main line"]
+    Merge --> Ready["Ready for users"]
 ```
 
-1. **Publish the cloud safety rules.** A routine one-step action that turns on the permissions described in Section 6.
-2. **Real-device test with two accounts.** Confirm two real phones can message each other, join an event group, and that requests, unread badges, and mute all behave correctly. (Automated tests already pass; this is the final human check.)
+1. **Publish the cloud safety rules.** A routine action that turns on the permissions in Section 6. (The announcements rules are already published; a couple of the earlier areas' rules still need this same one-step action.)
+2. **Real-device test with two accounts.** The final human check: two real phones join an event, chat, earn points, connect, and receive an announcement — confirming everything behaves correctly. Automated tests already pass; this is the last hands-on pass.
+3. **Fold the work into the main line.** All six areas were built on one working branch; merging it into the project's main line is the last housekeeping step.
 
-Neither is a development task — they're standard release steps.
+None of these is a development task — they're standard release steps.
 
 ---
 
 ## 8. What's coming next
 
-The remaining three areas build on the foundation that's now in place:
+Stage 2 delivered the complete everyday experience. The natural next stage is about **reach and polish** rather than new core areas:
 
-- **Points & Badges (D)** — reward members for showing up and participating, to drive repeat engagement.
-- **Connections (E)** — let people follow and stay connected with those they meet, turning one-off meetups into a real network.
-- **Venue Announcements (F)** — let hosts broadcast updates to everyone attending their events.
+- **Push notifications** — today, announcements and messages appear **inside** the app. Push would tap someone on the shoulder — "your host posted an update," "you have a new message" — even when the app is closed. This was deliberately left for later so we could ship the in-app experience first; it's the single biggest lever for bringing people back.
+- **Smaller follow-ups** — e.g. letting hosts edit or delete an announcement, and "seen by" counts.
+- **Launch preparation** — app-store builds, final configuration, and a broader device-testing pass.
 
-Each will be designed, built, and connected to live data the same careful way — one solid area at a time.
+The exact shape of this next stage is still to be decided — it would be scoped and planned the same careful way each of the six areas was.
 
 ---
 
@@ -201,4 +213,4 @@ Each will be designed, built, and connected to live data the same careful way �
 
 ---
 
-_This report reflects the state of the `feature/role-dashboards` branch as of 28 June 2026: Stage 2 areas A, B, and C complete; areas D, E, and F planned._
+_This report reflects the state of the `feature/role-dashboards` branch as of 10 July 2026: Stage 2 areas A–F all code-complete and connected to live data; remaining work is the release checklist in Section 7._
