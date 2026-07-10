@@ -116,6 +116,7 @@ export interface Message {
   authorPhotoURL: string | null
   text: string
   createdAt: Timestamp | null
+  kind?: 'group' | 'announcement'   // absent = group; 'announcement' renders the pinned/highlighted variant
 }
 
 export interface EventChatMeta {
@@ -153,4 +154,17 @@ export interface ChatThread {
 export interface ChatRead {
   readCount: number
   muted: boolean
+}
+
+// ── Venue Announcements (sub-project F) ───────────────────────────────────
+// One doc per broadcast at events/{eventId}/announcements/{autoId}. recipientCount
+// is a snapshot of the event's registeredCount at send time. createdAt is null in
+// the local snapshot window before serverTimestamp resolves.
+export interface Announcement {
+  id: string
+  text: string
+  authorUid: string
+  authorName: string
+  recipientCount: number
+  createdAt: Timestamp | null
 }
