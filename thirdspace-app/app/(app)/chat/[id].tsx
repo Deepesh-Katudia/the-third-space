@@ -151,11 +151,13 @@ export default function ChatThreadScreen() {
           ) : null}
           {messages.map((m, i) => {
             const isSelf = m.authorUid === myUid
+            const isAnnouncement = m.kind === 'announcement'
             return (
               <ChatBubble
                 key={m.id}
                 message={{ id: m.id, author: m.authorName, text: m.text, time: clockTime(m.createdAt ? m.createdAt.toDate() : null) }}
-                isSelf={isSelf}
+                isSelf={isSelf && !isAnnouncement}
+                isAnnouncement={isAnnouncement}
                 showAuthor={!isSelf && shouldShowAuthor(messages, i)}
               />
             )

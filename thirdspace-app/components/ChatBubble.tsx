@@ -13,16 +13,30 @@ interface ChatBubbleProps {
   message: ChatMessage
   isSelf: boolean
   isSystem?: boolean
+  /** Render the highlighted broadcast variant (host announcement). */
+  isAnnouncement?: boolean
   /** Show the author's name + avatar (first message in a run from others). */
   showAuthor?: boolean
 }
 
-export function ChatBubble({ message, isSelf, isSystem = false, showAuthor = true }: ChatBubbleProps) {
+export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement = false, showAuthor = true }: ChatBubbleProps) {
   if (isSystem) {
     return (
       <View style={styles.systemRow}>
         <View style={styles.systemPill}>
           <Text style={styles.systemText}>{message.text}</Text>
+        </View>
+      </View>
+    )
+  }
+
+  if (isAnnouncement) {
+    return (
+      <View style={styles.announceRow}>
+        <View style={styles.announceCard}>
+          <Text style={styles.announceLabel}>📣 Announcement · {message.author}</Text>
+          <Text style={styles.announceText}>{message.text}</Text>
+          <Text style={styles.announceTime}>{message.time}</Text>
         </View>
       </View>
     )
@@ -77,4 +91,9 @@ const styles = StyleSheet.create({
   systemRow: { alignItems: 'center', marginBottom: 14, paddingHorizontal: 16 },
   systemPill: { backgroundColor: 'rgba(140,123,112,0.15)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6 },
   systemText: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', textAlign: 'center' },
+  announceRow: { paddingHorizontal: 16, marginBottom: 14 },
+  announceCard: { backgroundColor: 'rgba(242,197,160,0.22)', borderLeftWidth: 3, borderLeftColor: '#C4614A', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
+  announceLabel: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#6B3F2A', letterSpacing: 0.4, marginBottom: 5 },
+  announceText: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 21 },
+  announceTime: { fontFamily: 'DMSans_400Regular', fontSize: 10, color: '#8C7B70', marginTop: 5 },
 })

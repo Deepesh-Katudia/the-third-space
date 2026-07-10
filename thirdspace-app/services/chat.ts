@@ -22,6 +22,7 @@ function toMessage(d: QueryDocumentSnapshot<DocumentData>): Message {
     authorPhotoURL: (data.authorPhotoURL as string | null) ?? null,
     text: (data.text as string) ?? '',
     createdAt: (data.createdAt as Message['createdAt']) ?? null,
+    kind: (data.kind as Message['kind']) ?? 'group',
   }
 }
 
