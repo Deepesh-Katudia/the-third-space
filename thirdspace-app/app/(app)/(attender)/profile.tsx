@@ -92,6 +92,11 @@ export default function Profile() {
           </View>
         </View>
 
+        <TouchableOpacity style={styles.settingsRow} onPress={() => router.push('/(app)/settings')}>
+          <Text style={styles.settingsText}>Settings</Text>
+          <Text style={styles.settingsChevron}>›</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOut}>
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
@@ -174,4 +179,8 @@ const styles = StyleSheet.create({
 
   signOut: { alignItems: 'center', paddingVertical: 8 },
   signOutText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#C4614A' },
+
+  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', marginBottom: 12 },
+  settingsText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
+  settingsChevron: { fontFamily: 'DMSans_400Regular', fontSize: 20, color: '#8C7B70' },
 })
