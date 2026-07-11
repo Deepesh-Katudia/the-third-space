@@ -28,6 +28,10 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
+
+      match /pushTokens/{token} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /venues/{uid} {
