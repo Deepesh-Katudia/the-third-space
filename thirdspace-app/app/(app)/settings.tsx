@@ -10,6 +10,7 @@ export default function Settings() {
   const router = useRouter()
   const { user } = useAuth()
   const [enabled, setEnabled] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -23,8 +24,17 @@ export default function Settings() {
   }, [user])
 
   const toggle = async (value: boolean) => {
+    const previous = enabled
     setEnabled(value)
-    if (user) await setPushEnabled(user.uid, value)
+    setError('')
+    if (user) {
+      try {
+        await setPushEnabled(user.uid, value)
+      } catch {
+        setEnabled(previous)
+        setError('Couldn\'t update. Try again.')
+      }
+    }
   }
 
   return (
@@ -48,6 +58,7 @@ export default function Settings() {
           trackColor={{ true: '#C4614A', false: 'rgba(140,123,112,0.4)' }}
         />
       </View>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <Text style={styles.footnote}>
         If notifications are turned off at the device level, enable them in your phone's Settings first.
       </Text>
@@ -65,4 +76,5 @@ const styles = StyleSheet.create({
   rowLabel: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
   rowHint: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 3 },
   footnote: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginHorizontal: 24, marginTop: 12, lineHeight: 18 },
+  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginHorizontal: 24, marginTop: 10 },
 })
