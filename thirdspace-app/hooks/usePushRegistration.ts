@@ -28,26 +28,30 @@ export function usePushRegistration(): void {
     let cancelled = false
     async function register(): Promise<void> {
       if (!user || !Device.isDevice) return
-      const current = await Notifications.getPermissionsAsync()
-      let status = current.status
-      if (status === 'undetermined') {
-        status = (await Notifications.requestPermissionsAsync()).status
-      }
-      if (status !== 'granted') return
+      try {
+        const current = await Notifications.getPermissionsAsync()
+        let status = current.status
+        if (status === 'undetermined') {
+          status = (await Notifications.requestPermissionsAsync()).status
+        }
+        if (status !== 'granted') return
 
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'Default',
-          importance: Notifications.AndroidImportance.DEFAULT,
-        })
-      }
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'Default',
+            importance: Notifications.AndroidImportance.DEFAULT,
+          })
+        }
 
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined
-      const token = (await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data
-      if (cancelled) return
-      tokenRef.current = token
-      uidRef.current = user.uid
-      await upsertPushToken(user.uid, token, Platform.OS === 'ios' ? 'ios' : 'android')
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined
+        const token = (await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data
+        if (cancelled) return
+        tokenRef.current = token
+        uidRef.current = user.uid
+        await upsertPushToken(user.uid, token, Platform.OS === 'ios' ? 'ios' : 'android')
+      } catch (err) {
+        console.warn('[push] registration failed', err)
+      }
     }
     register()
     return () => {
@@ -61,7 +65,7 @@ export function usePushRegistration(): void {
     const uid = uidRef.current
     const token = tokenRef.current
     if (uid && token) {
-      deletePushToken(uid, token)
+      deletePushToken(uid, token).catch((err) => console.warn('[push] token cleanup failed', err))
       uidRef.current = null
       tokenRef.current = null
     }
