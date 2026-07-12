@@ -64,7 +64,7 @@ export default function CreateProfile() {
         { displayName: name, photoURL, vibePhotos: [], bio: bio.trim(), interests, neighborhood: neighborhood.trim(), borough, age },
         dob
       )
-      router.replace('/(app)')
+      ;(router.replace as (href: string) => void)('/(app)/verify-identity')
     } catch {
       setError("Couldn't save your profile. Try again.")
     } finally {
@@ -139,7 +139,7 @@ export default function CreateProfile() {
 
           <View style={styles.submitWrap}>
             <AuthButton
-              label={canSubmit ? 'Enter The Third Space' : `Complete your profile`}
+              label={canSubmit ? 'Enter Your Third Space' : `Complete your profile`}
               onPress={handleSubmit}
               variant="primary"
               loading={busy}
