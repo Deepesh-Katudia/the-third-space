@@ -129,7 +129,7 @@ export default function EditProfile() {
             <Text style={styles.photoHint}>Change photo</Text>
           </View>
 
-          <Text style={styles.fieldLabel}>Short bio</Text>
+          <Text style={styles.fieldLabel}>Bio</Text>
           <TextInput
             style={styles.bioInput}
             placeholder="Illustrator, new to Brooklyn, always up for good coffee…"
