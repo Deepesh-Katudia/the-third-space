@@ -18,6 +18,18 @@ service cloud.firestore {
       return isRegistered(eventId) || isEventOwner(eventId);
     }
 
+    // The caller's own registration doc appears in this same batch (register flow).
+    function registersSelf(eventId) {
+      return !exists(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid))
+        && existsAfter(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid));
+    }
+
+    // The caller's own registration doc is removed in this same batch (cancel flow).
+    function unregistersSelf(eventId) {
+      return exists(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid))
+        && !existsAfter(/databases/$(database)/documents/events/$(eventId)/registrations/$(request.auth.uid));
+    }
+
     function tierFor(points) {
       return points >= 1500 ? 'Insider' : (points >= 500 ? 'Regular' : 'Newcomer');
     }
@@ -43,7 +55,6 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && request.auth.uid == uid
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified'])
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['points', 'tier'])
           || (
@@ -62,11 +73,17 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.venueId == request.auth.uid
         && exists(/databases/$(database)/documents/venues/$(request.auth.uid));
-      // Owner can update anything; attenders may only touch registeredCount
-      // (their registration batch increments it).
+      // Owner can update anything. A non-owner may only touch registeredCount, and
+      // only by ±1 in lockstep with creating/deleting their OWN registration in the
+      // same batch — so the counter can't be inflated, zeroed, or nudged for anyone else.
       allow update: if signedIn() && (
         resource.data.venueId == request.auth.uid ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount'])
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount']) && (
+            (request.resource.data.registeredCount == resource.data.registeredCount + 1 && registersSelf(eventId)) ||
+            (request.resource.data.registeredCount == resource.data.registeredCount - 1 && unregistersSelf(eventId))
+          )
+        )
       );
       allow delete: if signedIn() && resource.data.venueId == request.auth.uid;
 
