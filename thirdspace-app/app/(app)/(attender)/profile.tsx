@@ -12,6 +12,7 @@ import { useAttendanceStats } from '../../../hooks/useAttendanceStats'
 import { useConnections } from '../../../hooks/useConnections'
 import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
+import { messagePrivacyLabel } from '../../../utils/profile'
 
 export default function Profile() {
   const router = useRouter()
@@ -31,10 +32,7 @@ export default function Profile() {
       <StatusBar style="dark" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>You</Text>
-          <TouchableOpacity hitSlop={8}>
-            <Ionicons name="settings-outline" size={24} color="#8C7B70" />
-          </TouchableOpacity>
+          <Text style={styles.title} numberOfLines={1}>{name}</Text>
         </View>
 
         <View style={styles.identity}>
@@ -72,15 +70,26 @@ export default function Profile() {
 
         <Text style={styles.sectionLabel}>Account</Text>
         <View style={styles.card}>
+          {!profile?.verified ? (
+            <Row
+              label="Get verified"
+              badge="ID"
+              onPress={() => (router.push as (href: string) => void)('/(app)/verify-identity?from=profile')}
+            />
+          ) : null}
           <Row label="Points & badges" onPress={() => router.push('/(app)/badges')} />
-          <Row label="Interests & preferences" />
-          <Row label="Neighborhoods" />
-          <Row label="Become a host" badge="New" last />
+          <Row label="Interests & preferences" onPress={() => router.push('/(app)/edit-profile')} />
+          <Row label="Neighborhoods" onPress={() => router.push('/(app)/edit-profile')} />
+          <Row label="Become a host" badge="New" onPress={() => router.push('/(app)/become-host')} last />
         </View>
 
         <Text style={styles.sectionLabel}>Privacy</Text>
         <View style={styles.card}>
-          <Row label="Who can message me" value="Event-mates" />
+          <Row
+            label="Who can message me"
+            value={messagePrivacyLabel(profile?.messagePrivacy)}
+            onPress={() => router.push('/(app)/message-privacy')}
+          />
           <View style={[styles.row, styles.rowLast]}>
             <Text style={styles.rowLabel}>Notifications</Text>
             <Switch
