@@ -51,6 +51,9 @@ export interface Registration {
 
 export type Tier = 'Newcomer' | 'Regular' | 'Insider'
 
+// Who is allowed to open a message request with this member.
+export type MessagePrivacy = 'everyone' | 'event-mates' | 'no-one'
+
 export interface Profile {
   displayName: string
   photoURL: string | null
@@ -64,7 +67,10 @@ export interface Profile {
   points: number
   tier: Tier
   verified: boolean
+  verifiedAt?: Timestamp   // set when simulated ID verification completes; absent otherwise
   joinedAt: Timestamp
+  // Optional: absent on profiles created before this setting existed.
+  messagePrivacy?: MessagePrivacy
 }
 
 // Fields the user supplies; service fills joinedAt + neutral defaults.
@@ -77,6 +83,7 @@ export interface CreateProfileInput {
   neighborhood: string
   borough: Borough
   age: number
+  messagePrivacy?: MessagePrivacy
 }
 
 // ── Points & Badges (sub-project D) ───────────────────────────────────────

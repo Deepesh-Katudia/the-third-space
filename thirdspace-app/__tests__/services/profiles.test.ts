@@ -1,5 +1,5 @@
 import { writeBatch, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'
-import { createProfile, updateProfile, getProfile, subscribeProfile, redeemReward } from '../../services/profiles'
+import { createProfile, updateProfile, getProfile, subscribeProfile, redeemReward, submitVerification } from '../../services/profiles'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
 jest.mock('firebase/firestore', () => ({
@@ -123,5 +123,16 @@ describe('redeemReward', () => {
       expect.objectContaining({ rewardId: 'rw1', label: 'Free drink at Cellar 9', cost: 500, redeemedAt: '__serverTimestamp' })
     )
     expect(batch.commit).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('submitVerification', () => {
+  it('marks the profile verified with a server timestamp', async () => {
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    await submitVerification('u1')
+    expect(updateDoc).toHaveBeenCalledWith(
+      { path: 'profiles/u1' },
+      { verified: true, verifiedAt: '__serverTimestamp' }
+    )
   })
 })

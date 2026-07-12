@@ -23,6 +23,15 @@ export async function updateProfile(uid: string, partial: Partial<CreateProfileI
   await updateDoc(doc(db, 'profiles', uid), partial)
 }
 
+// Simulated ID verification: sets the verified badge. No real KYC — see the
+// verify-identity screen. Firestore rules permit the owner to write `verified`.
+export async function submitVerification(uid: string): Promise<void> {
+  await updateDoc(doc(db, 'profiles', uid), {
+    verified: true,
+    verifiedAt: serverTimestamp(),
+  })
+}
+
 export function subscribeProfile(
   uid: string,
   onChange: (profile: Profile | null) => void,
