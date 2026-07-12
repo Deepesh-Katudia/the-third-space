@@ -80,7 +80,7 @@ export default function SignIn() {
 
           <View style={styles.header}>
             <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to your Third Space account.</Text>
+            <Text style={styles.subtitle}>Sign in to Your Third Space.</Text>
           </View>
 
           {banner ? <View style={styles.banner}><Text style={styles.bannerText}>{banner}</Text></View> : null}
