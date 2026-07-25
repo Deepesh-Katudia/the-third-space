@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events Screen — Ticket Cards, Two-Tone Orange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF3E9;
+    --orange-deep:#F3B27A;   /* screen background — the deeper of the two pastel tones */
+    --orange-light:#FCE3C0;  /* box background — the lighter of the two pastel tones */
+    --ink:#2B2015;
+    --ink-soft:#5C4F3F;
+    --clay:#C4501F;
+    --sage:#6E7A5E;
+    --rule: rgba(43,32,21,0.20);
+
+    --font-display:'IBM Plex Mono', monospace;
+    --font-mono:'IBM Plex Mono', monospace;
+    --font-body:'Inter', sans-serif;
+    --display-tracking: 0em;
+    --display-transform: none;
+    --display-weight: 600;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--cream); font-family:'Inter', sans-serif; color:var(--ink); padding:48px 24px 80px; }
+  .intro{ max-width:900px; margin:0 auto 40px; }
+  .intro .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--clay); font-weight:600; margin-bottom:10px;
+  }
+  .intro h1{ font-family:'Fraunces', serif; font-weight:600; font-size:30px; line-height:1.15; margin-bottom:10px; letter-spacing:-0.01em; }
+  .intro p{ font-size:15px; color:var(--ink-soft); max-width:620px; line-height:1.5; }
+
+  .stage{ display:flex; gap:36px; flex-wrap:wrap; justify-content:center; max-width:1150px; margin:0 auto; }
+  .col{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .col-label{ text-align:center; }
+  .col-label .tag{
+    display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--cream); background:var(--ink); padding:3px 9px; border-radius:3px; margin-bottom:6px;
+  }
+  .col-label p{ font-size:12px; color:var(--ink-soft); max-width:260px; margin-top:2px; }
+
+  .phone{
+    width:320px; height:690px; border-radius:44px; background:#111; padding:12px;
+    box-shadow: 0 30px 60px -20px rgba(43,32,21,0.35), 0 4px 12px rgba(43,32,21,0.15);
+    position:relative;
+  }
+  .phone::before{
+    content:""; position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    width:100px; height:20px; background:#111; border-radius:0 0 16px 16px; z-index:5;
+  }
+  .screen{
+    width:100%; height:100%; background:var(--orange-deep); border-radius:34px;
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  .statusbar{ height:40px; flex-shrink:0; }
+  .content{ flex:1; overflow-y:auto; padding:4px 18px 10px; }
+  .content::-webkit-scrollbar{ display:none; }
+
+  .topbar{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:16px; }
+  .topbar .tagline{
+    font-family:var(--font-display); font-weight:var(--display-weight); text-transform:var(--display-transform);
+    letter-spacing:var(--display-tracking); font-size:18px; line-height:1.2; max-width:180px; color:var(--ink);
+  }
+  .topbar .right-col{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+  .city-chip{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em; text-transform:uppercase;
+    padding:5px 9px; border-radius:20px; border:1px solid rgba(43,32,21,0.3); white-space:nowrap; color:var(--ink);
+  }
+  .add-btn{
+    width:30px; height:30px; border-radius:50%; background:var(--ink); color:var(--orange-light);
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; flex-shrink:0;
+  }
+
+  .ticket{
+    background:var(--orange-light); border-radius:14px; border:1px solid rgba(43,32,21,0.14);
+    margin-bottom:14px; position:relative; overflow:hidden;
+  }
+  .ticket .photo{ width:100%; height:96px; object-fit:cover; display:block; }
+  .ticket .tear{ position:relative; border-top:1px dashed var(--rule); margin:0 16px; }
+  .ticket::before, .ticket::after{
+    content:""; position:absolute; width:14px; height:14px; background:var(--orange-deep);
+    border-radius:50%; top:96px; transform:translateY(-50%); z-index:2;
+  }
+  .ticket::before{ left:-8px; } .ticket::after{ right:-8px; }
+  .ticket .info-wrap{ padding:12px 14px 12px; display:flex; gap:11px; }
+  .ticket .stub{
+    width:48px; flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; border-right:1px dashed var(--rule); padding-right:11px;
+  }
+  .ticket .stub .day{
+    font-family:var(--font-display); font-weight:var(--display-weight); font-size:22px; line-height:1;
+    color:var(--clay); letter-spacing:var(--display-tracking);
+  }
+  .ticket .stub .mon{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--ink-soft); margin-top:3px;
+  }
+  .ticket .body{ flex:1; min-width:0; }
+  .ticket .row1{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .ticket .name{
+    font-family:var(--font-display); font-weight:var(--display-weight); font-size:15px; line-height:1.25;
+    text-transform:var(--display-transform); letter-spacing:var(--display-tracking); color:var(--ink);
+  }
+  .ticket .cta{
+    width:26px; height:26px; border-radius:50%; background:var(--orange-deep);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--clay);
+    font-size:12px; font-weight:700;
+  }
+  .ticket .loc{ font-family:var(--font-body); font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+  .ticket .desc{ font-family:var(--font-body); font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .ticket .meta{
+    display:flex; align-items:center; gap:7px; margin-top:8px;
+    font-family:var(--font-mono); font-size:10px; color:var(--ink); flex-wrap:wrap;
+  }
+  .ticket .meta .divider{ color:rgba(43,32,21,0.35); }
+  .ticket .meta .accent{ color:var(--sage); font-weight:600; }
+  .ticket .going{ font-family:var(--font-body); font-size:11px; color:var(--ink-soft); margin-top:7px; }
+  .ticket .going b{ color:var(--ink); }
+  .announce{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em; color:var(--clay);
+    text-transform:uppercase; margin:-2px 0 16px 4px;
+  }
+
+  .tabbar{ flex-shrink:0; display:flex; justify-content:space-around; padding:11px 10px 18px; border-top:1px solid rgba(43,32,21,0.16); background:var(--orange-light); }
+  .tab{ display:flex; flex-direction:column; align-items:center; gap:3px; font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.03em; color:var(--ink-soft); }
+  .tab.active{ color:var(--clay); font-weight:600; }
+  .tab .dot{ width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  /* ===== font-variant overrides ===== */
+  .font-anton{
+    --font-display:'Anton', sans-serif;
+    --display-tracking: 0.01em;
+    --display-transform: uppercase;
+    --display-weight: 400;
+  }
+  .font-dicemono{
+    --font-display:'Space Mono', monospace;
+    --display-tracking: -0.01em;
+    --display-transform: uppercase;
+    --display-weight: 700;
+  }
+  .font-typewriter{
+    --font-display:'IBM Plex Mono', monospace;
+    --font-body:'IBM Plex Mono', monospace;
+    --display-tracking: 0em;
+    --display-transform: none;
+    --display-weight: 600;
+  }
+
+  @media (max-width: 760px){
+    .stage{ gap:52px; }
+    .phone{ transform:scale(0.92); margin: -26px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Ticket Cards — Two-Tone Orange + 3 Type Options</div>
+  <h1>Same box layout, richer color, three fonts</h1>
+  <p>Dropped Fraunces per your note. This round: the box (ticket) uses the lighter pastel orange, the screen behind it uses a deeper pastel orange — so there's actual contrast instead of white-on-cream. Third font is IBM Plex Mono (the typewriter-style one from the date/time) applied everywhere, not just the meta line.</p>
+</div>
+
+<div id="app"></div>
+
+<script>
+const EVENTS = [
+  { name:'Cultfit', loc:'Samantha · Williamsburg', desc:'Do exercise', meta:['Sat, 7:00 PM','Wellness','Free','21+'], accentIdx:1, going:0, seed:'cultfit-space', announce:true },
+  { name:'Ceramics Night', loc:'Samantha · Williamsburg', desc:'Food', meta:['Sat, 7:00 PM','Nightlife','Free','21+'], accentIdx:1, going:0, seed:'ceramics-space', announce:true },
+  { name:'Fitness Club', loc:'Samantha · Williamsburg', desc:'Yoga Matte', meta:['Sat, 7:00 PM','Wellness','Free'], accentIdx:1, going:1, seed:'fitness-space', announce:false }
+];
+
+function header(){
+  return `
+    <div class="topbar">
+      <div class="tagline">Let's find your third space for the day</div>
+      <div class="right-col">
+        <div class="city-chip">NYC + Brooklyn</div>
+        <div class="add-btn">+</div>
+      </div>
+    </div>
+  `;
+}
+
+function metaHTML(meta, accentIdx){
+  return meta.map((m,i)=>{
+    const span = `<span class="${i===accentIdx?'accent':''}">${m}</span>`;
+    return i < meta.length-1 ? span + '<span class="divider">/</span>' : span;
+  }).join('');
+}
+
+function ticketPhone(){
+  const cards = EVENTS.map(e => `
+    <div class="ticket">
+      <img class="photo" src="https://picsum.photos/seed/${e.seed}/500/260" alt="">
+      <div class="tear"></div>
+      <div class="info-wrap">
+        <div class="stub"><div class="day">18</div><div class="mon">Jul</div></div>
+        <div class="body">
+          <div class="row1"><div class="name">${e.name}</div><div class="cta">→</div></div>
+          <div class="loc">${e.loc}</div>
+          <div class="desc">${e.desc}</div>
+          <div class="meta">${metaHTML(e.meta, e.accentIdx)}</div>
+          <div class="going"><b>${e.going}</b> going</div>
+        </div>
+      </div>
+    </div>
+    ${e.announce ? '<div class="announce">📣 Send announcement</div>' : ''}
+  `).join('');
+  return `
+    <div class="phone"><div class="screen">
+      <div class="statusbar"></div>
+      <div class="content">${header()}${cards}</div>
+      <div class="tabbar">
+        <div class="tab"><div class="dot"></div>Overview</div>
+        <div class="tab active"><div class="dot"></div>Events</div>
+        <div class="tab"><div class="dot"></div>Venue</div>
+      </div>
+    </div></div>
+  `;
+}
+
+const VARIANTS = [
+  { cls:'font-anton', title:'Anton', note:'Heavy condensed caps — loudest option.' },
+  { cls:'font-dicemono', title:'Space Mono', note:'DICE-style monospace, bold weight.' },
+  { cls:'font-typewriter', title:'IBM Plex Mono', note:'The typewriter font from your date/time, now everywhere.' }
+];
+
+const app = document.getElementById('app');
+const stage = document.createElement('div');
+stage.className = 'stage';
+VARIANTS.forEach(v => {
+  const col = document.createElement('div');
+  col.className = `col ${v.cls}`;
+  col.innerHTML = `
+    <div class="col-label"><span class="tag">${v.title}</span><p>${v.note}</p></div>
+    ${ticketPhone()}
+  `;
+  stage.appendChild(col);
+});
+app.appendChild(stage);
+</script>
+
+</body>
+</html>
