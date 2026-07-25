@@ -1,14 +1,17 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider } from 'firebase/auth'
+import { httpsCallable } from 'firebase/functions'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import * as WebBrowser from 'expo-web-browser'
-import { auth } from '../../firebase/config'
+import { auth, functions } from '../../firebase/config'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
-import { validateSignUpForm, SignUpFormErrors } from '../../utils/validation'
+import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter'
+import { validateSignUpForm, SignUpFormErrors, toE164 } from '../../utils/validation'
+import { evaluatePassword } from '../../utils/password'
 import { generateNonce } from '../../utils/crypto'
 import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { StatusBar } from 'expo-status-bar'
@@ -20,6 +23,7 @@ export default function SignUp() {
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<SignUpFormErrors>({})
@@ -31,22 +35,37 @@ export default function SignUp() {
     onError: setBanner,
   })
 
+  const passwordEval = useMemo(() => evaluatePassword(password, { email, name }), [password, email, name])
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
+  const canSubmit = passwordEval.meetsMinimum && passwordsMatch
+
   const handleEmailSignUp = async () => {
-    const formErrors = validateSignUpForm({ name, email, password, confirmPassword })
+    const formErrors = validateSignUpForm({ name, email, phone, password, confirmPassword })
     if (Object.keys(formErrors).length > 0) { setErrors(formErrors); return }
     setErrors({})
     setLoading(true)
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(user, { displayName: name.trim() })
+      // A retry after a failed phone claim (see below) leaves the Auth account
+      // already created and signed in — skip re-creating it in that case.
+      let user = auth.currentUser
+      if (!user || user.email !== email.trim()) {
+        const credential = await createUserWithEmailAndPassword(auth, email, password)
+        user = credential.user
+        await updateProfile(user, { displayName: name.trim() })
+      }
+      await httpsCallable(functions, 'completeSignUp')({ phone: toE164(phone) })
       router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
+      if (code === 'functions/already-exists') {
+        setErrors({ phone: 'This phone number is already registered.' })
+        return
+      }
       const messages: Record<string, string> = {
         'auth/email-already-in-use': 'An account with this email already exists. Sign in instead.',
         'auth/network-request-failed': 'No connection. Check your internet and try again.',
         'auth/operation-not-allowed': 'Email sign-up is not enabled. Contact support.',
-        'auth/weak-password': 'Password must be at least 6 characters.',
+        'auth/weak-password': 'That password is too weak. Use 8+ characters with a mix of letters, numbers, or symbols.',
         'auth/too-many-requests': 'Too many attempts. Try again later.',
       }
       setBanner(messages[code] ?? 'Something went wrong. Try again.')
@@ -78,18 +97,29 @@ export default function SignUp() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <Text style={styles.title}>Create your account</Text>
-            <Text style={styles.subtitle}>Join The Third Space — NYC's community app.</Text>
+            <Text style={styles.subtitle}>Join Your Third Space — NYC's community app.</Text>
           </View>
 
           {banner ? <View style={styles.banner}><Text style={styles.bannerText}>{banner}</Text></View> : null}
 
           <FormInput label="Full name" value={name} onChangeText={setName} error={errors.name} autoCapitalize="words" placeholder="Samantha Aleman" />
           <FormInput label="Email" value={email} onChangeText={setEmail} error={errors.email} keyboardType="email-address" placeholder="you@example.com" />
-          <FormInput label="Password" value={password} onChangeText={setPassword} error={errors.password} secureTextEntry placeholder="8+ characters" />
+          <FormInput
+            label="Phone number"
+            value={phone}
+            onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 10))}
+            error={errors.phone}
+            prefix="+1"
+            keyboardType="phone-pad"
+            maxLength={10}
+            placeholder="2125551234"
+          />
+          <FormInput label="Password" value={password} onChangeText={setPassword} error={errors.password} secureTextEntry placeholder="8+ characters, mixed types" />
+          {password.length > 0 ? <PasswordStrengthMeter evaluation={passwordEval} /> : null}
           <FormInput label="Confirm password" value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} secureTextEntry placeholder="Re-enter password" />
 
           <View style={styles.buttons}>
-            <AuthButton label="Create account" onPress={handleEmailSignUp} variant="primary" loading={loading || isGoogleLoading} />
+            <AuthButton label="Create account" onPress={handleEmailSignUp} variant="primary" loading={loading || isGoogleLoading} disabled={!canSubmit} />
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or continue with</Text>
@@ -109,20 +139,20 @@ export default function SignUp() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
   scroll: { flex: 1, paddingHorizontal: 24 },
   content: { paddingTop: 32, paddingBottom: 40 },
   header: { marginBottom: 28 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'DMSans_300Light', fontSize: 16, color: '#8C7B70', lineHeight: 22 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78', lineHeight: 22 },
   banner: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, marginBottom: 16 },
-  bannerText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#dc2626' },
+  bannerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30' },
   buttons: { marginTop: 8, gap: 12 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(242,197,160,0.4)' },
-  dividerText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(226,224,218,0.4)' },
+  dividerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
   footer: { alignItems: 'center', marginTop: 24 },
-  footerText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  footerLink: { color: '#C4614A', fontFamily: 'DMSans_500Medium' },
+  footerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  footerLink: { color: '#FF9F3D', fontFamily: 'Poppins_600SemiBold' },
 })

@@ -26,6 +26,15 @@ test('a user cannot write another user profile', async () => {
   await assertFails(setDoc(doc(me, 'profiles/other'), { displayName: 'x' }))
 })
 
+test('phoneIndex is never readable or writable by clients, even the owner', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'phoneIndex/+12125551234'), { uid: 'me', email: 'me@example.com' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'phoneIndex/+12125551234')))
+  await assertFails(setDoc(doc(me, 'phoneIndex/+19995551234'), { uid: 'me', email: 'me@example.com' }))
+})
+
 test('owner can update points/tier together with a valid earn/revoke delta', async () => {
   await env.withSecurityRulesDisabled(async (ctx) => {
     await setDoc(doc(ctx.firestore(), 'profiles/me'), { displayName: 'Me', points: 0, tier: 'Newcomer', verified: false })

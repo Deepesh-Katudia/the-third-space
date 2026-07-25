@@ -46,6 +46,12 @@ service cloud.firestore {
       }
     }
 
+    // Phone -> email lookup index for sign-in. Written only by Cloud Functions
+    // via the Admin SDK (which bypasses rules); clients never touch it directly.
+    match /phoneIndex/{phone} {
+      allow read, write: if false;
+    }
+
     match /venues/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid;

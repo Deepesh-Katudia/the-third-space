@@ -6,3 +6,5 @@ initializeApp()
 export { onNewDirectMessage } from './onNewDirectMessage'
 export { onNewAnnouncement } from './onNewAnnouncement'
 export { onNewFollow } from './onNewFollow'
+export { completeSignUp } from './completeSignUp'
+export { resolveEmailForPhone } from './resolveEmailForPhone'
