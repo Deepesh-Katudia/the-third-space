@@ -4,22 +4,28 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
 import { useVenue } from '../../../hooks/useVenue'
 import { LoadingView } from '../../../components/LoadingView'
+import { PillTabButton } from '../../../components/PillTabButton'
+import { colors, font, floatingNav } from '../../../constants/theme'
 
 export default function HosterLayout() {
   const { user, role, loading } = useAuth()
-  const { venue, loading: venueLoading } = useVenue(user?.uid)
+  const { venue, loading: venueLoading, hasError: venueHasError } = useVenue(user?.uid)
 
   if (loading || venueLoading) return <LoadingView />
   if (role !== 'hoster') return <Redirect href="/(app)" />
-  if (!venue) return <Redirect href="/(app)/venue-setup" />
+  // Only send them to setup when the venue is confirmed absent — not on a read
+  // error, which would bounce a hoster who already has a venue into the form.
+  if (!venue && !venueHasError) return <Redirect href="/(app)/venue-setup" />
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#C4614A',
-        tabBarInactiveTintColor: '#8C7B70',
-        tabBarStyle: { backgroundColor: '#FBF7F2', borderTopColor: 'rgba(242,197,160,0.4)' },
+        tabBarActiveTintColor: colors.ink,
+        tabBarInactiveTintColor: colors.mutedLight,
+        tabBarLabelStyle: { fontFamily: font.bold, fontSize: 10 },
+        tabBarStyle: floatingNav,
+        tabBarButton: (props) => <PillTabButton {...props} />,
       }}
     >
       <Tabs.Screen

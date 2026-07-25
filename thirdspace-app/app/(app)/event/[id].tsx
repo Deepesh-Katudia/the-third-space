@@ -82,7 +82,6 @@ export default function EventDetail() {
   const tint = CATEGORY_COLORS[event.category]
   // Registered users (and the owner) see real attendee avatars from the
   // subscription. Non-registered users only get count-driven blurred placeholders.
-  const attendeeSeeds = attendees.map((a) => a.uid)
   const lockedSeeds = Array.from({ length: Math.min(event.registeredCount, 3) }, (_, i) => `${event.id}:${i}`)
 
   const handleRegister = async () => {
@@ -135,7 +134,7 @@ export default function EventDetail() {
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Hero */}
-        <LinearGradient colors={[tint, '#2C1810']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        <LinearGradient colors={[tint, '#15161A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
           <SafeAreaView edges={['top']} style={styles.heroBar}>
             <TouchableOpacity style={styles.heroBtn} onPress={() => router.back()} hitSlop={8}>
               <Text style={styles.heroBtnText}>←</Text>
@@ -180,23 +179,22 @@ export default function EventDetail() {
 
           {/* Who's going */}
           <Text style={styles.sectionTitle}>Who's going</Text>
-          {isOwner ? (
+          {isOwner || isRegistered ? (
             <View style={styles.whosGoing}>
-              <AttendeeAvatarStack uids={attendees.map((a) => a.uid)} count={attendees.length} size={36} />
-              <Text style={styles.whosGoingText}>{attendees.length} registered</Text>
+              <AttendeeAvatarStack
+                uids={attendees.map((a) => a.uid)}
+                photoURLs={attendees.map((a) => a.photoURL ?? null)}
+                count={attendees.length}
+                size={36}
+              />
+              <Text style={styles.whosGoingText}>
+                {attendees.length} {isOwner ? 'registered' : 'going'}
+              </Text>
               {attendees.length > 0 ? (
                 <TouchableOpacity onPress={() => router.push({ pathname: '/(app)/guest-list/[id]', params: { id: event.id } })}>
                   <Text style={styles.seeAll}>See all →</Text>
                 </TouchableOpacity>
               ) : null}
-            </View>
-          ) : isRegistered ? (
-            <View style={styles.whosGoing}>
-              <AttendeeAvatarStack uids={attendeeSeeds} count={event.registeredCount} size={36} />
-              <Text style={styles.whosGoingText}>{event.registeredCount} going</Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: '/(app)/guest-list/[id]', params: { id: event.id } })}>
-                <Text style={styles.seeAll}>See all →</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.whosGoingLocked}>
@@ -242,7 +240,7 @@ export default function EventDetail() {
             </View>
           ) : (
             <TouchableOpacity style={styles.cta} onPress={handleRegister} disabled={busy}>
-              <LinearGradient colors={['#C4614A', '#E8855F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
+              <LinearGradient colors={['#FF9F3D', '#FFB75B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
                 <Text style={styles.ctaText}>{busy ? '…' : 'Register'}</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -271,53 +269,53 @@ export default function EventDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   scroll: { paddingBottom: 120 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  backText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
 
   hero: { height: 280, justifyContent: 'space-between' },
   heroBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8 },
-  heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(44,24,16,0.4)', alignItems: 'center', justifyContent: 'center' },
+  heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(21,22,26,0.4)', alignItems: 'center', justifyContent: 'center' },
   heroBtnText: { fontSize: 20, color: 'white' },
   heroFooter: { padding: 20 },
   categoryChip: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  categoryText: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#2C1810' },
+  categoryText: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#15161A' },
 
   body: { paddingHorizontal: 24, paddingTop: 20 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 30, color: '#2C1810', marginBottom: 6, letterSpacing: -0.5 },
-  venue: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#8C7B70', marginBottom: 20 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 30, color: '#15161A', marginBottom: 6, letterSpacing: -0.5 },
+  venue: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', marginBottom: 20 },
 
   infoRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  infoCard: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
-  infoLabel: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#8C7B70', letterSpacing: 0.6, marginBottom: 6 },
-  infoValue: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810', marginBottom: 2 },
-  infoTime: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  infoFree: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#7A8C6E' },
+  infoCard: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  infoLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#6B6F78', letterSpacing: 0.6, marginBottom: 6 },
+  infoValue: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', marginBottom: 2 },
+  infoTime: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  infoFree: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#2FA365' },
 
-  sectionTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 20, color: '#2C1810', marginBottom: 12, marginTop: 4 },
+  sectionTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#15161A', marginBottom: 12, marginTop: 4 },
   whosGoing: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  whosGoingText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#2C1810' },
-  seeAll: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#C4614A', marginLeft: 'auto' },
+  whosGoingText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A' },
+  seeAll: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D', marginLeft: 'auto' },
   whosGoingLocked: { marginBottom: 24 },
   lockedAvatars: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   blurredGroup: { flexDirection: 'row', marginLeft: -11 },
-  blurredAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(140,123,112,0.35)', borderWidth: 2, borderColor: '#FBF7F2' },
-  lockedText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70', fontStyle: 'italic' },
+  blurredAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(107,111,120,0.35)', borderWidth: 2, borderColor: '#F3F3F5' },
+  lockedText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78', fontStyle: 'italic' },
 
-  description: { fontFamily: 'DMSans_300Light', fontSize: 15, color: '#2C1810', lineHeight: 23, marginBottom: 8 },
+  description: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#15161A', lineHeight: 23, marginBottom: 8 },
 
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,249,244,0.98)', borderTopWidth: 1, borderTopColor: 'rgba(242,197,160,0.5)' },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,249,244,0.98)', borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)' },
   footerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 14, paddingBottom: 6 },
-  footerPrice: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 22, color: '#2C1810' },
-  footerSpots: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
+  footerPrice: { fontFamily: 'Poppins_800ExtraBold', fontSize: 22, color: '#15161A' },
+  footerSpots: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
   cta: { borderRadius: 100, overflow: 'hidden' },
   ctaGradient: { paddingVertical: 16, paddingHorizontal: 44, alignItems: 'center' },
-  ctaText: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: 'white' },
-  ctaOutline: { borderWidth: 1.5, borderColor: '#7A8C6E', paddingVertical: 14, paddingHorizontal: 28 },
-  ctaOutlineText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#7A8C6E' },
-  ctaDanger: { borderWidth: 1.5, borderColor: '#dc2626', paddingVertical: 14, paddingHorizontal: 28 },
-  ctaDangerText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#dc2626' },
-  ctaDisabled: { backgroundColor: 'rgba(140,123,112,0.15)', paddingVertical: 16, paddingHorizontal: 44 },
-  ctaDisabledText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#8C7B70' },
+  ctaText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: 'white' },
+  ctaOutline: { borderWidth: 1.5, borderColor: '#2FA365', paddingVertical: 14, paddingHorizontal: 28 },
+  ctaOutlineText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#2FA365' },
+  ctaDanger: { borderWidth: 1.5, borderColor: '#FF3B30', paddingVertical: 14, paddingHorizontal: 28 },
+  ctaDangerText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#FF3B30' },
+  ctaDisabled: { backgroundColor: 'rgba(107,111,120,0.15)', paddingVertical: 16, paddingHorizontal: 44 },
+  ctaDisabledText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#6B6F78' },
 })

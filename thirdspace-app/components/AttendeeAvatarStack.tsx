@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import { avatarColor, initials } from '../utils/avatar'
 
 interface AttendeeAvatarStackProps {
@@ -7,6 +7,9 @@ interface AttendeeAvatarStackProps {
   uids: string[]
   /** Total attendee count; drives the "+N" overflow chip. */
   count: number
+  /** Optional profile photo URLs, index-aligned with `uids`. A real photo is
+   *  shown when present; otherwise the initial-based avatar is used. */
+  photoURLs?: (string | null | undefined)[]
   size?: number
   /** Max avatars rendered before collapsing into a "+N" chip. */
   max?: number
@@ -17,9 +20,10 @@ interface AttendeeAvatarStackProps {
 export function AttendeeAvatarStack({
   uids,
   count,
+  photoURLs,
   size = 32,
   max = 4,
-  ringColor = '#FFF9F4',
+  ringColor = '#FFFFFF',
 }: AttendeeAvatarStackProps) {
   const shown = uids.slice(0, max)
   const overflow = count - shown.length
@@ -27,25 +31,32 @@ export function AttendeeAvatarStack({
 
   return (
     <View style={styles.row}>
-      {shown.map((seed, i) => (
-        <View
-          key={`${seed}-${i}`}
-          style={[
-            styles.avatar,
-            {
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              backgroundColor: avatarColor(seed),
-              borderColor: ringColor,
-              marginLeft: i === 0 ? 0 : -overlap,
-              zIndex: shown.length - i,
-            },
-          ]}
-        >
-          <Text style={[styles.initials, { fontSize: size * 0.4 }]}>{initials(seed)}</Text>
-        </View>
-      ))}
+      {shown.map((seed, i) => {
+        const photo = photoURLs?.[i]
+        return (
+          <View
+            key={`${seed}-${i}`}
+            style={[
+              styles.avatar,
+              {
+                width: size,
+                height: size,
+                borderRadius: size / 2,
+                backgroundColor: photo ? '#E2E0DA' : avatarColor(seed),
+                borderColor: ringColor,
+                marginLeft: i === 0 ? 0 : -overlap,
+                zIndex: shown.length - i,
+              },
+            ]}
+          >
+            {photo ? (
+              <Image source={{ uri: photo }} style={{ width: size, height: size }} />
+            ) : (
+              <Text style={[styles.initials, { fontSize: size * 0.4 }]}>{initials(seed)}</Text>
+            )}
+          </View>
+        )
+      })}
       {overflow > 0 ? (
         <View
           style={[
@@ -69,8 +80,8 @@ export function AttendeeAvatarStack({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
-  initials: { fontFamily: 'DMSans_500Medium', color: 'white' },
-  overflow: { backgroundColor: '#8C7B70' },
-  overflowText: { fontFamily: 'DMSans_500Medium', color: 'white' },
+  avatar: { alignItems: 'center', justifyContent: 'center', borderWidth: 2, overflow: 'hidden' },
+  initials: { fontFamily: 'Poppins_600SemiBold', color: 'white' },
+  overflow: { backgroundColor: '#6B6F78' },
+  overflowText: { fontFamily: 'Poppins_600SemiBold', color: 'white' },
 })

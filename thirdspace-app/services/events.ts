@@ -105,7 +105,15 @@ export function subscribeIsRegistered(
   uid: string,
   onChange: (isRegistered: boolean) => void
 ): () => void {
-  return onSnapshot(doc(db, 'events', eventId, 'registrations', uid), (snap) => onChange(snap.exists()))
+  // Report `true` only once the registration is committed server-side (not a
+  // pending local write). This gates the attendee-list subscription, whose
+  // security rule checks the committed registrations collection: subscribing on
+  // the optimistic local write races the commit and gets permission-denied.
+  return onSnapshot(
+    doc(db, 'events', eventId, 'registrations', uid),
+    { includeMetadataChanges: true },
+    (snap) => onChange(snap.exists() && !snap.metadata.hasPendingWrites)
+  )
 }
 
 export function subscribeRegistrations(
