@@ -182,3 +182,27 @@ test('any signed-in user can read follow edges', async () => {
   const stranger = env.authenticatedContext('stranger').firestore()
   await assertSucceeds(getDoc(doc(stranger, 'follows/me_you')))
 })
+
+// ── Conversations (DM request flow) ─────────────────────────────────────────
+test('a participant can probe a conversation that does not exist yet', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(getDoc(doc(me, 'conversations/me_you')))
+})
+
+test('a participant can create a pending request then send the first message', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'conversations/me_you'), {
+    participants: ['me', 'you'], status: 'pending', requestedBy: 'me', messageCount: 1,
+  }))
+  await assertSucceeds(setDoc(doc(me, 'conversations/me_you/messages/m1'), { authorUid: 'me', text: 'hi' }))
+})
+
+test('a non-participant cannot read a conversation', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'conversations/me_you'), {
+      participants: ['me', 'you'], status: 'pending', requestedBy: 'me',
+    })
+  })
+  const stranger = env.authenticatedContext('stranger').firestore()
+  await assertFails(getDoc(doc(stranger, 'conversations/me_you')))
+})

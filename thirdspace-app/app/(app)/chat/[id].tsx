@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar'
 import { ChatBubble } from '../../../components/ChatBubble'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { Banner } from '../../../components/Banner'
+import { Toast } from '../../../components/Toast'
 import { initials } from '../../../utils/avatar'
 import { shouldShowAuthor, dmConversationId } from '../../../utils/chat'
 import { useAuth } from '../../../hooks/useAuth'
@@ -43,6 +44,8 @@ export default function ChatThreadScreen() {
   const [messageCount, setMessageCount] = useState(0)
   const [muted, setMuted] = useState(false)
   const [draft, setDraft] = useState('')
+  const [toast, setToast] = useState('')
+  const [sendError, setSendError] = useState('')
   const scrollRef = useRef<ScrollView>(null)
   const everExisted = useRef(false)
 
@@ -90,14 +93,22 @@ export default function ChatThreadScreen() {
     const text = draft.trim()
     if (!text || !myUid) return
     setDraft('')
-    if (kind === 'group') {
-      await sendEventMessage(id, author, text)
-    } else {
-      const participants: ParticipantInfo[] = [
-        { uid: myUid, name: myName, photoURL: profile?.photoURL ?? null },
-        { uid: otherUid, name: otherProfile?.displayName ?? params.name ?? 'Member', photoURL: otherProfile?.photoURL ?? null },
-      ]
-      await sendDirectMessage(id, participants, author, text)
+    setSendError('')
+    try {
+      if (kind === 'group') {
+        await sendEventMessage(id, author, text)
+      } else {
+        const participants: ParticipantInfo[] = [
+          { uid: myUid, name: myName, photoURL: profile?.photoURL ?? null },
+          { uid: otherUid, name: otherProfile?.displayName ?? params.name ?? 'Member', photoURL: otherProfile?.photoURL ?? null },
+        ]
+        const { created } = await sendDirectMessage(id, participants, author, text)
+        if (created) setToast(`Request sent to ${headerName}`)
+      }
+    } catch {
+      // Put the text back so a failed send never loses what they typed.
+      setDraft((current) => (current ? current : text))
+      setSendError("Couldn't send that message. Check your connection and try again.")
     }
   }
 
@@ -144,11 +155,15 @@ export default function ChatThreadScreen() {
             <ChatBubble isSelf={false} isSystem message={{ id: 'sys', author: '', text: 'You registered · welcome to the chat', time: '' }} />
           ) : null}
           {isPendingOutgoing ? (
-            <Banner tone="success" message="Request sent — they haven't accepted yet." />
+            <Banner
+              tone="success"
+              message={`Message request sent. ${headerName} needs to accept before they can reply — you can keep adding to it in the meantime.`}
+            />
           ) : null}
           {declined ? (
             <Banner message="This conversation is no longer available." />
           ) : null}
+          {sendError ? <Banner message={sendError} /> : null}
           {messages.map((m, i) => {
             const isSelf = m.authorUid === myUid
             const isAnnouncement = m.kind === 'announcement'
@@ -176,7 +191,7 @@ export default function ChatThreadScreen() {
             <TextInput
               style={styles.input}
               placeholder={kind === 'group' ? 'Message the group' : 'Message'}
-              placeholderTextColor="#8C7B70"
+              placeholderTextColor="#6B6F78"
               value={draft}
               onChangeText={setDraft}
               multiline
@@ -187,30 +202,31 @@ export default function ChatThreadScreen() {
           </View>
         )}
       </KeyboardAvoidingView>
+      {toast ? <Toast message={toast} onDismiss={() => setToast('')} /> : null}
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(242,197,160,0.5)' },
-  back: { fontSize: 24, color: '#2C1810' },
-  headerAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#C4614A', alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.5)' },
+  back: { fontSize: 24, color: '#15161A' },
+  headerAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
   headerAvatarRound: { borderRadius: 20 },
-  headerAvatarText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: 'white' },
+  headerAvatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
   headerText: { flex: 1 },
-  headerTitle: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  headerMeta: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70' },
+  headerTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  headerMeta: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78' },
   muteToggle: { fontSize: 18 },
   messages: { paddingTop: 16, paddingBottom: 12 },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(242,197,160,0.5)', backgroundColor: '#FBF7F2' },
-  input: { flex: 1, maxHeight: 110, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810' },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#C4614A', alignItems: 'center', justifyContent: 'center' },
-  sendBtnDisabled: { backgroundColor: 'rgba(196,97,74,0.4)' },
-  sendText: { fontSize: 20, color: 'white', fontFamily: 'DMSans_500Medium' },
-  acceptRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: 'rgba(242,197,160,0.5)' },
-  acceptHint: { flex: 1, fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  acceptBtn: { backgroundColor: '#C4614A', borderRadius: 100, paddingHorizontal: 22, paddingVertical: 11 },
-  acceptText: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: 'white' },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)', backgroundColor: '#F3F3F5' },
+  input: { flex: 1, maxHeight: 110, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
+  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
+  sendBtnDisabled: { backgroundColor: 'rgba(255,159,61,0.4)' },
+  sendText: { fontSize: 20, color: '#15161A', fontFamily: 'Poppins_600SemiBold' },
+  acceptRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)' },
+  acceptHint: { flex: 1, fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  acceptBtn: { backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 22, paddingVertical: 11 },
+  acceptText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A' },
 })

@@ -103,14 +103,17 @@ export function subscribeConversationMessages(
   return onSnapshot(q, (snap) => onChange(snap.docs.map(toMessage).reverse()), onError)
 }
 
+/** `created` is true when this send opened a new pending request rather than appending. */
+export interface SendDirectMessageResult { created: boolean }
+
 export async function sendDirectMessage(
   convId: string,
   participants: ParticipantInfo[],
   author: MessageAuthor,
   text: string
-): Promise<void> {
+): Promise<SendDirectMessageResult> {
   const trimmed = text.trim()
-  if (!trimmed) return
+  if (!trimmed) return { created: false }
   const convRef = doc(db, 'conversations', convId)
   const snap = await getDoc(convRef)
   if (!snap.exists()) {
@@ -129,6 +132,7 @@ export async function sendDirectMessage(
       authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
       text: trimmed, createdAt: serverTimestamp(),
     })
+    return { created: true }
   } else {
     // Subsequent sends: conversation already exists, safe to batch.
     const batch = writeBatch(db)
@@ -141,6 +145,7 @@ export async function sendDirectMessage(
       lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1),
     })
     await batch.commit()
+    return { created: false }
   }
 }
 

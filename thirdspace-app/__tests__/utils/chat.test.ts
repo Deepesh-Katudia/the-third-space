@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase/firestore'
-import { Conversation, EventChatMeta, Message } from '../../types/models'
+import { ChatThread, Conversation, EventChatMeta, Message } from '../../types/models'
 import {
   dmConversationId,
   computeUnread,
@@ -8,9 +8,14 @@ import {
   formatRelativeTime,
   buildChatThreads,
   selectIncomingRequests,
+  chatUnreadBadge,
   GroupChatInput,
   ReadMap,
 } from '../../utils/chat'
+
+function threadWithUnread(unread: number): ChatThread {
+  return { id: 't', kind: 'group', name: 'T', photoURL: null, lastMessageText: '', lastMessageAt: null, unread, muted: false }
+}
 
 function tsAt(ms: number): Timestamp {
   return { toMillis: () => ms, toDate: () => new Date(ms) } as unknown as Timestamp
@@ -23,6 +28,26 @@ describe('dmConversationId', () => {
   it('is order-independent', () => {
     expect(dmConversationId('b', 'a')).toBe('a_b')
     expect(dmConversationId('a', 'b')).toBe('a_b')
+  })
+})
+
+describe('chatUnreadBadge', () => {
+  it('returns undefined when there are no unread messages', () => {
+    expect(chatUnreadBadge([])).toBeUndefined()
+    expect(chatUnreadBadge([threadWithUnread(0), threadWithUnread(0)])).toBeUndefined()
+  })
+
+  it('sums unread across threads', () => {
+    expect(chatUnreadBadge([threadWithUnread(3), threadWithUnread(2)])).toBe(5)
+  })
+
+  it('shows the exact count up to and including 10', () => {
+    expect(chatUnreadBadge([threadWithUnread(10)])).toBe(10)
+  })
+
+  it('caps at "10+" once the total exceeds 10', () => {
+    expect(chatUnreadBadge([threadWithUnread(11)])).toBe('10+')
+    expect(chatUnreadBadge([threadWithUnread(40), threadWithUnread(9)])).toBe('10+')
   })
 })
 

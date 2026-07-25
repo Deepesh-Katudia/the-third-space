@@ -87,3 +87,13 @@ export function buildChatThreads(
 export function selectIncomingRequests(conversations: Conversation[], myUid: string): Conversation[] {
   return conversations.filter((c) => c.status === 'pending' && c.requestedBy !== myUid)
 }
+
+// Total unread across chat threads, formatted for the Chats tab badge. Muted
+// threads already contribute 0 (see computeUnread). Returns undefined when there
+// is nothing unread (so no badge renders); caps the display at "10+".
+const CHAT_BADGE_MAX = 10
+export function chatUnreadBadge(threads: ChatThread[]): number | string | undefined {
+  const total = threads.reduce((sum, t) => sum + t.unread, 0)
+  if (total <= 0) return undefined
+  return total > CHAT_BADGE_MAX ? `${CHAT_BADGE_MAX}+` : total
+}

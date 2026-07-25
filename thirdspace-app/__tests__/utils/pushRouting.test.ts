@@ -3,7 +3,7 @@ import { routeForNotification } from '../../utils/pushRouting'
 describe('routeForNotification', () => {
   it('routes a dm to the chat screen', () => {
     expect(routeForNotification({ type: 'dm', convId: 'c1' })).toEqual({
-      pathname: '/(app)/chat/[id]', params: { id: 'c1' },
+      pathname: '/(app)/chat/[id]', params: { id: 'c1', kind: 'dm' },
     })
   })
   it('routes an announcement to the event screen', () => {

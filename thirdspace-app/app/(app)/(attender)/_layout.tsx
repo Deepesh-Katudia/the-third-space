@@ -2,29 +2,30 @@ import React from 'react'
 import { Tabs, Redirect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
+import { useChatList } from '../../../hooks/useChatList'
+import { chatUnreadBadge } from '../../../utils/chat'
 import { LoadingView } from '../../../components/LoadingView'
-
-// Phase 1: unread count is hardcoded; Phase 2 wires it to a chats subscription.
-const UNREAD_CHATS = 3
+import { PillTabButton } from '../../../components/PillTabButton'
+import { colors, font, floatingNav } from '../../../constants/theme'
 
 export default function AttenderLayout() {
-  const { role, loading } = useAuth()
+  const { user, role, loading } = useAuth()
+  const { threads } = useChatList(user?.uid)
   if (loading) return <LoadingView />
   if (role !== 'attender') return <Redirect href="/(app)" />
+
+  const chatBadge = chatUnreadBadge(threads)
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#C4614A',
-        tabBarInactiveTintColor: '#8C7B70',
-        tabBarLabelStyle: { fontFamily: 'DMSans_500Medium', fontSize: 11 },
-        tabBarStyle: {
-          backgroundColor: 'rgba(255,249,244,0.97)',
-          borderTopColor: 'rgba(242,197,160,0.5)',
-          borderTopWidth: 1,
-        },
-        tabBarBadgeStyle: { backgroundColor: '#C4614A', fontFamily: 'DMSans_500Medium', fontSize: 10 },
+        tabBarActiveTintColor: colors.ink,
+        tabBarInactiveTintColor: colors.mutedLight,
+        tabBarLabelStyle: { fontFamily: font.bold, fontSize: 10 },
+        tabBarStyle: floatingNav,
+        tabBarButton: (props) => <PillTabButton {...props} />,
+        tabBarBadgeStyle: { backgroundColor: colors.danger, fontFamily: font.bold, fontSize: 10 },
       }}
     >
       <Tabs.Screen
@@ -45,7 +46,7 @@ export default function AttenderLayout() {
         name="chats"
         options={{
           title: 'Chats',
-          tabBarBadge: UNREAD_CHATS,
+          tabBarBadge: chatBadge,
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles-outline" size={size} color={color} />,
         }}
       />
