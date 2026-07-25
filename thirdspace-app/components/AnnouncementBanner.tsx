@@ -18,8 +18,8 @@ export function AnnouncementBanner({ announcement, onPress }: AnnouncementBanner
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: 'rgba(242,197,160,0.22)', borderLeftWidth: 3, borderLeftColor: '#C4614A', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 24 },
-  label: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#6B3F2A', letterSpacing: 0.4, marginBottom: 6 },
-  text: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 21 },
-  cta: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#C4614A', marginTop: 8 },
+  card: { backgroundColor: 'rgba(226,224,218,0.22)', borderLeftWidth: 3, borderLeftColor: '#FF9F3D', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 24 },
+  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#3A3A3A', letterSpacing: 0.4, marginBottom: 6 },
+  text: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
+  cta: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D', marginTop: 8 },
 })

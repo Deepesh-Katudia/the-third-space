@@ -10,6 +10,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useChatList } from '../../../hooks/useChatList'
 import { useMessageRequests } from '../../../hooks/useMessageRequests'
 import { formatRelativeTime } from '../../../utils/chat'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -86,14 +87,14 @@ export default function Chats() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 12, marginBottom: 12 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5 },
-  requestsLink: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#C4614A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
+  requestsLink: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D' },
   filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, marginBottom: 4 },
-  filterPill: { borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
-  filterPillActive: { backgroundColor: '#2C1810', borderColor: '#2C1810' },
-  filterText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
+  filterPill: { borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
+  filterPillActive: { backgroundColor: '#15161A', borderColor: '#15161A' },
+  filterText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
   filterTextActive: { color: 'white' },
-  list: { paddingHorizontal: 24, paddingBottom: 24, paddingTop: 4 },
+  list: { paddingHorizontal: 24, paddingBottom: NAV_CLEARANCE, paddingTop: 4 },
 })

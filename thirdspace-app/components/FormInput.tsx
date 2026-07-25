@@ -4,19 +4,25 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, TextInputProps } f
 interface FormInputProps extends TextInputProps {
   label: string
   error?: string
+  prefix?: string
 }
 
-export function FormInput({ label, error, secureTextEntry, ...props }: FormInputProps) {
+export function FormInput({ label, error, prefix, secureTextEntry, ...props }: FormInputProps) {
   const [hidden, setHidden] = useState(secureTextEntry ?? false)
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrapper}>
+        {prefix ? <Text style={styles.prefix}>{prefix}</Text> : null}
         <TextInput
-          style={[styles.input, error ? styles.inputError : styles.inputNormal]}
+          style={[
+            styles.input,
+            error ? styles.inputError : styles.inputNormal,
+            prefix ? styles.inputWithPrefix : null,
+          ]}
           secureTextEntry={hidden}
-          placeholderTextColor="#8C7B70"
+          placeholderTextColor="#6B6F78"
           autoCapitalize="none"
           {...props}
         />
@@ -38,25 +44,35 @@ export function FormInput({ label, error, secureTextEntry, ...props }: FormInput
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
   label: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Poppins_500Medium',
     fontSize: 14,
-    color: '#8C7B70',
+    color: '#6B6F78',
     marginBottom: 6,
   },
   inputWrapper: { position: 'relative' },
   input: {
-    backgroundColor: '#FFF9F4',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Poppins_500Medium',
     fontSize: 16,
-    color: '#2C1810',
+    color: '#15161A',
     borderWidth: 1,
   },
-  inputNormal: { borderColor: 'rgba(242,197,160,0.4)' },
-  inputError: { borderColor: '#f87171' },
+  inputNormal: { borderColor: 'rgba(226,224,218,0.4)' },
+  inputError: { borderColor: '#FF6A5B' },
+  inputWithPrefix: { paddingLeft: 44 },
+  prefix: {
+    position: 'absolute',
+    left: 16,
+    top: 15,
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 16,
+    color: '#15161A',
+    zIndex: 1,
+  },
   toggle: { position: 'absolute', right: 16, top: 14 },
-  toggleText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  errorText: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#ef4444', marginTop: 4 },
+  toggleText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  errorText: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#FF3B30', marginTop: 4 },
 })

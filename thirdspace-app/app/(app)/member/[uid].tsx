@@ -117,17 +117,17 @@ export default function MemberProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
-  back: { fontSize: 24, color: '#2C1810' },
+  back: { fontSize: 24, color: '#15161A' },
   scroll: { paddingHorizontal: 24, paddingBottom: 32 },
-  bio: { fontFamily: 'DMSans_300Light', fontSize: 15, color: '#2C1810', lineHeight: 23, marginBottom: 20 },
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
+  bio: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#15161A', lineHeight: 23, marginBottom: 20 },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
   interestWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 },
-  interestChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
-  interestText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
+  interestChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
+  interestText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
   vibeStrip: { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  vibePhoto: { flex: 1, height: 110, borderRadius: 16, backgroundColor: 'rgba(242,197,160,0.3)' },
+  vibePhoto: { flex: 1, height: 110, borderRadius: 16, backgroundColor: 'rgba(226,224,218,0.3)' },
   blockBtn: { alignItems: 'center', paddingVertical: 10 },
-  blockText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  blockText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
 })

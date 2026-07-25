@@ -77,16 +77,16 @@ export default function Connections() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#2C1810' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#2C1810', letterSpacing: -0.5 },
+  back: { fontSize: 24, color: '#15161A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
   list: { paddingHorizontal: 24, paddingBottom: 32 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarText: { fontFamily: 'DMSans_500Medium', fontSize: 18, color: 'white' },
+  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: 'white' },
   rowText: { flex: 1 },
-  name: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: '#2C1810' },
-  neighborhood: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70', marginTop: 1 },
-  chevron: { fontSize: 20, color: '#C9B8A8' },
+  name: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
+  neighborhood: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78', marginTop: 1 },
+  chevron: { fontSize: 20, color: '#C9CCD2' },
 })

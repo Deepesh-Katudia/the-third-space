@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { EventCategory } from '../../../types/models'
-import { FeaturedEventCard } from '../../../components/FeaturedEventCard'
-import { CompactEventRow } from '../../../components/CompactEventRow'
+import { EventCard } from '../../../components/EventCard'
 import { LoadingView } from '../../../components/LoadingView'
 import { EmptyState } from '../../../components/EmptyState'
 import { useAuth } from '../../../hooks/useAuth'
@@ -14,6 +13,7 @@ import { useUpcomingEvents } from '../../../hooks/useUpcomingEvents'
 import { useDiscoverFilters } from '../../../hooks/useDiscoverFilters'
 import { applyEventFilters, hasActiveFilters } from '../../../utils/eventFilters'
 import { avatarColor, initials } from '../../../utils/avatar'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 const CATEGORY_CHIPS: { label: string; value: EventCategory | 'All' }[] = [
   { label: 'All', value: 'All' },
@@ -34,7 +34,6 @@ export default function Discover() {
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
   const visible = useMemo(() => applyEventFilters(events, filters, query), [events, filters, query])
-  const [featured, ...rest] = visible
 
   const activeCategory: EventCategory | 'All' =
     filters.categories.length === 1 ? filters.categories[0] : 'All'
@@ -67,7 +66,7 @@ export default function Discover() {
             <TextInput
               style={styles.searchInput}
               placeholder="Search events, venues, neighborhoods"
-              placeholderTextColor="#8C7B70"
+              placeholderTextColor="#6B6F78"
               value={query}
               onChangeText={setQuery}
               returnKeyType="search"
@@ -116,26 +115,14 @@ export default function Discover() {
             />
           )
         ) : (
-          <>
-            {featured ? (
-              <FeaturedEventCard
-                event={featured}
-                onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: featured.id } })}
-              />
-            ) : null}
-            {rest.length > 0 ? (
-              <>
-                <Text style={styles.sectionLabel}>More this week</Text>
-                {rest.map((event) => (
-                  <CompactEventRow
-                    key={event.id}
-                    event={event}
-                    onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: event.id } })}
-                  />
-                ))}
-              </>
-            ) : null}
-          </>
+          visible.map((event, i) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              index={i}
+              onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: event.id } })}
+            />
+          ))
         )}
       </ScrollView>
     </SafeAreaView>
@@ -143,13 +130,13 @@ export default function Discover() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
-  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
+  scroll: { paddingHorizontal: 15, paddingTop: 12, paddingBottom: NAV_CLEARANCE },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  location: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#C4614A', marginBottom: 2, letterSpacing: 0.3 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 34, color: '#2C1810', letterSpacing: -0.5 },
+  location: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D', marginBottom: 2, letterSpacing: 0.3 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 34, color: '#15161A', letterSpacing: -0.5 },
   userAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginTop: 4, overflow: 'hidden' },
-  userInitials: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: 'white' },
+  userInitials: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: 'white' },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   search: {
     flex: 1,
@@ -158,21 +145,21 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: 'rgba(242,197,160,0.5)',
+    borderColor: 'rgba(226,224,218,0.5)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  searchIcon: { fontSize: 18, color: '#8C7B70' },
-  searchInput: { flex: 1, fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#2C1810', paddingVertical: 0 },
-  searchClear: { fontSize: 14, color: '#8C7B70' },
-  filterBtn: { width: 48, height: 48, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
-  filterIcon: { fontSize: 18, color: '#2C1810' },
-  filterDot: { position: 'absolute', top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C4614A' },
+  searchIcon: { fontSize: 18, color: '#6B6F78' },
+  searchInput: { flex: 1, fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A', paddingVertical: 0 },
+  searchClear: { fontSize: 14, color: '#6B6F78' },
+  filterBtn: { width: 48, height: 48, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  filterIcon: { fontSize: 18, color: '#15161A' },
+  filterDot: { position: 'absolute', top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF9F3D' },
   chipRow: { gap: 8, paddingBottom: 4, marginBottom: 16 },
-  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', backgroundColor: 'white' },
-  chipActive: { backgroundColor: '#2C1810', borderColor: '#2C1810' },
-  chipText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
+  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', backgroundColor: 'white' },
+  chipActive: { backgroundColor: '#15161A', borderColor: '#15161A' },
+  chipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
   chipTextActive: { color: 'white' },
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, marginTop: 4 },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, marginTop: 4 },
 })

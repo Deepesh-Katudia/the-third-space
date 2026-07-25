@@ -33,8 +33,8 @@ export function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
 
 const styles = StyleSheet.create({
   row: { gap: 8, paddingVertical: 12 },
-  chip: { borderWidth: 1, borderColor: 'rgba(140,123,112,0.4)', borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#C4614A', borderColor: '#C4614A' },
-  chipText: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  chipTextActive: { color: 'white' },
+  chip: { borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8 },
+  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
+  chipText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  chipTextActive: { color: '#15161A' },
 })

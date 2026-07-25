@@ -65,7 +65,7 @@ export default function VerifyIdentity() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <StatusBar style="dark" />
         <View style={styles.centered}>
-          <Ionicons name="checkmark-circle" size={72} color="#7A8C6E" />
+          <Ionicons name="checkmark-circle" size={72} color="#2FA365" />
           <Text style={styles.doneTitle}>You're verified</Text>
           <Text style={styles.doneBody}>Your identity is confirmed. The verified badge now shows on your profile.</Text>
           <View style={styles.doneBtn}>
@@ -81,7 +81,7 @@ export default function VerifyIdentity() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <StatusBar style="dark" />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#C4614A" />
+          <ActivityIndicator size="large" color="#FF9F3D" />
           <Text style={styles.verifyingText}>Verifying your identity…</Text>
         </View>
       </SafeAreaView>
@@ -127,37 +127,37 @@ function CaptureSlot({ label, uri, onPress }: { label: string; uri: string | nul
         <Image source={{ uri }} style={styles.slotImg} />
       ) : (
         <View style={styles.slotEmpty}>
-          <Ionicons name="camera-outline" size={24} color="#8C7B70" />
+          <Ionicons name="camera-outline" size={24} color="#6B6F78" />
         </View>
       )}
       <View style={styles.slotText}>
         <Text style={styles.slotLabel}>{label}</Text>
         <Text style={styles.slotHint}>{uri ? 'Captured · tap to retake' : 'Tap to capture'}</Text>
       </View>
-      {uri ? <Ionicons name="checkmark-circle" size={22} color="#7A8C6E" /> : null}
+      {uri ? <Ionicons name="checkmark-circle" size={22} color="#2FA365" /> : null}
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 28, color: '#2C1810', letterSpacing: -0.5 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#15161A', letterSpacing: -0.5 },
   body: { flex: 1, paddingHorizontal: 24, paddingTop: 8 },
-  subtitle: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#8C7B70', lineHeight: 22, marginBottom: 24 },
-  slot: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
+  subtitle: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', lineHeight: 22, marginBottom: 24 },
+  slot: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
   slotImg: { width: 56, height: 56, borderRadius: 10 },
-  slotEmpty: { width: 56, height: 56, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5EDE3' },
+  slotEmpty: { width: 56, height: 56, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F3F5' },
   slotText: { flex: 1 },
-  slotLabel: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  slotHint: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 3 },
+  slotLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  slotHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3 },
   footer: { paddingHorizontal: 24, paddingBottom: 16 },
   skip: { alignItems: 'center', paddingVertical: 14 },
-  skipText: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#8C7B70' },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginTop: 4 },
+  skipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#6B6F78' },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginTop: 4 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  verifyingText: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: '#2C1810', marginTop: 20 },
-  doneTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 26, color: '#2C1810', marginTop: 16, letterSpacing: -0.5 },
-  doneBody: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#8C7B70', textAlign: 'center', lineHeight: 22, marginTop: 10 },
+  verifyingText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A', marginTop: 20 },
+  doneTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', marginTop: 16, letterSpacing: -0.5 },
+  doneBody: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', textAlign: 'center', lineHeight: 22, marginTop: 10 },
   doneBtn: { alignSelf: 'stretch', marginTop: 28 },
 })

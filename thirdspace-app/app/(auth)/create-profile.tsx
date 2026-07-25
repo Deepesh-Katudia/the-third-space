@@ -97,7 +97,7 @@ export default function CreateProfile() {
           <TextInput
             style={styles.bioInput}
             placeholder="Illustrator, new to Brooklyn, always up for good coffee…"
-            placeholderTextColor="#8C7B70"
+            placeholderTextColor="#6B6F78"
             value={bio}
             onChangeText={(t) => setBio(t.slice(0, BIO_LIMIT))}
             multiline
@@ -153,25 +153,25 @@ export default function CreateProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
   scroll: { flex: 1, paddingHorizontal: 24 },
   content: { paddingTop: 32, paddingBottom: 40 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'DMSans_300Light', fontSize: 16, color: '#8C7B70', lineHeight: 22, marginBottom: 28 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78', lineHeight: 22, marginBottom: 28 },
   photoWrap: { alignItems: 'center', marginBottom: 28 },
   photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: 8 },
   photoImg: { width: 96, height: 96 },
   photoFallback: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center' },
-  photoInitials: { fontFamily: 'DMSans_500Medium', fontSize: 32, color: 'white' },
-  photoHint: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  fieldLabel: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#2C1810', marginBottom: 10, marginTop: 8 },
-  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 21 },
-  counter: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
+  photoInitials: { fontFamily: 'Poppins_600SemiBold', fontSize: 32, color: 'white' },
+  photoHint: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  fieldLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 10, marginTop: 8 },
+  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
+  counter: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  dobBtn: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8 },
-  dobText: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810' },
-  ageError: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginBottom: 12 },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#dc2626', marginBottom: 12 },
+  dobBtn: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8 },
+  dobText: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
+  ageError: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginBottom: 12 },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30', marginBottom: 12 },
   submitWrap: { marginTop: 12 },
 })

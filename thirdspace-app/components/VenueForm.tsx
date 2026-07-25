@@ -74,11 +74,11 @@ export function VenueForm({ initial, submitLabel, onSubmit }: VenueFormProps) {
 }
 
 const styles = StyleSheet.create({
-  label: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#2C1810', marginBottom: 8 },
+  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 8 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-  chip: { borderWidth: 1, borderColor: 'rgba(140,123,112,0.4)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#C4614A', borderColor: '#C4614A' },
-  chipText: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  chipTextActive: { color: 'white' },
-  errorText: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginBottom: 8 },
+  chip: { borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8 },
+  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
+  chipText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  chipTextActive: { color: '#15161A' },
+  errorText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginBottom: 8 },
 })

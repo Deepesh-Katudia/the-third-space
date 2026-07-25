@@ -44,9 +44,9 @@ export default function VenueSetup() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   scroll: { flex: 1, paddingHorizontal: 24 },
   content: { paddingTop: 40, paddingBottom: 40 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'DMSans_300Light', fontSize: 16, color: '#8C7B70', marginBottom: 24 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78', marginBottom: 24 },
 })

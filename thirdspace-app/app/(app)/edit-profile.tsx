@@ -133,7 +133,7 @@ export default function EditProfile() {
           <TextInput
             style={styles.bioInput}
             placeholder="Illustrator, new to Brooklyn, always up for good coffee…"
-            placeholderTextColor="#8C7B70"
+            placeholderTextColor="#6B6F78"
             value={bio}
             onChangeText={(t) => setBio(t.slice(0, BIO_LIMIT))}
             multiline
@@ -175,26 +175,26 @@ export default function EditProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8 },
-  back: { fontSize: 24, color: '#2C1810' },
-  headerTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 22, color: '#2C1810', letterSpacing: -0.5 },
+  back: { fontSize: 24, color: '#15161A' },
+  headerTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 22, color: '#15161A', letterSpacing: -0.5 },
   headerSpacer: { width: 24 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backCenterText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  backCenterText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
   scroll: { flex: 1, paddingHorizontal: 24 },
   content: { paddingTop: 16, paddingBottom: 40 },
   photoWrap: { alignItems: 'center', marginBottom: 28 },
   photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: 8 },
   photoImg: { width: 96, height: 96 },
   photoFallback: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center' },
-  photoInitials: { fontFamily: 'DMSans_500Medium', fontSize: 32, color: 'white' },
-  photoHint: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
-  fieldLabel: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#2C1810', marginBottom: 10, marginTop: 8 },
-  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 21 },
-  counter: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
+  photoInitials: { fontFamily: 'Poppins_600SemiBold', fontSize: 32, color: 'white' },
+  photoHint: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
+  fieldLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 10, marginTop: 8 },
+  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
+  counter: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#dc2626', marginBottom: 12 },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30', marginBottom: 12 },
   submitWrap: { marginTop: 12 },
 })

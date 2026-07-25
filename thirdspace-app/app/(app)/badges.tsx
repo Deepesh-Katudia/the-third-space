@@ -72,7 +72,7 @@ export default function Badges() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <LinearGradient colors={['#C4614A', '#E8855F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        <LinearGradient colors={['#FF9F3D', '#FFB75B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
           <Text style={styles.heroLabel}>YOUR POINTS</Text>
           <Text style={styles.heroPoints}>{profile.points.toLocaleString()}</Text>
           <View style={styles.tierBadge}>
@@ -116,27 +116,27 @@ export default function Badges() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#2C1810' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 26, color: '#2C1810', letterSpacing: -0.5 },
+  back: { fontSize: 24, color: '#15161A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', letterSpacing: -0.5 },
   scroll: { paddingHorizontal: 24, paddingBottom: 32 },
 
   hero: { borderRadius: 22, padding: 24, marginBottom: 28, alignItems: 'center' },
-  heroLabel: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.8, marginBottom: 6 },
-  heroPoints: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 52, color: 'white', letterSpacing: -1 },
+  heroLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.8, marginBottom: 6 },
+  heroPoints: { fontFamily: 'Poppins_800ExtraBold', fontSize: 52, color: 'white', letterSpacing: -1 },
   tierBadge: { backgroundColor: 'rgba(255,255,255,0.22)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 5, marginTop: 8, marginBottom: 18 },
-  tierText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: 'white' },
+  tierText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' },
   progressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   progressFill: { height: 8, borderRadius: 4, backgroundColor: 'white' },
-  progressText: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8 },
+  progressText: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8 },
 
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
   rewardText: { flex: 1 },
-  rewardLabel: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810', marginBottom: 2 },
-  rewardCost: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#C4614A' },
-  useBtn: { backgroundColor: '#2C1810', borderRadius: 100, paddingHorizontal: 20, paddingVertical: 10 },
+  rewardLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', marginBottom: 2 },
+  rewardCost: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF9F3D' },
+  useBtn: { backgroundColor: '#15161A', borderRadius: 100, paddingHorizontal: 20, paddingVertical: 10 },
   useBtnDisabled: { opacity: 0.4 },
-  useText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#FBF7F2' },
+  useText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#F3F3F5' },
 })

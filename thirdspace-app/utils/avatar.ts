@@ -1,17 +1,21 @@
-// Deterministic avatar styling for mock/initial-based avatars (Phase 1 has no
-// uploaded photos). Same seed always yields the same warm-palette color so a
-// given person looks consistent across screens.
+// Deterministic avatar styling for initial-based avatars (Storage is not provisioned,
+// so photoURL is often null). The same seed always yields the same color, so a given
+// person looks consistent across screens.
+// Every entry carries white initials at AA (>= 4.5:1).
 
 const AVATAR_PALETTE = [
-  '#C4614A', // terracotta
-  '#7A8C6E', // sage
-  '#C99A2E', // gold
-  '#6B5B95', // plum
-  '#3F6C9B', // blue
-  '#B5651D', // amber
-  '#588B8B', // teal
-  '#A0673A', // light brown
+  '#C2410C', // orange
+  '#1F7A4C', // green
+  '#9A5B0E', // amber
+  '#5B3E9B', // plum
+  '#2A4FBF', // blue
+  '#B02A63', // pink
+  '#2F6E6E', // teal
+  '#6D4AA6', // violet
 ] as const
+
+/** Exported for the contrast test — every entry must carry white initials at AA. */
+export const AVATAR_PALETTE_FOR_TEST = AVATAR_PALETTE
 
 export function avatarColor(seed: string): string {
   let hash = 0

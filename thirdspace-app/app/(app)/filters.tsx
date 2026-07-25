@@ -45,12 +45,12 @@ export default function Filters() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { paddingHorizontal: 24, paddingTop: 10 },
-  handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(242,197,160,0.7)', marginBottom: 14 },
+  handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(226,224,218,0.7)', marginBottom: 14 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 28, color: '#2C1810', letterSpacing: -0.5 },
-  close: { fontSize: 18, color: '#8C7B70' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#15161A', letterSpacing: -0.5 },
+  close: { fontSize: 18, color: '#6B6F78' },
   body: { flex: 1, paddingHorizontal: 24, paddingTop: 8 },
   footer: {
     flexDirection: 'row',
@@ -60,10 +60,10 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(242,197,160,0.5)',
+    borderTopColor: 'rgba(226,224,218,0.5)',
     gap: 16,
   },
-  clear: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#8C7B70' },
-  applyBtn: { flex: 1, backgroundColor: '#C4614A', borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
-  applyText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: 'white' },
+  clear: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#6B6F78' },
+  applyBtn: { flex: 1, backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
+  applyText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
 })

@@ -34,16 +34,28 @@ export default function RoleSelect() {
     setError(null)
 
     try {
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        displayName: user.displayName ?? '',
-        email: user.email ?? '',
-        role,
-        createdAt: serverTimestamp(),
-      })
-      router.replace('/(app)')
-    } catch {
-      setError('Something went wrong. Please try again.')
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          uid: user.uid,
+          displayName: user.displayName ?? '',
+          email: user.email ?? '',
+          role,
+          createdAt: serverTimestamp(),
+        },
+        { merge: true }
+      )
+      // Attenders still need a profile before entering the app; hosters are done.
+      ;(router.replace as (href: string) => void)(
+        role === 'attender' ? '/(auth)/create-profile' : '/(app)'
+      )
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code
+      setError(
+        code === 'permission-denied'
+          ? 'Database permission denied — the Firestore security rules may not be deployed yet.'
+          : `Couldn't save your role${code ? ` (${code})` : ''}. Please try again.`
+      )
       setLoading(null)
     }
   }
@@ -51,7 +63,7 @@ export default function RoleSelect() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.heading}>How will you use{'\n'}The Third Space?</Text>
+        <Text style={styles.heading}>How will you use{'\n'}Your Third Space?</Text>
         <Text style={styles.subtitle}>Choose your role to get started.</Text>
 
         {error ? (
@@ -70,7 +82,7 @@ export default function RoleSelect() {
               activeOpacity={0.75}
             >
               {loading === role ? (
-                <ActivityIndicator color="#C4614A" size="large" />
+                <ActivityIndicator color="#FF9F3D" size="large" />
               ) : (
                 <>
                   <Text style={styles.icon}>{icon}</Text>
@@ -89,7 +101,7 @@ export default function RoleSelect() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FBF7F2',
+    backgroundColor: '#F3F3F5',
   },
   content: {
     flex: 1,
@@ -97,16 +109,16 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   heading: {
-    fontFamily: 'DMSerifDisplay_400Regular',
+    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 32,
-    color: '#2C1810',
+    color: '#15161A',
     marginBottom: 8,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontFamily: 'DMSans_300Light',
+    fontFamily: 'Poppins_400Regular',
     fontSize: 16,
-    color: '#8C7B70',
+    color: '#6B6F78',
     marginBottom: 32,
   },
   banner: {
@@ -118,9 +130,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bannerText: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Poppins_500Medium',
     fontSize: 14,
-    color: '#dc2626',
+    color: '#FF3B30',
   },
   cards: {
     gap: 16,
@@ -143,17 +155,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: {
-    fontFamily: 'DMSans_500Medium',
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 6,
-    color: '#2C1810',
+    color: '#15161A',
     textAlign: 'center',
   },
   cardBody: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Poppins_500Medium',
     fontSize: 14,
-    color: '#8C7B70',
+    color: '#6B6F78',
     textAlign: 'center',
     lineHeight: 20,
   },

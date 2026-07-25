@@ -76,7 +76,7 @@ export default function MessagePrivacyScreen() {
                 <Text style={styles.rowHint}>{option.hint}</Text>
               </View>
               {isSelected ? (
-                <Ionicons name="checkmark-circle" size={22} color="#C4614A" />
+                <Ionicons name="checkmark-circle" size={22} color="#FF9F3D" />
               ) : (
                 <View style={styles.radioEmpty} />
               )}
@@ -95,19 +95,19 @@ export default function MessagePrivacyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  back: { fontSize: 24, color: '#2C1810' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#2C1810', letterSpacing: -0.5 },
-  card: { marginHorizontal: 24, backgroundColor: 'white', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(242,197,160,0.4)' },
+  back: { fontSize: 24, color: '#15161A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
+  card: { marginHorizontal: 24, backgroundColor: 'white', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.4)' },
   rowLast: { borderBottomWidth: 0 },
   rowText: { flex: 1, paddingRight: 12 },
-  rowLabel: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  rowHint: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 3, lineHeight: 17 },
-  radioEmpty: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: 'rgba(140,123,112,0.4)' },
+  rowLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  rowHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3, lineHeight: 17 },
+  radioEmpty: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: 'rgba(107,111,120,0.4)' },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backCenterText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  footnote: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginHorizontal: 24, marginTop: 14, lineHeight: 18 },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginHorizontal: 24, marginTop: 10 },
+  backCenterText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  footnote: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginHorizontal: 24, marginTop: 14, lineHeight: 18 },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginHorizontal: 24, marginTop: 10 },
 })

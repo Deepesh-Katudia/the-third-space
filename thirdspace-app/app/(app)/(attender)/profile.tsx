@@ -13,6 +13,7 @@ import { useConnections } from '../../../hooks/useConnections'
 import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { messagePrivacyLabel } from '../../../utils/profile'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 export default function Profile() {
   const router = useRouter()
@@ -46,7 +47,7 @@ export default function Profile() {
           <View style={styles.identityText}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>{name}</Text>
-              {profile?.verified ? <Ionicons name="checkmark-circle" size={18} color="#7A8C6E" /> : null}
+              {profile?.verified ? <Ionicons name="checkmark-circle" size={18} color="#2FA365" /> : null}
             </View>
             {neighborhood ? <Text style={styles.neighborhood}>{neighborhood}</Text> : null}
           </View>
@@ -95,7 +96,7 @@ export default function Profile() {
             <Switch
               value={notifications}
               onValueChange={setNotifications}
-              trackColor={{ false: '#E5DCD2', true: '#C4614A' }}
+              trackColor={{ false: '#E2E0DA', true: '#FF9F3D' }}
               thumbColor="white"
             />
           </View>
@@ -153,43 +154,43 @@ function Row({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
-  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
+  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: NAV_CLEARANCE },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
 
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 18 },
   avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarText: { fontFamily: 'DMSans_500Medium', fontSize: 24, color: 'white' },
+  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 24, color: 'white' },
   identityText: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
-  name: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#2C1810' },
-  neighborhood: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  name: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A' },
+  neighborhood: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
 
-  editBtn: { borderWidth: 1.5, borderColor: '#C4614A', borderRadius: 100, paddingVertical: 12, alignItems: 'center', marginBottom: 24 },
-  editText: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: '#C4614A' },
+  editBtn: { borderWidth: 1.5, borderColor: '#FF9F3D', borderRadius: 100, paddingVertical: 12, alignItems: 'center', marginBottom: 24 },
+  editText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D' },
 
-  statsRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 18, paddingVertical: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
+  statsRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 18, paddingVertical: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
   stat: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 26, color: '#2C1810' },
-  statLabel: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: 'rgba(242,197,160,0.6)' },
+  statValue: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A' },
+  statLabel: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 2 },
+  statDivider: { width: 1, height: 32, backgroundColor: 'rgba(226,224,218,0.6)' },
 
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
-  card: { backgroundColor: 'white', borderRadius: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(242,197,160,0.4)' },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
+  card: { backgroundColor: 'white', borderRadius: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.4)' },
   rowLast: { borderBottomWidth: 0 },
-  rowLabel: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810' },
+  rowLabel: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowValue: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  chevron: { fontSize: 20, color: '#C9B8A8' },
-  newBadge: { backgroundColor: '#C4614A', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 2 },
-  newBadgeText: { fontFamily: 'DMSans_500Medium', fontSize: 10, color: 'white' },
+  rowValue: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  chevron: { fontSize: 20, color: '#C9CCD2' },
+  newBadge: { backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 2 },
+  newBadgeText: { fontFamily: 'Poppins_600SemiBold', fontSize: 10, color: '#15161A' },
 
   signOut: { alignItems: 'center', paddingVertical: 8 },
-  signOutText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#C4614A' },
+  signOutText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#FF9F3D' },
 
-  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', marginBottom: 12 },
-  settingsText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  settingsChevron: { fontFamily: 'DMSans_400Regular', fontSize: 20, color: '#8C7B70' },
+  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', marginBottom: 12 },
+  settingsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  settingsChevron: { fontFamily: 'Poppins_500Medium', fontSize: 20, color: '#6B6F78' },
 })

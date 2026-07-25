@@ -11,6 +11,7 @@ import { EmptyState } from '../../../components/EmptyState'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 export default function HosterEvents() {
   const router = useRouter()
@@ -36,21 +37,21 @@ export default function HosterEvents() {
       <View style={styles.header}>
         <Text style={styles.title}>Your events</Text>
         <TouchableOpacity onPress={() => router.push('/(app)/create-event')} style={styles.createButton}>
-          <Ionicons name="add" size={22} color="white" />
+          <Ionicons name="add" size={22} color="#15161A" />
         </TouchableOpacity>
       </View>
       {error ? <View style={styles.bannerWrap}><Banner message={error} /></View> : null}
       <FlatList
         data={ordered}
         keyExtractor={(e) => e.id}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.eventItem}>
-            <EventCard event={item} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
+            <EventCard event={item} index={index} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
             <TouchableOpacity
               style={styles.announceBtn}
               onPress={() => router.push({ pathname: '/(app)/(hoster)/announcement/[id]', params: { id: item.id } })}
             >
-              <Ionicons name="megaphone-outline" size={15} color="#C4614A" />
+              <Ionicons name="megaphone-outline" size={15} color="#FF9F3D" />
               <Text style={styles.announceText}>Send announcement</Text>
             </TouchableOpacity>
           </View>
@@ -71,13 +72,13 @@ export default function HosterEvents() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 12, marginBottom: 16 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5 },
-  createButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#C4614A', alignItems: 'center', justifyContent: 'center' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
+  createButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
   bannerWrap: { paddingHorizontal: 24 },
-  list: { paddingHorizontal: 24, paddingBottom: 24 },
+  list: { paddingHorizontal: 24, paddingBottom: NAV_CLEARANCE },
   eventItem: { marginBottom: 12 },
   announceBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: -4, paddingVertical: 6, paddingHorizontal: 4 },
-  announceText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#C4614A' },
+  announceText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D' },
 })

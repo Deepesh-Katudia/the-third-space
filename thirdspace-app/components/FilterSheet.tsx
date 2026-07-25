@@ -120,7 +120,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: '#E5DCD2', true: '#C4614A' }}
+        trackColor={{ false: '#E2E0DA', true: '#FF9F3D' }}
         thumbColor="white"
       />
     </View>
@@ -130,12 +130,12 @@ function ToggleRow({
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 12 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
+  sectionTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', backgroundColor: 'white' },
-  chipActive: { backgroundColor: '#C4614A', borderColor: '#C4614A' },
-  chipText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
-  chipTextActive: { color: 'white' },
+  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', backgroundColor: 'white' },
+  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
+  chipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
+  chipTextActive: { color: '#15161A' },
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  toggleLabel: { fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810' },
+  toggleLabel: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
 })

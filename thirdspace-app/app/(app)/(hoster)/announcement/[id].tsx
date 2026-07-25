@@ -27,7 +27,7 @@ const TEMPLATES = [
   { label: 'Thank you', text: 'Thank you all for coming — it was a wonderful evening!' },
 ]
 
-export default function Announcement() {
+export default function AnnouncementScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
@@ -94,7 +94,7 @@ export default function Announcement() {
           <TextInput
             style={styles.textarea}
             placeholder="Write your announcement…"
-            placeholderTextColor="#8C7B70"
+            placeholderTextColor="#6B6F78"
             value={message}
             onChangeText={setMessage}
             multiline
@@ -140,28 +140,28 @@ export default function Announcement() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#2C1810' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#2C1810', letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70' },
+  back: { fontSize: 24, color: '#15161A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
   scroll: { paddingHorizontal: 24, paddingBottom: 24 },
-  eventCard: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
-  eventTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 18, color: '#2C1810', marginBottom: 4 },
-  eventWhen: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  textarea: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)', borderRadius: 16, padding: 16, minHeight: 130, fontFamily: 'DMSans_400Regular', fontSize: 15, color: '#2C1810', lineHeight: 22 },
-  caption: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 8, marginBottom: 24 },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginTop: 8 },
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
+  eventCard: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  eventTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 18, color: '#15161A', marginBottom: 4 },
+  eventWhen: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  textarea: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 16, padding: 16, minHeight: 130, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 22 },
+  caption: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 8, marginBottom: 24 },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginTop: 8 },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
   templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
-  templateChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
-  templateText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
-  recentCard: { backgroundColor: 'rgba(242,197,160,0.15)', borderRadius: 16, padding: 16 },
-  recentText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#2C1810', lineHeight: 20, marginBottom: 8 },
-  recentStats: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70' },
-  footer: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(242,197,160,0.5)', backgroundColor: '#FBF7F2' },
-  sendBtn: { backgroundColor: '#C4614A', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  sendBtnDisabled: { backgroundColor: 'rgba(196,97,74,0.4)' },
-  sendText: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: 'white' },
+  templateChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
+  templateText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
+  recentCard: { backgroundColor: 'rgba(226,224,218,0.15)', borderRadius: 16, padding: 16 },
+  recentText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A', lineHeight: 20, marginBottom: 8 },
+  recentStats: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78' },
+  footer: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)', backgroundColor: '#F3F3F5' },
+  sendBtn: { backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  sendBtnDisabled: { backgroundColor: 'rgba(255,159,61,0.4)' },
+  sendText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
 })

@@ -11,6 +11,7 @@ import { AuthButton } from '../../../components/AuthButton'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 export default function Overview() {
   const router = useRouter()
@@ -65,14 +66,15 @@ export default function Overview() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   content: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 20, letterSpacing: -0.5 },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 20, letterSpacing: -0.5 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  stat: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(242,197,160,0.4)' },
-  statNumber: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 28, color: '#C4614A' },
-  statLabel: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#8C7B70', marginTop: 4 },
-  sectionTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 20, color: '#2C1810', marginBottom: 12 },
-  muted: { fontFamily: 'DMSans_300Light', fontSize: 14, color: '#8C7B70', marginBottom: 12 },
-  cta: { marginTop: 'auto', marginBottom: 24 },
+  stat: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.4)' },
+  statNumber: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#FF9F3D' },
+  statLabel: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78', marginTop: 4 },
+  sectionTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#15161A', marginBottom: 12 },
+  muted: { fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#6B6F78', marginBottom: 12 },
+  // Pinned to the bottom, so it must clear the absolutely-positioned floating nav.
+  cta: { marginTop: 'auto', marginBottom: NAV_CLEARANCE },
 })

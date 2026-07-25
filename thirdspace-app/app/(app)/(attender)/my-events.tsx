@@ -13,6 +13,7 @@ import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
 import { formatDayDate, formatTime, daysUntil } from '../../../utils/eventHelpers'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 type TabKey = 'upcoming' | 'hosting' | 'past'
 
@@ -94,7 +95,7 @@ export default function MyEvents() {
           ) : (
             <>
               <TouchableOpacity activeOpacity={0.92} onPress={() => goEvent(next.id)}>
-                <LinearGradient colors={['#2C1810', '#3a1e12']} style={styles.nextCard}>
+                <LinearGradient colors={['#15161A', '#0E0E10']} style={styles.nextCard}>
                   <Text style={styles.nextLabel}>NEXT UP · {nextUpLabel(next, now)}</Text>
                   <Text style={styles.nextTitle}>{next.title}</Text>
                   <Text style={styles.nextMeta}>{formatDayDate(next.startsAt.toDate())} · {formatTime(next.startsAt.toDate())}</Text>
@@ -104,7 +105,7 @@ export default function MyEvents() {
                       uids={Array.from({ length: Math.min(next.registeredCount, 4) }, (_, i) => `${next.id}:${i}`)}
                       count={next.registeredCount}
                       size={28}
-                      ringColor="#2C1810"
+                      ringColor="#15161A"
                     />
                     <TouchableOpacity
                       style={styles.chatBtn}
@@ -174,27 +175,27 @@ function RateAction() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', letterSpacing: -0.5, paddingHorizontal: 24, paddingTop: 12, marginBottom: 16 },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5, paddingHorizontal: 24, paddingTop: 12, marginBottom: 16 },
   tabRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, marginBottom: 8 },
-  tabPill: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(242,197,160,0.6)' },
-  tabPillActive: { backgroundColor: '#2C1810', borderColor: '#2C1810' },
-  tabText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#6B3F2A' },
+  tabPill: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
+  tabPillActive: { backgroundColor: '#15161A', borderColor: '#15161A' },
+  tabText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
   tabTextActive: { color: 'white' },
   bannerWrap: { paddingHorizontal: 24, paddingTop: 8 },
-  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24 },
+  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: NAV_CLEARANCE },
 
   nextCard: { borderRadius: 20, padding: 20, marginBottom: 8 },
-  nextLabel: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: '#F2C5A0', letterSpacing: 0.8, marginBottom: 10 },
-  nextTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#FBF7F2', marginBottom: 8, letterSpacing: -0.5 },
-  nextMeta: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: 'rgba(251,247,242,0.75)', marginBottom: 2 },
+  nextLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#E2E0DA', letterSpacing: 0.8, marginBottom: 10 },
+  nextTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#F3F3F5', marginBottom: 8, letterSpacing: -0.5 },
+  nextMeta: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(251,247,242,0.75)', marginBottom: 2 },
   nextFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
-  chatBtn: { backgroundColor: '#C4614A', borderRadius: 100, paddingHorizontal: 18, paddingVertical: 9 },
-  chatBtnText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: 'white' },
+  chatBtn: { backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 18, paddingVertical: 9 },
+  chatBtnText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#15161A' },
 
-  sectionLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#8C7B70', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, marginTop: 20 },
-  goingBadge: { backgroundColor: 'rgba(122,140,110,0.18)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  goingBadgeText: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#5c6e51' },
-  rateBtn: { borderWidth: 1, borderColor: 'rgba(242,197,160,0.8)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  rateText: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: '#C4614A' },
+  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12, marginTop: 20 },
+  goingBadge: { backgroundColor: 'rgba(47,163,101,0.18)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
+  goingBadgeText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#25804E' },
+  rateBtn: { borderWidth: 1, borderColor: 'rgba(226,224,218,0.8)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
+  rateText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#FF9F3D' },
 })

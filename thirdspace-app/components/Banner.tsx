@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   banner: { borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 16 },
   error: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
   success: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  text: { fontFamily: 'DMSans_400Regular', fontSize: 14 },
-  errorText: { color: '#dc2626' },
-  successText: { color: '#16a34a' },
+  text: { fontFamily: 'Poppins_500Medium', fontSize: 14 },
+  errorText: { color: '#FF3B30' },
+  successText: { color: '#2FA365' },
 })

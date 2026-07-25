@@ -12,6 +12,7 @@ import { VenueForm } from '../../../components/VenueForm'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { Venue } from '../../../types/models'
+import { NAV_CLEARANCE } from '../../../constants/theme'
 
 export default function VenueTab() {
   const router = useRouter()
@@ -51,14 +52,14 @@ export default function VenueTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 40, paddingBottom: 40 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 24, letterSpacing: -0.5 },
-  signOutButton: { marginTop: 24, alignSelf: 'center', borderWidth: 1, borderColor: 'rgba(140,123,112,0.4)', borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  signOutText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  content: { paddingTop: 40, paddingBottom: NAV_CLEARANCE },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 24, letterSpacing: -0.5 },
+  signOutButton: { marginTop: 24, alignSelf: 'center', borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
+  signOutText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
 
-  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)', marginBottom: 12 },
-  settingsText: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  settingsChevron: { fontFamily: 'DMSans_400Regular', fontSize: 20, color: '#8C7B70' },
+  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', marginBottom: 12 },
+  settingsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  settingsChevron: { fontFamily: 'Poppins_500Medium', fontSize: 20, color: '#6B6F78' },
 })

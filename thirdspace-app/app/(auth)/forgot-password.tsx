@@ -66,18 +66,18 @@ export default function ForgotPassword() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   inner: { flex: 1, paddingHorizontal: 24, paddingTop: 40 },
   back: { marginBottom: 32 },
-  backText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  backText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
   header: { marginBottom: 32 },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 32, color: '#2C1810', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'DMSans_300Light', fontSize: 16, color: '#8C7B70' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78' },
   banner: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, marginBottom: 16 },
-  bannerText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#dc2626' },
+  bannerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30' },
   successContainer: { flex: 1, justifyContent: 'center' },
   successEmoji: { fontSize: 48, textAlign: 'center', marginBottom: 24 },
-  successTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 28, color: '#2C1810', textAlign: 'center', marginBottom: 12, letterSpacing: -0.5 },
-  successBody: { fontFamily: 'DMSans_300Light', fontSize: 16, color: '#8C7B70', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  successEmail: { color: '#6B3F2A', fontFamily: 'DMSans_500Medium' },
+  successTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#15161A', textAlign: 'center', marginBottom: 12, letterSpacing: -0.5 },
+  successBody: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  successEmail: { color: '#3A3A3A', fontFamily: 'Poppins_600SemiBold' },
 })

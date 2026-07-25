@@ -40,7 +40,7 @@ export function RegistrationConfirmation({
 
   return (
     <Animated.View style={[styles.overlay, { opacity }]} pointerEvents="auto">
-      <LinearGradient colors={['#2C1810', '#3a1e12']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['#15161A', '#0E0E10']} style={StyleSheet.absoluteFill} />
       <View style={styles.blobTerracotta} />
       <View style={styles.blobSage} />
 
@@ -75,21 +75,21 @@ export function RegistrationConfirmation({
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 50, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  blobTerracotta: { position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(196,97,74,0.25)' },
-  blobSage: { position: 'absolute', bottom: -80, left: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(122,140,110,0.2)' },
+  blobTerracotta: { position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(255,159,61,0.25)' },
+  blobSage: { position: 'absolute', bottom: -80, left: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(47,163,101,0.2)' },
   content: { width: '100%', alignItems: 'center' },
-  checkCircle: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#7A8C6E', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  check: { fontSize: 44, color: 'white', fontFamily: 'DMSans_500Medium', lineHeight: 50 },
-  heading: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 36, color: '#FBF7F2', marginBottom: 24, letterSpacing: -0.5 },
-  summary: { width: '100%', backgroundColor: 'rgba(255,249,244,0.08)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(242,197,160,0.25)', padding: 20, marginBottom: 24 },
-  summaryTitle: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 20, color: '#FBF7F2', marginBottom: 8 },
-  summaryLine: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: 'rgba(251,247,242,0.7)', marginBottom: 2 },
-  pointsRow: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: 'rgba(196,97,74,0.25)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  pointsText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#F2C5A0' },
-  primaryAction: { width: '100%', backgroundColor: '#C4614A', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 12 },
-  primaryActionText: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: 'white' },
-  secondaryAction: { width: '100%', backgroundColor: 'rgba(255,249,244,0.1)', borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(242,197,160,0.3)' },
-  secondaryActionText: { fontFamily: 'DMSans_500Medium', fontSize: 16, color: '#FBF7F2' },
+  checkCircle: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#2FA365', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  check: { fontSize: 44, color: 'white', fontFamily: 'Poppins_600SemiBold', lineHeight: 50 },
+  heading: { fontFamily: 'Poppins_800ExtraBold', fontSize: 36, color: '#F3F3F5', marginBottom: 24, letterSpacing: -0.5 },
+  summary: { width: '100%', backgroundColor: 'rgba(255,249,244,0.08)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(226,224,218,0.25)', padding: 20, marginBottom: 24 },
+  summaryTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#F3F3F5', marginBottom: 8 },
+  summaryLine: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(251,247,242,0.7)', marginBottom: 2 },
+  pointsRow: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: 'rgba(255,159,61,0.25)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
+  pointsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#E2E0DA' },
+  primaryAction: { width: '100%', backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 12 },
+  primaryActionText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
+  secondaryAction: { width: '100%', backgroundColor: 'rgba(255,249,244,0.1)', borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(226,224,218,0.3)' },
+  secondaryActionText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#F3F3F5' },
   dismiss: { marginTop: 16 },
-  dismissText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: 'rgba(251,247,242,0.6)' },
+  dismissText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(251,247,242,0.6)' },
 })
