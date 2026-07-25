@@ -3,6 +3,7 @@ import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../hooks/useAuth'
 import { getPushEnabled, setPushEnabled } from '../../services/pushTokens'
 
@@ -11,6 +12,9 @@ export default function Settings() {
   const { user } = useAuth()
   const [enabled, setEnabled] = useState(true)
   const [error, setError] = useState('')
+
+  // Only email/password accounts have a password to change; Google/Apple do not.
+  const isPasswordUser = user?.providerData?.some((p) => p.providerId === 'password') ?? false
 
   useEffect(() => {
     if (!user) return
@@ -55,10 +59,21 @@ export default function Settings() {
         <Switch
           value={enabled}
           onValueChange={toggle}
-          trackColor={{ true: '#C4614A', false: 'rgba(140,123,112,0.4)' }}
+          trackColor={{ true: '#FF9F3D', false: 'rgba(107,111,120,0.4)' }}
         />
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {isPasswordUser ? (
+        <TouchableOpacity style={styles.navRow} onPress={() => router.push('/(app)/change-password')} activeOpacity={0.7}>
+          <View style={styles.rowText}>
+            <Text style={styles.rowLabel}>Change password</Text>
+            <Text style={styles.rowHint}>Update the password for your account</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#6B6F78" />
+        </TouchableOpacity>
+      ) : null}
+
       <Text style={styles.footnote}>
         If notifications are turned off at the device level, enable them in your phone's Settings first.
       </Text>
@@ -67,14 +82,15 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF7F2' },
+  container: { flex: 1, backgroundColor: '#F3F3F5' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  back: { fontSize: 24, color: '#2C1810' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 24, color: '#2C1810', letterSpacing: -0.5 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 24, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(242,197,160,0.5)' },
+  back: { fontSize: 24, color: '#15161A' },
+  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 24, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 24, marginTop: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
   rowText: { flex: 1, paddingRight: 12 },
-  rowLabel: { fontFamily: 'DMSans_500Medium', fontSize: 15, color: '#2C1810' },
-  rowHint: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginTop: 3 },
-  footnote: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: '#8C7B70', marginHorizontal: 24, marginTop: 12, lineHeight: 18 },
-  error: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: '#dc2626', marginHorizontal: 24, marginTop: 10 },
+  rowLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  rowHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3 },
+  footnote: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginHorizontal: 24, marginTop: 12, lineHeight: 18 },
+  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginHorizontal: 24, marginTop: 10 },
 })

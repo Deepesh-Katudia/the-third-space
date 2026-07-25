@@ -1,14 +1,27 @@
+import { evaluatePassword, PasswordContext } from './password'
+
 export function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-export function validatePassword(password: string): boolean {
-  return password.length >= 8
+// US-only, NANP-valid: exactly 10 digits, area code doesn't start with 0/1.
+export function validatePhoneNumber(digits: string): boolean {
+  return /^[2-9]\d{9}$/.test(digits)
+}
+
+export function toE164(digits: string): string {
+  return `+1${digits}`
+}
+
+// Delegates to the Balanced password policy (see utils/password.ts).
+export function validatePassword(password: string, context?: PasswordContext): boolean {
+  return evaluatePassword(password, context).meetsMinimum
 }
 
 export interface SignUpFormErrors {
   name?: string
   email?: string
+  phone?: string
   password?: string
   confirmPassword?: string
 }
@@ -16,13 +29,42 @@ export interface SignUpFormErrors {
 export function validateSignUpForm(fields: {
   name: string
   email: string
+  phone: string
   password: string
   confirmPassword: string
 }): SignUpFormErrors {
   const errors: SignUpFormErrors = {}
   if (!fields.name.trim()) errors.name = 'Full name is required.'
   if (!validateEmail(fields.email)) errors.email = 'Please enter a valid email address.'
-  if (!validatePassword(fields.password)) errors.password = 'Password must be at least 8 characters.'
+  if (!validatePhoneNumber(fields.phone)) errors.phone = 'Enter a valid 10-digit US phone number.'
+  if (!validatePassword(fields.password, { email: fields.email, name: fields.name })) {
+    errors.password =
+      'Use at least 8 characters with a mix of upper- and lower-case letters, numbers, or symbols — and avoid your name, email, or a common password.'
+  }
   if (fields.password !== fields.confirmPassword) errors.confirmPassword = 'Passwords do not match.'
+  return errors
+}
+
+export interface ChangePasswordFormErrors {
+  currentPassword?: string
+  newPassword?: string
+  confirmNewPassword?: string
+}
+
+export function validateChangePasswordForm(fields: {
+  currentPassword: string
+  newPassword: string
+  confirmNewPassword: string
+  email?: string
+}): ChangePasswordFormErrors {
+  const errors: ChangePasswordFormErrors = {}
+  if (!fields.currentPassword) errors.currentPassword = 'Enter your current password.'
+  if (!validatePassword(fields.newPassword, { email: fields.email })) {
+    errors.newPassword =
+      'Use at least 8 characters with a mix of upper- and lower-case letters, numbers, or symbols — and avoid your email or a common password.'
+  } else if (fields.newPassword === fields.currentPassword) {
+    errors.newPassword = 'Choose a password different from your current one.'
+  }
+  if (fields.newPassword !== fields.confirmNewPassword) errors.confirmNewPassword = 'Passwords do not match.'
   return errors
 }
