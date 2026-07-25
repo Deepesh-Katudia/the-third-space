@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { View, ActivityIndicator } from 'react-native'
-import { useFonts, DMSerifDisplay_400Regular, DMSerifDisplay_400Regular_Italic } from '@expo-google-fonts/dm-serif-display'
-import { DMSans_300Light, DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans'
+import {
+  useFonts,
+  Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
+} from '@expo-google-fonts/poppins'
 import { useAuth } from '../hooks/useAuth'
+import { resolveAuthRoute } from '../utils/authRoute'
+import { colors } from '../constants/theme'
 
 interface AuthRedirectProps {
   user: import('firebase/auth').User | null
@@ -18,20 +22,14 @@ function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
 
   useEffect(() => {
     if (loading) return
-    const inAuthGroup = segments[0] === '(auth)'
-    const inAppGroup = segments[0] === '(app)'
-    const onRoleSelect = segments[1] === 'role-select'
-    const onCreateProfile = (segments[1] as string) === 'create-profile'
-
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/onboarding')
-    } else if (user && !role && !onRoleSelect) {
-      router.replace('/(auth)/role-select')
-    } else if (user && role === 'attender' && !hasProfile && !onCreateProfile) {
-      ;(router.replace as (href: string) => void)('/(auth)/create-profile')  // Task 8 adds this route
-    } else if (user && role && (role !== 'attender' || hasProfile) && !inAppGroup) {
-      router.replace('/(app)')
-    }
+    const target = resolveAuthRoute({
+      hasUser: !!user,
+      role,
+      hasProfile,
+      segment0: segments[0],
+      segment1: segments[1],
+    })
+    if (target) (router.replace as (href: string) => void)(target)
   }, [user, role, hasProfile, loading, segments])
 
   return null
@@ -39,18 +37,18 @@ function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    DMSerifDisplay_400Regular,
-    DMSerifDisplay_400Regular_Italic,
-    DMSans_300Light,
-    DMSans_400Regular,
-    DMSans_500Medium,
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
   })
   const { user, role, hasProfile, loading } = useAuth()
 
   if (!fontsLoaded || loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2C1810' }}>
-        <ActivityIndicator color="#C4614A" size="large" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     )
   }

@@ -1,7 +1,7 @@
-import { renderHook, waitFor } from '@testing-library/react-native'
+import { renderHook, waitFor, act } from '@testing-library/react-native'
 import { useAuth } from '../../hooks/useAuth'
 import { onAuthStateChanged } from 'firebase/auth'
-import { getDoc } from 'firebase/firestore'
+import { onSnapshot } from 'firebase/firestore'
 
 jest.mock('../../firebase/config', () => ({
   auth: {},
@@ -13,9 +13,25 @@ jest.mock('firebase/auth', () => ({
 }))
 
 jest.mock('firebase/firestore', () => ({
-  doc: jest.fn(),
-  getDoc: jest.fn(),
+  doc: (_db: unknown, ...segments: string[]) => ({ path: segments.join('/') }),
+  onSnapshot: jest.fn(),
 }))
+
+// The hook subscribes to users/{uid} first, then profiles/{uid}. Capture each
+// snapshot handler by call order so tests can drive live emissions.
+function captureSnapshots() {
+  const handlers: { next: (snap: { exists: () => boolean; data?: () => Record<string, unknown> }) => void; error: () => void }[] = []
+  ;(onSnapshot as jest.Mock).mockImplementation((_ref, next, error) => {
+    handlers.push({ next, error })
+    return jest.fn()
+  })
+  return {
+    emitUser: (snap: { exists: () => boolean; data?: () => Record<string, unknown> }) => handlers[0]?.next(snap),
+    failUser: () => handlers[0]?.error(),
+    emitProfile: (snap: { exists: () => boolean }) => handlers[1]?.next(snap),
+    failProfile: () => handlers[1]?.error(),
+  }
+}
 
 describe('useAuth', () => {
   beforeEach(() => {
@@ -23,7 +39,6 @@ describe('useAuth', () => {
   })
 
   test('starts with no user, no role, and loading true', () => {
-    // mock onAuthStateChanged to never call back
     ;(onAuthStateChanged as jest.Mock).mockReturnValue(jest.fn())
     const { result } = renderHook(() => useAuth())
     expect(result.current.user).toBeNull()
@@ -38,10 +53,12 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock)
-      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'hoster' }) }) // users
-      .mockResolvedValueOnce({ exists: () => false }) // profiles
+    const snaps = captureSnapshots()
     const { result } = renderHook(() => useAuth())
+    act(() => {
+      snaps.emitUser({ exists: () => true, data: () => ({ role: 'hoster' }) })
+      snaps.emitProfile({ exists: () => false })
+    })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.role).toBe('hoster')
     expect(result.current.hasProfile).toBe(false)
@@ -53,10 +70,12 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock)
-      .mockResolvedValueOnce({ exists: () => false }) // users
-      .mockResolvedValueOnce({ exists: () => false }) // profiles
+    const snaps = captureSnapshots()
     const { result } = renderHook(() => useAuth())
+    act(() => {
+      snaps.emitUser({ exists: () => false })
+      snaps.emitProfile({ exists: () => false })
+    })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.role).toBeNull()
     expect(result.current.hasProfile).toBe(false)
@@ -80,10 +99,12 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock)
-      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'attender' }) }) // users
-      .mockResolvedValueOnce({ exists: () => false }) // profiles
+    const snaps = captureSnapshots()
     const { result } = renderHook(() => useAuth())
+    act(() => {
+      snaps.emitUser({ exists: () => true, data: () => ({ role: 'attender' }) })
+      snaps.emitProfile({ exists: () => false })
+    })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.role).toBe('attender')
     expect(result.current.hasProfile).toBe(false)
@@ -95,12 +116,33 @@ describe('useAuth', () => {
       cb(mockUser)
       return jest.fn()
     })
-    ;(getDoc as jest.Mock)
-      .mockResolvedValueOnce({ exists: () => true, data: () => ({ role: 'attender' }) }) // users
-      .mockResolvedValueOnce({ exists: () => true }) // profiles
+    const snaps = captureSnapshots()
     const { result } = renderHook(() => useAuth())
+    act(() => {
+      snaps.emitUser({ exists: () => true, data: () => ({ role: 'attender' }) })
+      snaps.emitProfile({ exists: () => true })
+    })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.hasProfile).toBe(true)
+    expect(result.current.role).toBe('attender')
+  })
+
+  test('reacts to a role written after the initial snapshot', async () => {
+    const mockUser = { uid: 'lateRole' }
+    ;(onAuthStateChanged as jest.Mock).mockImplementation((_auth: unknown, cb: (user: unknown) => void) => {
+      cb(mockUser)
+      return jest.fn()
+    })
+    const snaps = captureSnapshots()
+    const { result } = renderHook(() => useAuth())
+    act(() => {
+      snaps.emitUser({ exists: () => false })
+      snaps.emitProfile({ exists: () => false })
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.role).toBeNull()
+    // role-select writes the users doc -> live snapshot fires again
+    act(() => snaps.emitUser({ exists: () => true, data: () => ({ role: 'attender' }) }))
     expect(result.current.role).toBe('attender')
   })
 })
