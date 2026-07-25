@@ -1,141 +1,139 @@
-import React, { useRef, useState } from 'react'
-import { View, FlatList, TouchableOpacity, Text, Dimensions, StyleSheet, ListRenderItem } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { AttendeeAvatarStack } from '../../components/AttendeeAvatarStack'
+import { Ionicons } from '@expo/vector-icons'
+import { setOnboardingPrefs } from '../../services/preferences'
+import { colors, font, gradients, radius } from '../../constants/theme'
 
-const { width } = Dimensions.get('window')
-
-interface Slide {
-  id: string
+interface PermissionRowProps {
+  icon: 'location' | 'notifications'
+  tint: string
   title: string
   body: string
-  tint: string
-  showCount?: boolean
+  enabled: boolean
+  onToggle: () => void
 }
 
-const slides: Slide[] = [
-  {
-    id: '1',
-    title: 'A real third place — for a city that forgot how to meet.',
-    body: 'ID-verified people, real venues, actual plans. No bots, no endless scroll.',
-    tint: '#C4614A',
-    showCount: true,
-  },
-  {
-    id: '2',
-    title: "See who's going first.",
-    body: "Preview who's attending before you commit. Register to unlock the full guest list.",
-    tint: '#7A8C6E',
-  },
-  {
-    id: '3',
-    title: 'Connect before you arrive.',
-    body: 'Join the group chat, message attendees, and show up already knowing someone.',
-    tint: '#C99A2E',
-  },
-]
+function PermissionRow({ icon, tint, title, body, enabled, onToggle }: PermissionRowProps) {
+  return (
+    <View style={styles.row}>
+      <View style={[styles.rowIcon, { backgroundColor: tint }]}>
+        <Ionicons name={icon} size={25} color={colors.white} />
+      </View>
+      <View style={styles.rowText}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={styles.rowBody}>{body}</Text>
+      </View>
+      <TouchableOpacity
+        onPress={onToggle}
+        hitSlop={10}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: enabled }}
+        accessibilityLabel={title}
+      >
+        {enabled ? (
+          <View style={styles.checkOn}>
+            <Ionicons name="checkmark" size={15} color={colors.white} />
+          </View>
+        ) : (
+          <View style={styles.checkOff} />
+        )}
+      </TouchableOpacity>
+    </View>
+  )
+}
 
 export default function Onboarding() {
   const router = useRouter()
-  const flatListRef = useRef<FlatList<Slide>>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const isLast = currentIndex === slides.length - 1
+  const [location, setLocation] = useState(true)
+  const [notifications, setNotifications] = useState(true)
 
-  const handleNext = () => {
-    if (isLast) router.push('/(auth)/sign-up')
-    else flatListRef.current?.scrollToIndex({ index: currentIndex + 1 })
+  const next = async () => {
+    // Record the opt-ins before moving on. The OS notification prompt itself is raised
+    // later by usePushRegistration, once the user is actually signed in.
+    await setOnboardingPrefs({ location, notifications })
+    router.push('/(auth)/sign-up')
   }
 
-  const renderSlide: ListRenderItem<Slide> = ({ item }) => (
-    <View style={styles.slide}>
-      <LinearGradient colors={[item.tint, '#2C1810']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-        {item.showCount ? (
-          <View style={styles.countPill}>
-            <AttendeeAvatarStack
-              uids={['Ava', 'Noah', 'Mia', 'Leo']}
-              count={1240}
-              size={26}
-              max={4}
-              ringColor="#2C1810"
-            />
-            <Text style={styles.countText}>1,240 in Brooklyn</Text>
-          </View>
-        ) : null}
-      </LinearGradient>
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.body}>{item.body}</Text>
-    </View>
-  )
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      {/* Soft radial-style blobs */}
-      <View style={styles.blobTerracotta} pointerEvents="none" />
-      <View style={styles.blobSage} pointerEvents="none" />
-
-      <TouchableOpacity onPress={() => router.push('/(auth)/sign-up')} style={styles.skip} hitSlop={8}>
-        <Text style={styles.skipText}>Skip</Text>
-      </TouchableOpacity>
-
-      <FlatList<Slide>
-        ref={flatListRef}
-        data={slides}
-        renderItem={renderSlide}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(e) => setCurrentIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-        style={styles.flex}
-      />
-
-      <View style={styles.bottom}>
-        <View style={styles.dots}>
-          {slides.map((_, i) => (
-            <View key={i} style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]} />
-          ))}
+    <LinearGradient colors={gradients.sunset} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.flex}>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
+        <View style={styles.logoWrap}>
+          {/* Three-dot mark, laid out with Views — react-native-svg would mean a native rebuild. */}
+          <View style={styles.logo} accessibilityRole="image" accessibilityLabel="ThirdSpace">
+            <View style={[styles.dot, { left: 8, top: 10 }]} />
+            <View style={[styles.dot, { left: 30, top: 10 }]} />
+            <View style={[styles.dot, { left: 19, top: 29 }]} />
+          </View>
+          <Text style={styles.wordmark}>ThirdSpace</Text>
         </View>
 
-        <TouchableOpacity onPress={handleNext} style={styles.getStarted}>
-          <Text style={styles.getStartedText}>{isLast ? 'Get started' : 'Next'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={styles.signInLink}>
-          <Text style={styles.signInText}>
-            Already a member? <Text style={styles.signInBold}>Sign in</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        <View style={styles.sheet}>
+          <Text style={styles.heading}>Get Started</Text>
+
+          <PermissionRow
+            icon="location"
+            tint={colors.primary}
+            title="Location"
+            body="To see people & groups near you"
+            enabled={location}
+            onToggle={() => setLocation((v) => !v)}
+          />
+          <PermissionRow
+            icon="notifications"
+            tint={colors.primaryLight}
+            title="Notifications"
+            body="So you never miss a thing"
+            enabled={notifications}
+            onToggle={() => setNotifications((v) => !v)}
+          />
+
+          <TouchableOpacity style={styles.next} onPress={next} activeOpacity={0.9}>
+            <Text style={styles.nextText}>Next</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.signIn} onPress={() => router.push('/(auth)/sign-in')}>
+            <Text style={styles.signInText}>Already have an account?</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#2C1810' },
   flex: { flex: 1 },
-  blobTerracotta: { position: 'absolute', top: -80, right: -90, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(196,97,74,0.22)' },
-  blobSage: { position: 'absolute', bottom: 40, left: -100, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(122,140,110,0.16)' },
-  skip: { position: 'absolute', top: 56, right: 24, zIndex: 10 },
-  skipText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
+  logoWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 13 },
+  logo: { width: 58, height: 58 },
+  dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: colors.inkSoft },
+  wordmark: { fontFamily: font.extrabold, fontSize: 37, letterSpacing: -1.2, color: colors.inkSoft },
 
-  slide: { width, paddingHorizontal: 24, paddingTop: 24, justifyContent: 'center' },
-  hero: { height: 320, borderRadius: 28, justifyContent: 'flex-end', padding: 20, marginBottom: 32 },
-  countPill: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start', backgroundColor: 'rgba(44,24,16,0.55)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 8 },
-  countText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: '#FBF7F2' },
-  title: { fontFamily: 'DMSerifDisplay_400Regular', fontSize: 30, color: '#FBF7F2', lineHeight: 38, marginBottom: 14, letterSpacing: -0.5 },
-  body: { fontFamily: 'DMSans_300Light', fontSize: 16, color: 'rgba(251,247,242,0.72)', lineHeight: 24 },
+  sheet: {
+    backgroundColor: colors.white,
+    borderRadius: radius.sheet,
+    marginHorizontal: 14,
+    marginBottom: 16,
+    paddingHorizontal: 22,
+    paddingTop: 26,
+    paddingBottom: 20,
+    shadowColor: '#78460A', shadowOpacity: 0.2, shadowRadius: 44, shadowOffset: { width: 0, height: 22 }, elevation: 12,
+  },
+  heading: { fontFamily: font.extrabold, fontSize: 29, color: colors.inkSoft, textAlign: 'center', marginBottom: 20 },
 
-  bottom: { paddingHorizontal: 24, paddingBottom: 32 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 28 },
-  dot: { height: 8, borderRadius: 4 },
-  dotActive: { width: 22, backgroundColor: '#C4614A' },
-  dotInactive: { width: 8, backgroundColor: 'rgba(255,255,255,0.3)' },
-  getStarted: { backgroundColor: '#C4614A', borderRadius: 100, paddingVertical: 16, alignItems: 'center', marginBottom: 16 },
-  getStartedText: { color: 'white', fontFamily: 'DMSans_500Medium', fontSize: 16 },
-  signInLink: { alignItems: 'center' },
-  signInText: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: '#8C7B70' },
-  signInBold: { color: '#F2C5A0', fontFamily: 'DMSans_500Medium' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  rowIcon: { width: 52, height: 52, borderRadius: radius.icon, alignItems: 'center', justifyContent: 'center' },
+  rowText: { flex: 1, minWidth: 0 },
+  rowTitle: { fontFamily: font.bold, fontSize: 16.5, color: colors.inkSoft },
+  rowBody: { fontFamily: font.medium, fontSize: 12.5, color: '#8A8A8A', marginTop: 1 },
+  checkOn: { width: 28, height: 28, borderRadius: radius.pill, backgroundColor: colors.inkSoft, alignItems: 'center', justifyContent: 'center' },
+  checkOff: { width: 28, height: 28, borderRadius: radius.pill, borderWidth: 2, borderColor: '#D6D6D6' },
+
+  next: { backgroundColor: colors.inkSoft, borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center', marginTop: 22 },
+  nextText: { fontFamily: font.bold, fontSize: 16.5, color: colors.white },
+  signIn: { alignItems: 'center', marginTop: 14 },
+  signInText: { fontFamily: font.semibold, fontSize: 13.5, color: '#A0A0A0' },
 })
