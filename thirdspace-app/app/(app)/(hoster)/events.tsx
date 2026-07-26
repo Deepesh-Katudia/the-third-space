@@ -44,9 +44,9 @@ export default function HosterEvents() {
       <FlatList
         data={ordered}
         keyExtractor={(e) => e.id}
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <View style={styles.eventItem}>
-            <EventCard event={item} index={index} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
+            <EventCard event={item} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
             <TouchableOpacity
               style={styles.announceBtn}
               onPress={() => router.push({ pathname: '/(app)/(hoster)/announcement/[id]', params: { id: item.id } })}

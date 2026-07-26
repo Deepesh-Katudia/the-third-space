@@ -115,11 +115,10 @@ export default function Discover() {
             />
           )
         ) : (
-          visible.map((event, i) => (
+          visible.map((event) => (
             <EventCard
               key={event.id}
               event={event}
-              index={i}
               onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: event.id } })}
             />
           ))

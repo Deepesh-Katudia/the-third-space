@@ -54,7 +54,6 @@ const NOT_YET_CONVERTED = [
   'components/ChatRow.tsx',
   'components/CompactEventRow.tsx',
   'components/EmptyState.tsx',
-  'components/EventCard.tsx',
   'components/FilterSheet.tsx',
   'components/FormInput.tsx',
   'components/InterestChip.tsx',
