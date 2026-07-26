@@ -4,6 +4,13 @@ import { fireEvent, render } from '@testing-library/react-native'
 import { TicketCard } from '../../../components/ui/TicketCard'
 import { palette } from '../../../constants/design'
 
+const flat = (style: unknown) => StyleSheetFlatten(style)
+function StyleSheetFlatten(style: unknown): Record<string, unknown> {
+  return Array.isArray(style)
+    ? Object.assign({}, ...style.map(StyleSheetFlatten))
+    : ((style ?? {}) as Record<string, unknown>)
+}
+
 describe('TicketCard', () => {
   it('paints the notches in the screen tone so they read as cut-outs', () => {
     const { getAllByTestId } = render(
@@ -12,7 +19,7 @@ describe('TicketCard', () => {
     const notches = getAllByTestId('ticket-notch')
     expect(notches).toHaveLength(2)
     for (const n of notches) {
-      expect(n.props.style).toMatchObject({ backgroundColor: palette.orangeDeep })
+      expect(flat(n.props.style)).toMatchObject({ backgroundColor: palette.orangeDeep })
     }
   })
 
@@ -21,7 +28,7 @@ describe('TicketCard', () => {
       <TicketCard tone="cream" day="18" month="Jul" onPress={() => {}}><Text>x</Text></TicketCard>
     )
     for (const n of getAllByTestId('ticket-notch')) {
-      expect(n.props.style).toMatchObject({ backgroundColor: palette.cream })
+      expect(flat(n.props.style)).toMatchObject({ backgroundColor: palette.cream })
     }
   })
 
@@ -42,7 +49,7 @@ describe('TicketCard', () => {
     expect(getByTestId('ticket-band')).toBeTruthy()
     // Notches must sit on the band's bottom edge (44 - 7), not the photo's (96 - 7).
     for (const n of getAllByTestId('ticket-notch')) {
-      expect(n.props.style).toMatchObject({ top: 37 })
+      expect(flat(n.props.style)).toMatchObject({ top: 37 })
     }
   })
 
@@ -53,7 +60,7 @@ describe('TicketCard', () => {
       </TicketCard>
     )
     for (const n of getAllByTestId('ticket-notch')) {
-      expect(n.props.style).toMatchObject({ top: 89 })
+      expect(flat(n.props.style)).toMatchObject({ top: 89 })
     }
   })
 

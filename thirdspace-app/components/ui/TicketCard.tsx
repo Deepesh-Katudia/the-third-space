@@ -31,14 +31,8 @@ export function TicketCard({ tone, photoUri, day, month, onPress, children }: Ti
       )}
 
       <View style={styles.tear} />
-      <View
-        testID="ticket-notch"
-        style={{ ...styles.notch, ...styles.notchLeft, top: headerHeight - NOTCH / 2, backgroundColor: notchColor }}
-      />
-      <View
-        testID="ticket-notch"
-        style={{ ...styles.notch, ...styles.notchRight, top: headerHeight - NOTCH / 2, backgroundColor: notchColor }}
-      />
+      <View testID="ticket-notch" style={[styles.notch, styles.notchLeft, { top: headerHeight - NOTCH / 2, backgroundColor: notchColor }]} />
+      <View testID="ticket-notch" style={[styles.notch, styles.notchRight, { top: headerHeight - NOTCH / 2, backgroundColor: notchColor }]} />
 
       <View style={styles.infoWrap}>
         <View style={styles.stub}>
