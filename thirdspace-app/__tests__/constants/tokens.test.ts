@@ -16,7 +16,6 @@ const NOT_YET_CONVERTED = [
   'app/(app)/(attender)/profile.tsx',
   'app/(app)/(hoster)/_layout.tsx',
   'app/(app)/(hoster)/announcement/[id].tsx',
-  'app/(app)/(hoster)/events.tsx',
   'app/(app)/(hoster)/index.tsx',
   'app/(app)/(hoster)/venue.tsx',
   'app/(app)/_layout.tsx',

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
 import { subscribeVenueEvents } from '../../../services/events'
 import { EventCard } from '../../../components/EventCard'
@@ -11,7 +9,11 @@ import { EmptyState } from '../../../components/EmptyState'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
-import { NAV_CLEARANCE } from '../../../constants/theme'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Meta } from '../../../components/ui/Text'
+import { IconButton } from '../../../components/ui/IconButton'
+import { CityChip } from '../../../components/ui/CityChip'
+import { space, NAV_CLEARANCE } from '../../../constants/design'
 
 export default function HosterEvents() {
   const router = useRouter()
@@ -32,27 +34,33 @@ export default function HosterEvents() {
   const ordered = [...upcoming, ...past]
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Text style={styles.title}>Your events</Text>
-        <TouchableOpacity onPress={() => router.push('/(app)/create-event')} style={styles.createButton}>
-          <Ionicons name="add" size={22} color="#15161A" />
-        </TouchableOpacity>
+      <View style={styles.topbar}>
+        <Display role="screenTitle" style={styles.tagline}>Your events</Display>
+        <View style={styles.rightCol}>
+          <CityChip label="NYC + Brooklyn" />
+          <IconButton name="add" accessibilityLabel="Create event" onPress={() => router.push('/(app)/create-event')} />
+        </View>
       </View>
+
       {error ? <View style={styles.bannerWrap}><Banner message={error} /></View> : null}
+
       <FlatList
         data={ordered}
         keyExtractor={(e) => e.id}
         renderItem={({ item }) => (
-          <View style={styles.eventItem}>
-            <EventCard event={item} onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })} />
+          <View>
+            <EventCard
+              event={item}
+              tone="deep"
+              onPress={() => router.push({ pathname: '/(app)/event/[id]', params: { id: item.id } })}
+            />
             <TouchableOpacity
               style={styles.announceBtn}
               onPress={() => router.push({ pathname: '/(app)/(hoster)/announcement/[id]', params: { id: item.id } })}
             >
-              <Ionicons name="megaphone-outline" size={15} color="#FF9F3D" />
-              <Text style={styles.announceText}>Send announcement</Text>
+              <Meta role="eyebrow" tone="clay">Send announcement</Meta>
             </TouchableOpacity>
           </View>
         )}
@@ -67,18 +75,15 @@ export default function HosterEvents() {
           />
         }
       />
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 12, marginBottom: 16 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
-  createButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
-  bannerWrap: { paddingHorizontal: 24 },
-  list: { paddingHorizontal: 24, paddingBottom: NAV_CLEARANCE },
-  eventItem: { marginBottom: 12 },
-  announceBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: -4, paddingVertical: 6, paddingHorizontal: 4 },
-  announceText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D' },
+  topbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: space.lg, paddingTop: space.md, marginBottom: space.lg },
+  tagline: { maxWidth: 180 },
+  rightCol: { alignItems: 'flex-end', gap: space.sm },
+  bannerWrap: { paddingHorizontal: space.lg },
+  list: { paddingHorizontal: space.lg, paddingBottom: NAV_CLEARANCE },
+  announceBtn: { alignSelf: 'flex-start', marginTop: -space.xs, paddingVertical: space.sm, paddingHorizontal: space.xs },
 })
