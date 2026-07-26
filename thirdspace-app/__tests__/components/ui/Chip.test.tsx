@@ -44,7 +44,7 @@ describe('chips and buttons', () => {
 
     // Verify no React duplicate key warning was logged
     const keyWarnings = consoleErrorSpy.mock.calls.filter(
-      call => call[0] && typeof call[0] === 'string' && call[0].includes('Not a valid React child')
+      call => call[0] && typeof call[0] === 'string' && call[0].includes('Encountered two children with the same key')
     )
     expect(keyWarnings).toHaveLength(0)
 
