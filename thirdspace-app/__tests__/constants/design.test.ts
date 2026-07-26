@@ -1,4 +1,4 @@
-import { palette } from '../../constants/design'
+import { palette, type as typeScale, radius, space, tabBar } from '../../constants/design'
 
 /** WCAG 2.1 relative luminance. */
 function luminance(hex: string): number {
@@ -43,5 +43,44 @@ describe('design palette', () => {
     expect(Object.values(palette)).not.toContain('#C4501F')
     expect(Object.values(palette)).not.toContain('#6E7A5E')
     expect(Object.values(palette)).not.toContain('#5C4F3F')
+  })
+})
+
+describe('type scale', () => {
+  it('binds each role to exactly one of the three faces', () => {
+    const display = ['screenTitle', 'cardTitle', 'stubDay', 'tabLabel'] as const
+    const body = ['body', 'bodySm', 'bodyLg'] as const
+    const meta = ['meta', 'eyebrow'] as const
+
+    for (const role of display) expect(typeScale[role].fontFamily).toMatch(/^Antonio_/)
+    for (const role of body) expect(typeScale[role].fontFamily).toMatch(/^Inter_/)
+    for (const role of meta) expect(typeScale[role].fontFamily).toMatch(/^IBMPlexMono_/)
+  })
+
+  it('reserves uppercase for eyebrows, chips and the date stub', () => {
+    expect(typeScale.eyebrow.textTransform).toBe('uppercase')
+    expect(typeScale.stubDay.textTransform).toBe('uppercase')
+    // Sentence case for names and titles — Antonio has real weights, so hierarchy
+    // does not need shouting.
+    expect(typeScale.screenTitle.textTransform).toBeUndefined()
+    expect(typeScale.cardTitle.textTransform).toBeUndefined()
+  })
+
+  it('gives every role a line height at least its font size', () => {
+    for (const role of Object.values(typeScale)) {
+      expect(role.lineHeight).toBeGreaterThanOrEqual(role.fontSize)
+    }
+  })
+})
+
+describe('layout tokens', () => {
+  it('exposes the ticket radius and a 4-point space scale', () => {
+    expect(radius.ticket).toBe(14)
+    expect(space.md % 4).toBe(0)
+  })
+
+  it('gives the tab bar the light orange fill with a clay active state', () => {
+    expect(tabBar.backgroundColor).toBe(palette.orangeLight)
+    expect(tabBar.activeTintColor).toBe(palette.clay)
   })
 })

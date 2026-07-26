@@ -27,3 +27,65 @@ export const palette = {
 } as const
 
 export type PaletteKey = keyof typeof palette
+
+export const font = {
+  displaySemi: 'Antonio_600SemiBold',
+  displayBold: 'Antonio_700Bold',
+  bodyRegular: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemi: 'Inter_600SemiBold',
+  metaMedium: 'IBMPlexMono_500Medium',
+  metaSemi: 'IBMPlexMono_600SemiBold',
+} as const
+
+export type TypeRole =
+  | 'screenTitle' | 'cardTitle' | 'stubDay' | 'tabLabel'
+  | 'body' | 'bodySm' | 'bodyLg'
+  | 'meta' | 'eyebrow'
+
+interface TypeStyle {
+  fontFamily: string
+  fontSize: number
+  lineHeight: number
+  letterSpacing?: number
+  textTransform?: 'uppercase'
+}
+
+export const type: Record<TypeRole, TypeStyle> = {
+  screenTitle: { fontFamily: font.displayBold, fontSize: 30, lineHeight: 34, letterSpacing: -0.2 },
+  cardTitle:   { fontFamily: font.displayBold, fontSize: 17, lineHeight: 21 },
+  stubDay:     { fontFamily: font.displaySemi, fontSize: 22, lineHeight: 24, textTransform: 'uppercase' },
+  tabLabel:    { fontFamily: font.displaySemi, fontSize: 11, lineHeight: 13, letterSpacing: 0.3 },
+
+  bodyLg: { fontFamily: font.bodyRegular, fontSize: 15, lineHeight: 22 },
+  body:   { fontFamily: font.bodyRegular, fontSize: 13, lineHeight: 19 },
+  bodySm: { fontFamily: font.bodyMedium,  fontSize: 11.5, lineHeight: 16 },
+
+  meta:    { fontFamily: font.metaMedium, fontSize: 10, lineHeight: 14, letterSpacing: 0.4 },
+  eyebrow: { fontFamily: font.metaSemi,   fontSize: 10, lineHeight: 14, letterSpacing: 1.4, textTransform: 'uppercase' },
+}
+
+export const radius = {
+  ticket: 14,
+  chip: 20,
+  sheet: 34,
+  pill: 999,
+} as const
+
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const
+
+/**
+ * The comp's bottom bar is flat and flush to the screen edge with a hairline top rule —
+ * not the detached floating pill of the previous design system.
+ */
+export const tabBar = {
+  backgroundColor: palette.orangeLight,
+  borderTopColor: palette.rule,
+  borderTopWidth: 1,
+  height: 76,
+  activeTintColor: palette.clay,
+  inactiveTintColor: palette.inkSoft,
+} as const
+
+/** Bottom padding a scrollable tab screen needs to clear the tab bar. */
+export const NAV_CLEARANCE = 92

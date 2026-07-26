@@ -5,6 +5,9 @@ import {
   useFonts,
   Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins'
+import { Antonio_600SemiBold, Antonio_700Bold } from '@expo-google-fonts/antonio'
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter'
+import { IBMPlexMono_500Medium, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono'
 import { useAuth } from '../hooks/useAuth'
 import { resolveAuthRoute } from '../utils/authRoute'
 import { colors } from '../constants/theme'
@@ -37,11 +40,12 @@ function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Poppins_800ExtraBold,
-    Poppins_700Bold,
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
+    // Poppins is still loaded because unconverted screens name it directly.
+    // The final cleanup task removes these five once every screen is converted.
+    Poppins_800ExtraBold, Poppins_700Bold, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold,
+    Antonio_600SemiBold, Antonio_700Bold,
+    Inter_400Regular, Inter_500Medium, Inter_600SemiBold,
+    IBMPlexMono_500Medium, IBMPlexMono_600SemiBold,
   })
   const { user, role, hasProfile, loading } = useAuth()
 
