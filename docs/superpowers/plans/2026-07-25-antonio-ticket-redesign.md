@@ -361,7 +361,12 @@ git commit -m "feat: add Antonio/Inter/IBM Plex Mono type scale and layout token
 
 **Interfaces:**
 - Consumes: `type`, `palette` from Tasks 1-2.
-- Produces: `Display`, `Body`, `Meta` — each `(props: { role?: TypeRole; tone?: 'ink' | 'inkSoft' | 'clay' | 'sage'; style?: StyleProp<TextStyle>; numberOfLines?: number; children: React.ReactNode }) => JSX.Element`. Defaults: `Display` → `cardTitle`, `Body` → `body`, `Meta` → `meta`; `tone` defaults to `ink` for Display, `inkSoft` for Body and Meta.
+- Produces: `Display`, `Body`, `Meta` — each `(props: { role?: <its own role union>; tone?: 'ink' | 'inkSoft' | 'clay' | 'sage'; style?: StyleProp<TextStyle>; numberOfLines?: number; children: React.ReactNode }) => JSX.Element`. Defaults: `Display` → `cardTitle`, `Body` → `body`, `Meta` → `meta`; `tone` defaults to `ink` for Display, `inkSoft` for Body and Meta.
+- **Each primitive accepts only its own face's roles** (ruled during Task 3 review, overriding this plan's original shared-`TypeRole` interface):
+  `DisplayRole = 'screenTitle' | 'cardTitle' | 'stubDay' | 'tabLabel'`,
+  `BodyRole = 'body' | 'bodySm' | 'bodyLg'`,
+  `MetaRole = 'meta' | 'eyebrow'`.
+  `<Meta role="cardTitle">` is a compile error. Later tasks must not reach across faces.
 
 - [ ] **Step 1: Write the failing test**
 
