@@ -198,11 +198,11 @@ npx expo install @expo-google-fonts/antonio @expo-google-fonts/inter @expo-googl
 
 - [ ] **Step 2: Write the failing test**
 
-Append to `thirdspace-app/__tests__/constants/design.test.ts`:
+In `thirdspace-app/__tests__/constants/design.test.ts`, widen the existing import to
+`import { palette, type as typeScale, radius, space, tabBar } from '../../constants/design'`
+(one import statement, not a second one), then append:
 
 ```ts
-import { type as typeScale, radius, space, tabBar } from '../../constants/design'
-
 describe('type scale', () => {
   it('binds each role to exactly one of the three faces', () => {
     const display = ['screenTitle', 'cardTitle', 'stubDay', 'tabLabel'] as const
@@ -579,7 +579,7 @@ Create `thirdspace-app/__tests__/components/ui/TicketCard.test.tsx`:
 ```tsx
 import React from 'react'
 import { Text } from 'react-native'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import { TicketCard } from '../../../components/ui/TicketCard'
 import { palette } from '../../../constants/design'
 
@@ -636,13 +636,13 @@ describe('TicketCard', () => {
     }
   })
 
-  it('fires onPress', () => {
+  it('fires onPress when the card is pressed', () => {
     const onPress = jest.fn()
     const { getByTestId } = render(
       <TicketCard tone="deep" day="18" month="Jul" onPress={onPress}><Text>x</Text></TicketCard>
     )
-    getByTestId('ticket-card').props.onClick?.()
-    expect(typeof onPress).toBe('function')
+    fireEvent.press(getByTestId('ticket-card'))
+    expect(onPress).toHaveBeenCalledTimes(1)
   })
 })
 ```
@@ -1197,7 +1197,7 @@ Expected: tsc will FAIL in `(attender)/index.tsx` and `(hoster)/events.tsx`, whi
 - [ ] **Step 6: Commit**
 
 ```bash
-git add components/EventCard.tsx __tests__/components/EventCard.test.tsx __tests__/constants/tokens.test.ts "app/(attender)/index.tsx" "app/(app)/(hoster)/events.tsx"
+git add components/EventCard.tsx __tests__/components/EventCard.test.tsx __tests__/constants/tokens.test.ts "app/(app)/(attender)/index.tsx" "app/(app)/(hoster)/events.tsx"
 git commit -m "feat: rebuild EventCard on the ticket primitive"
 ```
 
