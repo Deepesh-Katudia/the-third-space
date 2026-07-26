@@ -5,7 +5,6 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useChatList } from '../../../hooks/useChatList'
 import { chatUnreadBadge } from '../../../utils/chat'
 import { LoadingView } from '../../../components/LoadingView'
-import { PillTabButton } from '../../../components/PillTabButton'
 import { colors, font, floatingNav } from '../../../constants/theme'
 
 export default function AttenderLayout() {
@@ -24,7 +23,6 @@ export default function AttenderLayout() {
         tabBarInactiveTintColor: colors.mutedLight,
         tabBarLabelStyle: { fontFamily: font.bold, fontSize: 10 },
         tabBarStyle: floatingNav,
-        tabBarButton: (props) => <PillTabButton {...props} />,
         tabBarBadgeStyle: { backgroundColor: colors.danger, fontFamily: font.bold, fontSize: 10 },
       }}
     >

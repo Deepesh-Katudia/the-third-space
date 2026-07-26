@@ -4,8 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
 import { useVenue } from '../../../hooks/useVenue'
 import { LoadingView } from '../../../components/LoadingView'
-import { PillTabButton } from '../../../components/PillTabButton'
-import { colors, font, floatingNav } from '../../../constants/theme'
+import { tabBar, type as typeScale } from '../../../constants/design'
 
 export default function HosterLayout() {
   const { user, role, loading } = useAuth()
@@ -21,11 +20,16 @@ export default function HosterLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.ink,
-        tabBarInactiveTintColor: colors.mutedLight,
-        tabBarLabelStyle: { fontFamily: font.bold, fontSize: 10 },
-        tabBarStyle: floatingNav,
-        tabBarButton: (props) => <PillTabButton {...props} />,
+        tabBarActiveTintColor: tabBar.activeTintColor,
+        tabBarInactiveTintColor: tabBar.inactiveTintColor,
+        tabBarStyle: {
+          backgroundColor: tabBar.backgroundColor,
+          borderTopColor: tabBar.borderTopColor,
+          borderTopWidth: tabBar.borderTopWidth,
+          height: tabBar.height,
+          elevation: 0,
+        },
+        tabBarLabelStyle: typeScale.tabLabel,
       }}
     >
       <Tabs.Screen
