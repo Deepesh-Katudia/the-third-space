@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../hooks/useAuth'
@@ -11,7 +10,9 @@ import { AuthButton } from '../../../components/AuthButton'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
-import { NAV_CLEARANCE } from '../../../constants/theme'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, NAV_CLEARANCE } from '../../../constants/design'
 
 export default function Overview() {
   const router = useRouter()
@@ -33,48 +34,53 @@ export default function Overview() {
   const totalRegistrations = (events ?? []).reduce((sum, e) => sum + e.registeredCount, 0)
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.content}>
-        <Text style={styles.title}>{venue?.name ?? 'Your venue'}</Text>
+        <Display role="screenTitle" style={styles.title}>{venue?.name ?? 'Your venue'}</Display>
         {error ? <Banner message={error} /> : null}
 
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={styles.statNumber}>{events?.length ?? 0}</Text>
-            <Text style={styles.statLabel}>Events created</Text>
+            <Display role="stubDay" tone="clay">{events?.length ?? 0}</Display>
+            <Meta style={styles.statLabel}>Events created</Meta>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statNumber}>{totalRegistrations}</Text>
-            <Text style={styles.statLabel}>Total registrations</Text>
+            <Display role="stubDay" tone="clay">{totalRegistrations}</Display>
+            <Meta style={styles.statLabel}>Total registrations</Meta>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Next event</Text>
+        <Display style={styles.sectionTitle}>Next event</Display>
         {nextEvent ? (
-          <EventCard event={nextEvent} onPress={() => router.push(`/(app)/event/${nextEvent.id}`)} />
+          <EventCard event={nextEvent} tone="deep" onPress={() => router.push(`/(app)/event/${nextEvent.id}`)} />
         ) : (
-          <Text style={styles.muted}>Nothing scheduled — create your next event.</Text>
+          <Body style={styles.muted}>Nothing scheduled — create your next event.</Body>
         )}
 
         <View style={styles.cta}>
           <AuthButton label="Create event" onPress={() => router.push('/(app)/create-event')} variant="primary" loading={false} />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 20, letterSpacing: -0.5 },
-  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  stat: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.4)' },
-  statNumber: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#FF9F3D' },
-  statLabel: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78', marginTop: 4 },
-  sectionTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#15161A', marginBottom: 12 },
-  muted: { fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#6B6F78', marginBottom: 12 },
-  // Pinned to the bottom, so it must clear the absolutely-positioned floating nav.
+  content: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.md },
+  title: { marginBottom: space.lg },
+  statsRow: { flexDirection: 'row', gap: space.md, marginBottom: space.xl },
+  stat: {
+    flex: 1,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  statLabel: { marginTop: space.xs },
+  sectionTitle: { marginBottom: space.md },
+  muted: { marginBottom: space.md },
+  // Pinned to the bottom, so it must clear the flat bottom tab bar.
   cta: { marginTop: 'auto', marginBottom: NAV_CLEARANCE },
 })
