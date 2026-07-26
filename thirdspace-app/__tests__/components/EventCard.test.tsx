@@ -30,7 +30,7 @@ describe('EventCard', () => {
   it('shows the event name, venue and going count', () => {
     const { getByText } = render(<EventCard event={event} tone="deep" onPress={() => {}} />)
     expect(getByText('Ceramics Night')).toBeTruthy()
-    expect(getByText(/Clay Studio/)).toBeTruthy()
+    expect(getByText('Clay Studio · Williamsburg')).toBeTruthy()
     expect(getByText(/4 going/)).toBeTruthy()
   })
 
@@ -45,5 +45,36 @@ describe('EventCard', () => {
     const { getByText, queryByText } = render(<EventCard event={full} tone="deep" onPress={() => {}} />)
     expect(getByText('Sold out')).toBeTruthy()
     expect(queryByText(/going/)).toBeNull()
+  })
+
+  it('shows the 21+ chip only for 21+ events', () => {
+    const { getByText, queryByText, rerender } = render(
+      <EventCard event={event} tone="deep" onPress={() => {}} />
+    )
+    expect(getByText('21+')).toBeTruthy()
+
+    const notAgeGated = { ...event, ageRequirement: '18+' } as CommunityEvent
+    rerender(<EventCard event={notAgeGated} tone="deep" onPress={() => {}} />)
+    expect(queryByText('21+')).toBeNull()
+  })
+
+  it('shows Starting soon within the window and not outside it', () => {
+    // isStartingSoon (utils/eventHelpers.ts) windows at 24h: 0 < msUntilStart <= 24h.
+    const soon = {
+      ...event,
+      startsAt: Timestamp.fromDate(new Date(Date.now() + 2 * 60 * 60 * 1000)), // 2h out — inside window
+    } as CommunityEvent
+    const notSoon = {
+      ...event,
+      startsAt: Timestamp.fromDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)), // 3d out — outside window
+    } as CommunityEvent
+
+    const { getByText, queryByText, rerender } = render(
+      <EventCard event={soon} tone="deep" onPress={() => {}} />
+    )
+    expect(getByText('Starting soon')).toBeTruthy()
+
+    rerender(<EventCard event={notSoon} tone="deep" onPress={() => {}} />)
+    expect(queryByText('Starting soon')).toBeNull()
   })
 })
