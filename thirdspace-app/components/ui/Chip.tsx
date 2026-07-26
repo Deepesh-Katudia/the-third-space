@@ -13,7 +13,7 @@ export function ChipRow({ items, accentIndex }: ChipRowProps) {
   return (
     <View style={styles.row}>
       {items.map((item, i) => (
-        <React.Fragment key={item}>
+        <React.Fragment key={i}>
           <Meta tone={i === accentIndex ? 'sage' : 'ink'}>{item}</Meta>
           {i < items.length - 1 ? <Meta style={styles.divider}>/</Meta> : null}
         </React.Fragment>

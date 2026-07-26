@@ -32,4 +32,22 @@ describe('chips and buttons', () => {
     const flat = Array.isArray(style) ? Object.assign({}, ...style) : style
     expect(flat.backgroundColor).toBe(palette.ink)
   })
+
+  it('handles duplicate items without React key warnings', () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const { getAllByText } = render(<ChipRow items={['Free', 'Free']} />)
+
+    // Verify both items render
+    expect(getAllByText('Free')).toHaveLength(2)
+    // Verify divider renders
+    expect(getAllByText('/')).toHaveLength(1)
+
+    // Verify no React duplicate key warning was logged
+    const keyWarnings = consoleErrorSpy.mock.calls.filter(
+      call => call[0] && typeof call[0] === 'string' && call[0].includes('Not a valid React child')
+    )
+    expect(keyWarnings).toHaveLength(0)
+
+    consoleErrorSpy.mockRestore()
+  })
 })
