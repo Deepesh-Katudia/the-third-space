@@ -68,7 +68,12 @@ const NOT_YET_CONVERTED = [
   'components/VenueForm.tsx',
 ]
 
-const HEX = /#[0-9a-fA-F]{3,8}\b/
+// Matches only QUOTED hex literals — '#FF9F3D', "#FFF", '#FF9F3Dcc' — because in
+// React Native a color is always a string. Deliberately does NOT match bare hex runs
+// like `// TODO #1234` or `issue #456`, since those are comments/prose, not colors,
+// and an unquoted version of this pattern flags them as false positives. Do not widen
+// this back to an unquoted match — that was tried and it broke the guard's credibility.
+const HEX = /['"]#[0-9a-fA-F]{3,8}['"]/
 const ROOTS = ['app', 'components']
 
 function walk(dir: string, out: string[] = []): string[] {
