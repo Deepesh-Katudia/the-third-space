@@ -15,7 +15,7 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 | Fonts | Poppins 400/500/600/700/800 (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
-| Tests | Jest (jest-expo) — 37 suites / 216 tests; `@firebase/rules-unit-testing` for rules |
+| Tests | Jest (jest-expo) — 48 suites / 297 tests; `@firebase/rules-unit-testing` for rules |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -24,11 +24,10 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-07-28)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **216/216 pass**, 37 suites
+- `npx jest` — **297/297 pass**, 48 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have an undeployed fix** (conversations read on a non-existent doc). Deploy before testing DMs.
 - Firebase rules otherwise **deployed**. Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
-- In flight (uncommitted): password strength + change-password + `authRoute` guard extraction.
 
 ---
 
@@ -65,7 +64,7 @@ thirdspace-app/
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
 │   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
 │   └── location.ts             # detectBorough() (5s timeout, never throws)
-├── components/               # 22 components + components/ui/ design primitives
+├── components/               # 19 components + 7 under components/ui/ design primitives
 ├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
 ├── utils/                    # 18 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
@@ -210,8 +209,9 @@ when signed in with setup incomplete.
 - **A manual borough pick is permanent until changed** — GPS never silently overrides it, and
   "All of NYC" is a real stored choice (`{ borough: null }`), distinct from never having chosen.
 - **Venue keyed by uid** — `venues/{uid}` uses the hoster's UID as doc id. 1:1 hoster → venue.
-- **Denormalized event fields** — `venueName` + `neighborhood` copied at creation so cards render
-  without a join. `borough` intentionally NOT copied; feed filters by category/search only.
+- **Denormalized event fields** — `venueName`, `neighborhood`, and `borough` are all copied from the
+  venue at creation so cards render without a join. `borough` is optional because events created before
+  the location feature lack it.
 - **`registeredCount` is an atomic counter** — `increment()` inside a batch alongside the registration doc.
   Rules use `registersSelf`/`unregistersSelf` + `existsAfter` to gate it.
 - **Cancelled events stay in Firestore** — `cancelled: true`; `subscribeUpcomingEvents` filters server-side,
