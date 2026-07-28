@@ -1,6 +1,13 @@
-import { colors } from '../../constants/theme'
-import { CATEGORY_COLORS } from '../../constants/categories'
+import { palette } from '../../constants/design'
 import { AVATAR_PALETTE_FOR_TEST } from '../../utils/avatar'
+
+/**
+ * Avatar tints are the one thing that deliberately sits OUTSIDE the two-tone palette —
+ * they encode identity, and flattening them to ink would make every member look alike.
+ * Because they are exempt from the token rule, they need their own contrast guard.
+ *
+ * The rest of the palette is covered by __tests__/constants/design.test.ts.
+ */
 
 /** WCAG 2.1 relative luminance. */
 function luminance(hex: string): number {
@@ -20,36 +27,18 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05)
 }
 
-describe('palette contrast', () => {
-  it('pairs ink with the orange primary, not white (the comp rule)', () => {
-    // Ink on orange is the readable pairing; white on orange is ~2:1 and fails.
-    expect(contrast(colors.ink, colors.primary)).toBeGreaterThanOrEqual(4.5)
-    expect(contrast('#FFFFFF', colors.primary)).toBeLessThan(3)
-  })
-
-  it('keeps body and ink text readable on the surface background', () => {
-    expect(contrast(colors.ink, colors.surface)).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(colors.body, colors.surface)).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it('keeps muted text readable on surface and white', () => {
-    expect(contrast(colors.muted, colors.surface)).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(colors.muted, colors.white)).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it('keeps white readable on the dark primary CTA', () => {
-    expect(contrast('#FFFFFF', colors.inkSoft)).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it('carries white initials on every avatar color', () => {
+describe('avatar contrast', () => {
+  it('carries cream initials at AA on every avatar color', () => {
+    // Avatars render initials in palette.cream, not white — the palette has no white.
     for (const c of AVATAR_PALETTE_FOR_TEST) {
-      expect(contrast('#FFFFFF', c)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(palette.cream, c)).toBeGreaterThanOrEqual(4.5)
     }
   })
 
-  it('carries white labels on every category tint', () => {
-    for (const c of Object.values(CATEGORY_COLORS)) {
-      expect(contrast('#FFFFFF', c)).toBeGreaterThanOrEqual(4.5)
+  it('keeps every avatar tint dark enough to sit on the light ticket fill', () => {
+    // Avatars appear as circles on orangeLight cards; a too-light tint would vanish.
+    for (const c of AVATAR_PALETTE_FOR_TEST) {
+      expect(contrast(c, palette.orangeLight)).toBeGreaterThanOrEqual(3)
     }
   })
 })

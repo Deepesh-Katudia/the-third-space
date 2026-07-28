@@ -63,8 +63,8 @@ thirdspace-app/
 │   ├── follows.ts              # Follow edge writes + subscriptions
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
 │   └── pushTokens.ts           # users/{uid}/pushTokens CRUD
-├── components/               # 23 components (Toast added, FeaturedEventCard removed)
-├── constants/                # theme (DESIGN TOKENS — source of truth), categories, filters, rewards
+├── components/               # 22 components + components/ui/ design primitives
+├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
 ├── utils/                    # 15 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
@@ -99,27 +99,43 @@ thirdspace-app/
 
 ---
 
-## Design System (orange / Poppins)
+## Design System (two-tone orange ticket / Antonio)
 
-Source of truth: Claude Design project `2a9b6b42-9e64-4c83-8fdf-fcae07e4229c`
-(`ThirdSpace App.dc.html` + `Discover.dc.html`). Tokens live in `constants/theme.ts`.
+Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
+`docs/superpowers/specs/2026-07-25-antonio-ticket-redesign-design.md`,
+`docs/superpowers/plans/2026-07-25-antonio-ticket-redesign.md`.
+**`constants/design.ts` is the only file in which a color may be written.**
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `primary` | `#FF9F3D` | Accent fills, icon buttons. **Always carries ink glyphs, never white.** |
-| `inkSoft` | `#1C1C1E` | Primary CTA fill (the comp's "Next" button), with white label |
-| `ink` | `#15161A` | Headings and text on light or orange |
-| `surface` | `#F3F3F5` | App background |
-| `muted` | `#6B6F78` | Secondary text — darkened from the comp's `#7D818A`, which is only 3.5:1 |
-| `cardPalette` | 5 pastels | Feed cards cycle via `paletteFor(index)` |
-| `floatingNav` | — | Detached, rounded tab bar; screens pad by `NAV_CLEARANCE` |
+| `orangeDeep` | `#F3B27A` | Browse/list screen background |
+| `orangeLight` | `#FCE3C0` | Ticket / card fill, tab bar, inputs |
+| `cream` | `#FBF3E9` | Forms, chat threads, all `(auth)` routes |
+| `ink` | `#2B2015` | Headings; also the one high-contrast surface (CTAs, heroes) with cream text |
+| `inkSoft` | `#584C3C` | Secondary text. Comp's `#5C4F3F` was 4.33:1 on deep — under AA |
+| `clay` | `#853615` | Accent + "error" semantics. Comp's `#C4501F` was 2.54:1 on deep |
+| `sage` | `#49513E` | Meta accent + "success" semantics. Comp's `#6E7A5E` was 2.49:1 |
+| `rule` | `rgba(43,32,21,0.20)` | Dashed tear lines, hairline borders |
 
-- **Ink on orange, never white on orange** — white on `#FF9F3D` is ~2:1 and fails WCAG;
-  ink is 8.9:1. The comp follows this rule too (its arrow button uses an ink glyph).
-  `__tests__/components/contrast.test.ts` enforces this plus the avatar/category palettes.
-- **Colors are still hardcoded per file** — `theme.ts` is the source of truth for *new* code,
-  but the bulk restyle wrote literal hex. Changing a token does not repaint existing screens yet.
-- **Fonts** — Poppins ladder: 400 body-light, 500 body, 600 labels, 700 buttons, 800 display.
+- **No literal hex anywhere under `app/` or `components/`** — enforced by
+  `__tests__/constants/tokens.test.ts`, whose allowlist is now empty. Changing a token
+  really does repaint the app.
+- **White never appears on orange** (1.83:1). Ink-on-orange, cream-on-ink.
+- **No red/green in the palette.** Error → `clay`, success → `sage`; both are AA on all
+  three surfaces. The password meter conveys its four levels by filled-segment count.
+- **No gradients.** Depth comes from tone (ink vs orangeLight vs cream), not blending.
+- **Ticket notches are for event surfaces only** — `EventCard`, `CompactEventRow`, and the
+  `event/[id]` hero. `ChatRow` deliberately has none.
+- **Avatar tints are the one deliberate palette exemption** (`utils/avatar.ts`) — they
+  encode identity. Guarded separately by `__tests__/components/contrast.test.ts`.
+- **Fonts** — Antonio 600/700 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta.
+  Uppercase is a token (`eyebrow`, `stubDay`), never an inline `textTransform`.
+
+### `components/ui/` primitives
+
+`Screen` (tone: deep|cream), `Display`/`Body`/`Meta` (one type face each, role unions
+narrowed per face), `TicketCard` (tear line + tone-matched notches), `ChipRow`, `CityChip`,
+`IconButton`.
 
 ---
 
