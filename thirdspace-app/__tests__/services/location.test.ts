@@ -3,6 +3,7 @@ import { detectBorough } from '../../services/location'
 import { getOnboardingPrefs } from '../../services/preferences'
 
 jest.mock('expo-location', () => ({
+  getForegroundPermissionsAsync: jest.fn(),
   requestForegroundPermissionsAsync: jest.fn(),
   getCurrentPositionAsync: jest.fn(),
   reverseGeocodeAsync: jest.fn(),
@@ -16,6 +17,7 @@ const position = { coords: { latitude: 40.7, longitude: -73.9 } }
 beforeEach(() => {
   jest.clearAllMocks()
   ;(getOnboardingPrefs as jest.Mock).mockResolvedValue({ location: true, notifications: true })
+  ;(Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'granted', canAskAgain: true })
   ;(Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValue(granted)
   ;(Location.getCurrentPositionAsync as jest.Mock).mockResolvedValue(position)
   ;(Location.reverseGeocodeAsync as jest.Mock).mockResolvedValue([{ subregion: 'Kings County' }])
@@ -32,10 +34,24 @@ describe('detectBorough', () => {
     expect(Location.requestForegroundPermissionsAsync).not.toHaveBeenCalled()
   })
 
-  it('returns null when permission is denied', async () => {
+  it('returns null when permission is denied after prompting', async () => {
+    ;(Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'undetermined', canAskAgain: true })
     ;(Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'denied' })
     await expect(detectBorough()).resolves.toBeNull()
     expect(Location.getCurrentPositionAsync).not.toHaveBeenCalled()
+  })
+
+  it('does not re-prompt a user who already denied and cannot be asked again', async () => {
+    ;(Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'denied', canAskAgain: false })
+    await expect(detectBorough()).resolves.toBeNull()
+    expect(Location.requestForegroundPermissionsAsync).not.toHaveBeenCalled()
+    expect(Location.getCurrentPositionAsync).not.toHaveBeenCalled()
+  })
+
+  it('skips the prompt entirely when permission is already granted', async () => {
+    await detectBorough()
+    expect(Location.requestForegroundPermissionsAsync).not.toHaveBeenCalled()
+    expect(Location.getCurrentPositionAsync).toHaveBeenCalled()
   })
 
   it('returns null instead of throwing when the GPS call rejects', async () => {
