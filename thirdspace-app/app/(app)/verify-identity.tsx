@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, Image, ActivityIndicator, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity, Image, ActivityIndicator, StyleSheet } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
@@ -11,6 +10,9 @@ import { AuthButton } from '../../components/AuthButton'
 import { captureImage } from '../../services/photos'
 import { submitVerification } from '../../services/profiles'
 import { canSubmitVerification } from '../../utils/verification'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 const VERIFY_DELAY_MS = 2000
 
@@ -57,52 +59,52 @@ export default function VerifyIdentity() {
     }
   }
 
-  if (loading) return <LoadingView />
+  if (loading) return <LoadingView tone="cream" />
 
   const alreadyVerified = profile?.verified === true
   if (phase === 'done' || alreadyVerified) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="cream">
         <StatusBar style="dark" />
         <View style={styles.centered}>
-          <Ionicons name="checkmark-circle" size={72} color="#2FA365" />
-          <Text style={styles.doneTitle}>You're verified</Text>
-          <Text style={styles.doneBody}>Your identity is confirmed. The verified badge now shows on your profile.</Text>
+          <Ionicons name="checkmark-circle" size={72} color={palette.sage} />
+          <Display role="screenTitle" style={styles.doneTitle}>You&apos;re verified</Display>
+          <Body role="bodyLg" style={styles.doneBody}>Your identity is confirmed. The verified badge now shows on your profile.</Body>
           <View style={styles.doneBtn}>
             <AuthButton label="Continue" onPress={exit} variant="primary" />
           </View>
         </View>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   if (phase === 'verifying') {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="cream">
         <StatusBar style="dark" />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#FF9F3D" />
-          <Text style={styles.verifyingText}>Verifying your identity…</Text>
+          <ActivityIndicator size="large" color={palette.clay} />
+          <Display style={styles.verifyingText}>Verifying your identity…</Display>
         </View>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <Text style={styles.title}>Verify your identity</Text>
+        <Display role="screenTitle">Verify your identity</Display>
       </View>
       <View style={styles.body}>
-        <Text style={styles.subtitle}>
-          Your Third Space is for real, verified people. Add a photo of your ID and a selfie — we only use them to confirm it's you, and they're never stored.
-        </Text>
+        <Body role="bodyLg" style={styles.subtitle}>
+          Your Third Space is for real, verified people. Add a photo of your ID and a selfie — we only use them to confirm it&apos;s you, and they&apos;re never stored.
+        </Body>
 
         <CaptureSlot label="Photo of your ID" uri={idUri} onPress={() => capture('id')} />
         <CaptureSlot label="Selfie" uri={selfieUri} onPress={() => capture('selfie')} />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
       </View>
 
       <View style={styles.footer}>
@@ -113,10 +115,10 @@ export default function VerifyIdentity() {
           disabled={!canSubmitVerification({ idUri, selfieUri })}
         />
         <TouchableOpacity onPress={exit} style={styles.skip} hitSlop={8}>
-          <Text style={styles.skipText}>Skip for now</Text>
+          <Meta role="eyebrow" tone="clay">Skip for now</Meta>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
@@ -127,37 +129,43 @@ function CaptureSlot({ label, uri, onPress }: { label: string; uri: string | nul
         <Image source={{ uri }} style={styles.slotImg} />
       ) : (
         <View style={styles.slotEmpty}>
-          <Ionicons name="camera-outline" size={24} color="#6B6F78" />
+          <Ionicons name="camera-outline" size={24} color={palette.inkSoft} />
         </View>
       )}
       <View style={styles.slotText}>
-        <Text style={styles.slotLabel}>{label}</Text>
-        <Text style={styles.slotHint}>{uri ? 'Captured · tap to retake' : 'Tap to capture'}</Text>
+        <Display>{label}</Display>
+        <Body role="bodySm" style={styles.slotHint}>{uri ? 'Captured · tap to retake' : 'Tap to capture'}</Body>
       </View>
-      {uri ? <Ionicons name="checkmark-circle" size={22} color="#2FA365" /> : null}
+      {uri ? <Ionicons name="checkmark-circle" size={22} color={palette.sage} /> : null}
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#15161A', letterSpacing: -0.5 },
-  body: { flex: 1, paddingHorizontal: 24, paddingTop: 8 },
-  subtitle: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', lineHeight: 22, marginBottom: 24 },
-  slot: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  header: { paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.sm },
+  body: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.sm },
+  subtitle: { marginBottom: space.xl },
+  slot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md + 2,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.md + 2,
+    marginBottom: space.md + 2,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
   slotImg: { width: 56, height: 56, borderRadius: 10 },
-  slotEmpty: { width: 56, height: 56, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F3F5' },
-  slotText: { flex: 1 },
-  slotLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  slotHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3 },
-  footer: { paddingHorizontal: 24, paddingBottom: 16 },
-  skip: { alignItems: 'center', paddingVertical: 14 },
-  skipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#6B6F78' },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginTop: 4 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  verifyingText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A', marginTop: 20 },
-  doneTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', marginTop: 16, letterSpacing: -0.5 },
-  doneBody: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', textAlign: 'center', lineHeight: 22, marginTop: 10 },
-  doneBtn: { alignSelf: 'stretch', marginTop: 28 },
+  slotEmpty: { width: 56, height: 56, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.cream },
+  slotText: { flex: 1, minWidth: 0 },
+  slotHint: { marginTop: 3 },
+  footer: { paddingHorizontal: space.xl, paddingBottom: space.lg },
+  skip: { alignItems: 'center', paddingVertical: space.md + 2 },
+  error: { marginTop: space.xs },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl },
+  verifyingText: { marginTop: space.xl - 4 },
+  doneTitle: { marginTop: space.lg },
+  doneBody: { textAlign: 'center', marginTop: space.sm + 2 },
+  doneBtn: { alignSelf: 'stretch', marginTop: space.xxl - 4 },
 })

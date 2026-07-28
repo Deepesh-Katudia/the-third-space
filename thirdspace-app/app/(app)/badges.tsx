@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { BadgeGrid } from '../../components/BadgeGrid'
@@ -16,6 +14,9 @@ import { tierProgress } from '../../utils/points'
 import { computeBadges } from '../../utils/badges'
 import { redeemReward } from '../../services/profiles'
 import { REWARDS } from '../../constants/rewards'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 export default function Badges() {
   const router = useRouter()
@@ -30,16 +31,16 @@ export default function Badges() {
 
   if (profileHasError || !profile) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.back}>←</Text>
+            <Display style={styles.back}>←</Display>
           </TouchableOpacity>
-          <Text style={styles.title}>Points & badges</Text>
+          <Display role="screenTitle">Points & badges</Display>
         </View>
         <EmptyState emoji="🫥" title="Couldn't load your points" body="Check your connection and try again." />
-      </SafeAreaView>
+      </Screen>
     )
   }
 
@@ -62,81 +63,88 @@ export default function Badges() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <Text style={styles.title}>Points & badges</Text>
+        <Display role="screenTitle">Points & badges</Display>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <LinearGradient colors={['#FF9F3D', '#FFB75B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-          <Text style={styles.heroLabel}>YOUR POINTS</Text>
-          <Text style={styles.heroPoints}>{profile.points.toLocaleString()}</Text>
+        {/* Ink hero — the points total is the loudest thing on the screen, and ink is
+            the only surface that outranks the deep orange field. */}
+        <View style={styles.hero}>
+          <Meta role="eyebrow" style={styles.onInkSoft}>Your points</Meta>
+          <Display role="screenTitle" style={styles.heroPoints}>{profile.points.toLocaleString()}</Display>
           <View style={styles.tierBadge}>
-            <Text style={styles.tierText}>{progress.tier}</Text>
+            <Meta role="eyebrow" tone="ink">{progress.tier}</Meta>
           </View>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${Math.round(progress.progress * 100)}%` }]} />
           </View>
-          <Text style={styles.progressText}>
+          <Meta style={styles.progressText}>
             {progress.nextTier ? `${progress.pointsToNext} pts to ${progress.nextTier}` : "You've reached the top tier"}
-          </Text>
-        </LinearGradient>
+          </Meta>
+        </View>
 
         {banner ? <Banner message={banner} /> : attendanceHasError ? <Banner message="Couldn't load your attendance history — badges may be out of date." /> : null}
 
-        <Text style={styles.sectionLabel}>Badges</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Badges</Meta>
         <BadgeGrid badges={badges} />
 
-        <Text style={styles.sectionLabel}>Redeem</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Redeem</Meta>
         {REWARDS.map((r) => {
           const disabled = profile.points < r.cost || redeemingId === r.id
           return (
             <View key={r.id} style={styles.rewardRow}>
               <View style={styles.rewardText}>
-                <Text style={styles.rewardLabel}>{r.label}</Text>
-                <Text style={styles.rewardCost}>{r.cost} pts</Text>
+                <Display>{r.label}</Display>
+                <Body role="bodySm" tone="clay">{r.cost} pts</Body>
               </View>
               <TouchableOpacity
                 style={[styles.useBtn, disabled && styles.useBtnDisabled]}
                 onPress={() => handleRedeem(r.id, r.cost)}
                 disabled={disabled}
               >
-                <Text style={styles.useText}>{redeemingId === r.id ? '…' : 'Use'}</Text>
+                <Meta role="eyebrow" style={styles.onInk}>{redeemingId === r.id ? '…' : 'Use'}</Meta>
               </TouchableOpacity>
             </View>
           )
         })}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', letterSpacing: -0.5 },
-  scroll: { paddingHorizontal: 24, paddingBottom: 32 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
+  back: { fontSize: 24 },
+  scroll: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
 
-  hero: { borderRadius: 22, padding: 24, marginBottom: 28, alignItems: 'center' },
-  heroLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.8, marginBottom: 6 },
-  heroPoints: { fontFamily: 'Poppins_800ExtraBold', fontSize: 52, color: 'white', letterSpacing: -1 },
-  tierBadge: { backgroundColor: 'rgba(255,255,255,0.22)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 5, marginTop: 8, marginBottom: 18 },
-  tierText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' },
-  progressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
-  progressFill: { height: 8, borderRadius: 4, backgroundColor: 'white' },
-  progressText: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8 },
+  hero: { backgroundColor: palette.ink, borderRadius: radius.chip + 2, padding: space.xl, marginBottom: space.xxl - 4, alignItems: 'center' },
+  onInk: { color: palette.cream },
+  onInkSoft: { color: palette.orangeLight },
+  heroPoints: { fontSize: 52, lineHeight: 58, color: palette.cream, letterSpacing: -1 },
+  tierBadge: { backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.md + 2, paddingVertical: space.xs + 1, marginTop: space.sm, marginBottom: space.lg + 2 },
+  progressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: palette.inkSoft, overflow: 'hidden' },
+  progressFill: { height: 8, borderRadius: 4, backgroundColor: palette.orangeLight },
+  progressText: { color: palette.orangeLight, marginTop: space.sm },
 
-  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  rewardText: { flex: 1 },
-  rewardLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', marginBottom: 2 },
-  rewardCost: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF9F3D' },
-  useBtn: { backgroundColor: '#15161A', borderRadius: 100, paddingHorizontal: 20, paddingVertical: 10 },
+  sectionLabel: { marginBottom: space.md + 2 },
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    marginBottom: space.md,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  rewardText: { flex: 1, minWidth: 0 },
+  useBtn: { backgroundColor: palette.ink, borderRadius: radius.pill, paddingHorizontal: space.xl - 4, paddingVertical: space.sm + 2 },
   useBtnDisabled: { opacity: 0.4 },
-  useText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#F3F3F5' },
 })

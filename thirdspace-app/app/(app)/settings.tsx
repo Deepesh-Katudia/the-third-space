@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, Switch, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../hooks/useAuth'
 import { getPushEnabled, setPushEnabled } from '../../services/pushTokens'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 export default function Settings() {
   const router = useRouter()
@@ -42,55 +44,74 @@ export default function Settings() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <Text style={styles.title}>Settings</Text>
+        <Display role="screenTitle">Settings</Display>
       </View>
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Push notifications</Text>
-          <Text style={styles.rowHint}>Messages, announcements, and new connections</Text>
+          <Display>Push notifications</Display>
+          <Body role="bodySm" style={styles.rowHint}>Messages, announcements, and new connections</Body>
         </View>
         <Switch
           value={enabled}
           onValueChange={toggle}
-          trackColor={{ true: '#FF9F3D', false: 'rgba(107,111,120,0.4)' }}
+          trackColor={{ true: palette.clay, false: palette.rule }}
+          thumbColor={palette.cream}
         />
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
       {isPasswordUser ? (
         <TouchableOpacity style={styles.navRow} onPress={() => router.push('/(app)/change-password')} activeOpacity={0.7}>
           <View style={styles.rowText}>
-            <Text style={styles.rowLabel}>Change password</Text>
-            <Text style={styles.rowHint}>Update the password for your account</Text>
+            <Display>Change password</Display>
+            <Body role="bodySm" style={styles.rowHint}>Update the password for your account</Body>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#6B6F78" />
+          <Ionicons name="chevron-forward" size={20} color={palette.inkSoft} />
         </TouchableOpacity>
       ) : null}
 
-      <Text style={styles.footnote}>
-        If notifications are turned off at the device level, enable them in your phone's Settings first.
-      </Text>
-    </SafeAreaView>
+      <Body role="bodySm" style={styles.footnote}>
+        If notifications are turned off at the device level, enable them in your phone&apos;s Settings first.
+      </Body>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 24, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 24, marginTop: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  rowText: { flex: 1, paddingRight: 12 },
-  rowLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  rowHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3 },
-  footnote: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginHorizontal: 24, marginTop: 12, lineHeight: 18 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginHorizontal: 24, marginTop: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.lg },
+  back: { fontSize: 24 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: space.xl,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: space.xl,
+    marginTop: space.md,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  rowText: { flex: 1, paddingRight: space.md },
+  rowHint: { marginTop: 3 },
+  footnote: { marginHorizontal: space.xl, marginTop: space.md },
+  error: { marginHorizontal: space.xl, marginTop: space.sm + 2 },
 })

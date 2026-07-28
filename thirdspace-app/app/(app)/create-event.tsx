@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native'
 import { useRouter, Redirect } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
@@ -15,6 +14,9 @@ import { AuthButton } from '../../components/AuthButton'
 import { Banner } from '../../components/Banner'
 import { LoadingView } from '../../components/LoadingView'
 import { AgeRequirement, EventCategory } from '../../types/models'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 function defaultStart(): Date {
   const d = new Date()
@@ -39,7 +41,7 @@ export default function CreateEvent() {
   const [banner, setBanner] = useState('')
   const [saving, setSaving] = useState(false)
 
-  if (loading || venueLoading) return <LoadingView />
+  if (loading || venueLoading) return <LoadingView tone="cream" />
   if (role !== 'hoster' || !venue) return <Redirect href="/(app)" />
 
   const onPickerChange = (_event: DateTimePickerEvent, selected?: Date) => {
@@ -80,38 +82,38 @@ export default function CreateEvent() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backText}>← Cancel</Text>
+          <Body role="bodySm">← Cancel</Body>
         </TouchableOpacity>
-        <Text style={styles.title}>Create an event</Text>
+        <Display role="screenTitle" style={styles.title}>Create an event</Display>
         {banner ? <Banner message={banner} /> : null}
 
         <FormInput label="Title" value={title} onChangeText={setTitle} error={errors.title} placeholder="Ceramics Night" />
         <FormInput label="Description" value={description} onChangeText={setDescription} error={errors.description} placeholder="What to expect, what to bring" />
 
-        <Text style={styles.label}>Category</Text>
+        <Meta role="eyebrow" style={styles.label}>Category</Meta>
         <View style={styles.chipRow}>
           {EVENT_CATEGORIES.map((c) => (
             <TouchableOpacity key={c} onPress={() => setCategory(c)} style={[styles.chip, category === c && styles.chipActive]}>
-              <Text style={[styles.chipText, category === c && styles.chipTextActive]}>{c}</Text>
+              <Meta role="eyebrow" tone={category === c ? 'clay' : 'inkSoft'}>{c}</Meta>
             </TouchableOpacity>
           ))}
         </View>
-        {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
+        {errors.category ? <Body role="bodySm" tone="clay" style={styles.errorText}>{errors.category}</Body> : null}
 
-        <Text style={styles.label}>Date & time</Text>
+        <Meta role="eyebrow" style={styles.label}>Date & time</Meta>
         <View style={styles.dateRow}>
           <TouchableOpacity onPress={() => setPickerMode('date')} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{formatEventDate(startsAt).split(' · ')[0]}</Text>
+            <Body role="bodyLg" tone="ink">{formatEventDate(startsAt).split(' · ')[0]}</Body>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setPickerMode('time')} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{formatEventDate(startsAt).split(' · ')[1]}</Text>
+            <Body role="bodyLg" tone="ink">{formatEventDate(startsAt).split(' · ')[1]}</Body>
           </TouchableOpacity>
         </View>
-        {errors.startsAt ? <Text style={styles.errorText}>{errors.startsAt}</Text> : null}
+        {errors.startsAt ? <Body role="bodySm" tone="clay" style={styles.errorText}>{errors.startsAt}</Body> : null}
         {pickerMode ? (
           <DateTimePicker
             value={startsAt}
@@ -123,11 +125,11 @@ export default function CreateEvent() {
 
         <FormInput label="Capacity" value={capacity} onChangeText={setCapacity} error={errors.capacity} keyboardType="number-pad" placeholder="12" />
 
-        <Text style={styles.label}>Age requirement</Text>
+        <Meta role="eyebrow" style={styles.label}>Age requirement</Meta>
         <View style={styles.chipRow}>
           {(['18+', '21+'] as AgeRequirement[]).map((a) => (
             <TouchableOpacity key={a} onPress={() => setAgeRequirement(a)} style={[styles.chip, ageRequirement === a && styles.chipActive]}>
-              <Text style={[styles.chipText, ageRequirement === a && styles.chipTextActive]}>{a}</Text>
+              <Meta role="eyebrow" tone={ageRequirement === a ? 'clay' : 'inkSoft'}>{a}</Meta>
             </TouchableOpacity>
           ))}
         </View>
@@ -136,26 +138,35 @@ export default function CreateEvent() {
           <AuthButton label="Publish event" onPress={handleSubmit} variant="primary" loading={saving} />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 24, paddingBottom: 40 },
-  back: { marginBottom: 24 },
-  backText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 24, letterSpacing: -0.5 },
-  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 8 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  chip: { borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
-  chipText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  chipTextActive: { color: '#15161A' },
-  dateRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  dateButton: { flex: 1, borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 12, padding: 14, alignItems: 'center', backgroundColor: 'white' },
-  dateButtonText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A' },
-  errorText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginBottom: 8 },
-  submit: { marginTop: 8 },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.xl, paddingBottom: space.xxl + space.sm },
+  back: { marginBottom: space.xl },
+  title: { marginBottom: space.xl },
+  label: { marginBottom: space.sm },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.lg },
+  chip: {
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.sm,
+  },
+  chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  dateRow: { flexDirection: 'row', gap: space.md, marginBottom: space.lg },
+  dateButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket - 2,
+    padding: space.md + 2,
+    alignItems: 'center',
+    backgroundColor: palette.orangeLight,
+  },
+  errorText: { marginBottom: space.sm },
+  submit: { marginTop: space.sm },
 })

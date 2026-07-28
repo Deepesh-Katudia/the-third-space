@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
 import { signOut } from 'firebase/auth'
@@ -12,7 +11,9 @@ import { VenueForm } from '../../../components/VenueForm'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { Venue } from '../../../types/models'
-import { NAV_CLEARANCE } from '../../../constants/theme'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, NAV_CLEARANCE } from '../../../constants/design'
 
 export default function VenueTab() {
   const router = useRouter()
@@ -33,33 +34,48 @@ export default function VenueTab() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Your venue</Text>
+        <Display role="screenTitle" style={styles.title}>Your venue</Display>
         <TouchableOpacity style={styles.settingsRow} onPress={() => router.push('/(app)/settings')}>
-          <Text style={styles.settingsText}>Settings</Text>
-          <Text style={styles.settingsChevron}>›</Text>
+          <Body role="bodyLg" tone="ink">Settings</Body>
+          <Meta style={styles.chevron}>›</Meta>
         </TouchableOpacity>
         {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
         <VenueForm initial={venue} submitLabel="Save changes" onSubmit={handleSubmit} />
         <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOutButton}>
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Meta role="eyebrow" tone="clay">Sign out</Meta>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 40, paddingBottom: NAV_CLEARANCE },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 24, letterSpacing: -0.5 },
-  signOutButton: { marginTop: 24, alignSelf: 'center', borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  signOutText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-
-  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', marginBottom: 12 },
-  settingsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  settingsChevron: { fontFamily: 'Poppins_500Medium', fontSize: 20, color: '#6B6F78' },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.xxl + space.sm, paddingBottom: NAV_CLEARANCE },
+  title: { marginBottom: space.xl },
+  signOutButton: {
+    marginTop: space.xl,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: palette.clay,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.xl,
+    paddingVertical: space.md,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 2,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    marginBottom: space.md,
+  },
+  chevron: { fontSize: 20 },
 })

@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { EmptyState } from '../../components/EmptyState'
@@ -9,6 +8,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { useConnections } from '../../hooks/useConnections'
 import { useProfile } from '../../hooks/useProfile'
 import { avatarColor, initials } from '../../utils/avatar'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 // Resolves its own profile so one failed read renders a neutral placeholder
 // row instead of sinking the whole list.
@@ -30,10 +32,10 @@ function ConnectionRow({ uid }: { uid: string }) {
         </View>
       )}
       <View style={styles.rowText}>
-        <Text style={styles.name}>{name}</Text>
-        {profile?.neighborhood ? <Text style={styles.neighborhood}>{profile.neighborhood}</Text> : null}
+        <Display numberOfLines={1}>{name}</Display>
+        {profile?.neighborhood ? <Body role="bodySm">{profile.neighborhood}</Body> : null}
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <Meta style={styles.chevron}>›</Meta>
     </TouchableOpacity>
   )
 }
@@ -46,13 +48,13 @@ export default function Connections() {
   if (loading) return <LoadingView />
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <Text style={styles.title}>Connections</Text>
+        <Display role="screenTitle">Connections</Display>
       </View>
 
       {hasError ? (
@@ -72,21 +74,28 @@ export default function Connections() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  list: { paddingHorizontal: 24, paddingBottom: 32 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
+  back: { fontSize: 24 },
+  list: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md + 2,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip,
+    padding: space.md + 2,
+    marginBottom: space.md,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: 'white' },
-  rowText: { flex: 1 },
-  name: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
-  neighborhood: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78', marginTop: 1 },
-  chevron: { fontSize: 20, color: '#C9CCD2' },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  avatarText: { ...typeScale.bodySm, fontSize: 18, lineHeight: 22, color: palette.cream },
+  rowText: { flex: 1, minWidth: 0 },
+  chevron: { fontSize: 20 },
 })

@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -13,7 +12,9 @@ import { useConnections } from '../../../hooks/useConnections'
 import { LoadingView } from '../../../components/LoadingView'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { messagePrivacyLabel } from '../../../utils/profile'
-import { NAV_CLEARANCE } from '../../../constants/theme'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, type as typeScale, NAV_CLEARANCE } from '../../../constants/design'
 
 export default function Profile() {
   const router = useRouter()
@@ -29,11 +30,11 @@ export default function Profile() {
   if (loading) return <LoadingView />
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>{name}</Text>
+          <Display role="screenTitle" numberOfLines={1}>{name}</Display>
         </View>
 
         <View style={styles.identity}>
@@ -46,15 +47,15 @@ export default function Profile() {
           )}
           <View style={styles.identityText}>
             <View style={styles.nameRow}>
-              <Text style={styles.name}>{name}</Text>
-              {profile?.verified ? <Ionicons name="checkmark-circle" size={18} color="#2FA365" /> : null}
+              <Display role="screenTitle">{name}</Display>
+              {profile?.verified ? <Ionicons name="checkmark-circle" size={18} color={palette.sage} /> : null}
             </View>
-            {neighborhood ? <Text style={styles.neighborhood}>{neighborhood}</Text> : null}
+            {neighborhood ? <Body role="bodySm">{neighborhood}</Body> : null}
           </View>
         </View>
 
         <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/(app)/edit-profile')}>
-          <Text style={styles.editText}>Edit profile & photos</Text>
+          <Meta role="eyebrow" tone="clay">Edit profile & photos</Meta>
         </TouchableOpacity>
 
         <View style={styles.statsRow}>
@@ -69,7 +70,7 @@ export default function Profile() {
           />
         </View>
 
-        <Text style={styles.sectionLabel}>Account</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Account</Meta>
         <View style={styles.card}>
           {!profile?.verified ? (
             <Row
@@ -84,7 +85,7 @@ export default function Profile() {
           <Row label="Become a host" badge="New" onPress={() => router.push('/(app)/become-host')} last />
         </View>
 
-        <Text style={styles.sectionLabel}>Privacy</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Privacy</Meta>
         <View style={styles.card}>
           <Row
             label="Who can message me"
@@ -92,34 +93,34 @@ export default function Profile() {
             onPress={() => router.push('/(app)/message-privacy')}
           />
           <View style={[styles.row, styles.rowLast]}>
-            <Text style={styles.rowLabel}>Notifications</Text>
+            <Body role="bodyLg" tone="ink">Notifications</Body>
             <Switch
               value={notifications}
               onValueChange={setNotifications}
-              trackColor={{ false: '#E2E0DA', true: '#FF9F3D' }}
-              thumbColor="white"
+              trackColor={{ false: palette.rule, true: palette.clay }}
+              thumbColor={palette.cream}
             />
           </View>
         </View>
 
         <TouchableOpacity style={styles.settingsRow} onPress={() => router.push('/(app)/settings')}>
-          <Text style={styles.settingsText}>Settings</Text>
-          <Text style={styles.settingsChevron}>›</Text>
+          <Body role="bodyLg" tone="ink">Settings</Body>
+          <Meta style={styles.chevron}>›</Meta>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Meta role="eyebrow" tone="clay">Sign out</Meta>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 function Stat({ value, label, onPress }: { value: number | string; label: string; onPress?: () => void }) {
   return (
     <TouchableOpacity style={styles.stat} onPress={onPress} disabled={!onPress}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Display role="stubDay" tone="clay">{value}</Display>
+      <Meta style={styles.statLabel}>{label}</Meta>
     </TouchableOpacity>
   )
 }
@@ -139,58 +140,82 @@ function Row({
 }) {
   return (
     <TouchableOpacity style={[styles.row, last && styles.rowLast]} onPress={onPress} disabled={!onPress}>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <Body role="bodyLg" tone="ink">{label}</Body>
       <View style={styles.rowRight}>
         {badge ? (
           <View style={styles.newBadge}>
-            <Text style={styles.newBadgeText}>{badge}</Text>
+            <Meta role="eyebrow" tone="clay">{badge}</Meta>
           </View>
         ) : null}
-        {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-        <Text style={styles.chevron}>›</Text>
+        {value ? <Body role="bodySm">{value}</Body> : null}
+        <Meta style={styles.chevron}>›</Meta>
       </View>
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: NAV_CLEARANCE },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
+  scroll: { paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: NAV_CLEARANCE },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.xl - 4 },
 
-  identity: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 18 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginBottom: space.lg + 2 },
   avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 24, color: 'white' },
-  identityText: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
-  name: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A' },
-  neighborhood: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  avatarText: { ...typeScale.button, fontSize: 24, lineHeight: 30, color: palette.cream },
+  identityText: { flex: 1, minWidth: 0 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginBottom: 3 },
 
-  editBtn: { borderWidth: 1.5, borderColor: '#FF9F3D', borderRadius: 100, paddingVertical: 12, alignItems: 'center', marginBottom: 24 },
-  editText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D' },
+  editBtn: { borderWidth: 1.5, borderColor: palette.clay, borderRadius: radius.pill, paddingVertical: space.md, alignItems: 'center', marginBottom: space.xl },
 
-  statsRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 18, paddingVertical: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip,
+    paddingVertical: space.lg + 2,
+    marginBottom: space.xxl - 4,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
   stat: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A' },
-  statLabel: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: 'rgba(226,224,218,0.6)' },
+  statLabel: { marginTop: 2 },
+  statDivider: { width: 1, height: 32, backgroundColor: palette.rule },
 
-  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
-  card: { backgroundColor: 'white', borderRadius: 18, marginBottom: 28, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.4)' },
+  sectionLabel: { marginBottom: space.sm + 2 },
+  card: {
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip,
+    marginBottom: space.xxl - 4,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 3,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.rule,
+  },
   rowLast: { borderBottomWidth: 0 },
-  rowLabel: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowValue: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  chevron: { fontSize: 20, color: '#C9CCD2' },
-  newBadge: { backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 2 },
-  newBadgeText: { fontFamily: 'Poppins_600SemiBold', fontSize: 10, color: '#15161A' },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  chevron: { fontSize: 20 },
+  newBadge: { borderWidth: 1, borderColor: palette.clay, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 2 },
 
-  signOut: { alignItems: 'center', paddingVertical: 8 },
-  signOutText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#FF9F3D' },
+  signOut: { alignItems: 'center', paddingVertical: space.sm },
 
-  settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', marginBottom: 12 },
-  settingsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  settingsChevron: { fontFamily: 'Poppins_500Medium', fontSize: 20, color: '#6B6F78' },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 2,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    marginBottom: space.md,
+  },
 })

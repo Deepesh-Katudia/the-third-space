@@ -10,7 +10,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { IBMPlexMono_500Medium, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono'
 import { useAuth } from '../hooks/useAuth'
 import { resolveAuthRoute } from '../utils/authRoute'
-import { colors } from '../constants/theme'
+import { palette } from '../constants/design'
 
 interface AuthRedirectProps {
   user: import('firebase/auth').User | null
@@ -51,8 +51,8 @@ export default function RootLayout() {
 
   if (!fontsLoaded || loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface }}>
-        <ActivityIndicator color={colors.primary} size="large" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.orangeDeep }}>
+        <ActivityIndicator color={palette.clay} size="large" />
       </View>
     )
   }

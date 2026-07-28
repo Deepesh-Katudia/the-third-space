@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../hooks/useAuth'
@@ -15,6 +14,9 @@ import { Borough } from '../../types/models'
 import { updateProfile } from '../../services/profiles'
 import { pickImage, uploadProfilePhoto } from '../../services/photos'
 import { avatarColor, initials } from '../../utils/avatar'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 const BIO_LIMIT = 300
 const MIN_INTERESTS = 3
@@ -89,28 +91,28 @@ export default function EditProfile() {
     }
   }
 
-  if (loading) return <LoadingView />
+  if (loading) return <LoadingView tone="cream" />
 
   if (hasError || !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Screen tone="cream">
         <StatusBar style="dark" />
         <EmptyState emoji="🫥" title="Profile unavailable" body="We couldn't load your profile. Try again." />
         <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Text style={styles.backCenterText}>← Go back</Text>
+          <Body role="bodySm">← Go back</Body>
         </TouchableOpacity>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit profile</Text>
+        <Display role="screenTitle">Edit profile</Display>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -126,38 +128,38 @@ export default function EditProfile() {
                 </View>
               )}
             </TouchableOpacity>
-            <Text style={styles.photoHint}>Change photo</Text>
+            <Body role="bodySm">Change photo</Body>
           </View>
 
-          <Text style={styles.fieldLabel}>Bio</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Bio</Meta>
           <TextInput
             style={styles.bioInput}
             placeholder="Illustrator, new to Brooklyn, always up for good coffee…"
-            placeholderTextColor="#6B6F78"
+            placeholderTextColor={palette.inkSoft}
             value={bio}
             onChangeText={(t) => setBio(t.slice(0, BIO_LIMIT))}
             multiline
             textAlignVertical="top"
           />
-          <Text style={styles.counter}>{bio.length}/{BIO_LIMIT}</Text>
+          <Meta style={styles.counter}>{bio.length}/{BIO_LIMIT}</Meta>
 
           <FormInput label="Neighborhood" value={neighborhood} onChangeText={setNeighborhood} placeholder="Williamsburg" />
 
-          <Text style={styles.fieldLabel}>Borough</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Borough</Meta>
           <View style={styles.chipWrap}>
             {BOROUGHS.map((b) => (
               <InterestChip key={b} label={b} selected={borough === b} onPress={() => setBorough(b)} />
             ))}
           </View>
 
-          <Text style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Meta>
           <View style={styles.chipWrap}>
             {INTEREST_OPTIONS.map((label) => (
               <InterestChip key={label} label={label} selected={interests.includes(label)} onPress={() => toggleInterest(label)} />
             ))}
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
           <View style={styles.submitWrap}>
             <AuthButton
@@ -170,31 +172,37 @@ export default function EditProfile() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8 },
-  back: { fontSize: 24, color: '#15161A' },
-  headerTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 22, color: '#15161A', letterSpacing: -0.5 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.sm },
+  back: { fontSize: 24 },
   headerSpacer: { width: 24 },
-  backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backCenterText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 16, paddingBottom: 40 },
-  photoWrap: { alignItems: 'center', marginBottom: 28 },
-  photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: 8 },
+  backCenter: { alignItems: 'center', paddingBottom: space.xxl + space.sm },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.lg, paddingBottom: space.xxl + space.sm },
+  photoWrap: { alignItems: 'center', marginBottom: space.xxl - space.xs },
+  photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: space.sm },
   photoImg: { width: 96, height: 96 },
   photoFallback: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center' },
-  photoInitials: { fontFamily: 'Poppins_600SemiBold', fontSize: 32, color: 'white' },
-  photoHint: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  fieldLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 10, marginTop: 8 },
-  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  counter: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30', marginBottom: 12 },
-  submitWrap: { marginTop: 12 },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  photoInitials: { ...typeScale.button, fontSize: 32, lineHeight: 38, color: palette.cream },
+  fieldLabel: { marginBottom: space.sm + 2, marginTop: space.sm },
+  bioInput: {
+    ...typeScale.bodyLg,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    minHeight: 96,
+    color: palette.ink,
+  },
+  counter: { alignSelf: 'flex-end', marginTop: space.xs + 2, marginBottom: space.lg },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.xl - 4 },
+  error: { marginBottom: space.md },
+  submitWrap: { marginTop: space.md },
 })

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -9,7 +8,6 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../../hooks/useAuth'
@@ -19,6 +17,9 @@ import { sendAnnouncement, subscribeAnnouncements, AnnouncementAuthor } from '..
 import { formatSentSummary } from '../../../../utils/announcementHelpers'
 import { formatDayDate, formatTime } from '../../../../utils/eventHelpers'
 import { CommunityEvent, Announcement } from '../../../../types/models'
+import { Screen } from '../../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../../../constants/design'
 
 const TEMPLATES = [
   { label: 'What to bring', text: 'A quick reminder to bring: ' },
@@ -72,54 +73,54 @@ export default function AnnouncementScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>Send announcement</Text>
-          <Text style={styles.subtitle}>To {recipientCount} registered {recipientCount === 1 ? 'attendee' : 'attendees'}</Text>
+        <View style={styles.headerText}>
+          <Display role="screenTitle">Send announcement</Display>
+          <Body role="bodySm">To {recipientCount} registered {recipientCount === 1 ? 'attendee' : 'attendees'}</Body>
         </View>
       </View>
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           <View style={styles.eventCard}>
-            <Text style={styles.eventTitle}>{event?.title ?? '…'}</Text>
-            <Text style={styles.eventWhen}>{whenLine}</Text>
+            <Display>{event?.title ?? '…'}</Display>
+            <Body role="bodySm">{whenLine}</Body>
           </View>
 
           <TextInput
             style={styles.textarea}
             placeholder="Write your announcement…"
-            placeholderTextColor="#6B6F78"
+            placeholderTextColor={palette.inkSoft}
             value={message}
             onChangeText={setMessage}
             multiline
             textAlignVertical="top"
           />
-          <Text style={styles.caption}>Posts to the event chat as a pinned notice</Text>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Body role="bodySm" style={styles.caption}>Posts to the event chat as a pinned notice</Body>
+          {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
-          <Text style={styles.sectionLabel}>Quick templates</Text>
+          <Meta role="eyebrow" style={styles.sectionLabel}>Quick templates</Meta>
           <View style={styles.templateWrap}>
             {TEMPLATES.map((t) => (
               <TouchableOpacity key={t.label} style={styles.templateChip} onPress={() => setMessage(t.text)}>
-                <Text style={styles.templateText}>{t.label}</Text>
+                <Meta role="eyebrow" tone="inkSoft">{t.label}</Meta>
               </TouchableOpacity>
             ))}
           </View>
 
           {latest ? (
             <>
-              <Text style={styles.sectionLabel}>Most recent</Text>
+              <Meta role="eyebrow" style={styles.sectionLabel}>Most recent</Meta>
               <View style={styles.recentCard}>
-                <Text style={styles.recentText}>{latest.text}</Text>
-                <Text style={styles.recentStats}>
+                <Body role="bodyLg" tone="ink" style={styles.recentText}>{latest.text}</Body>
+                <Meta>
                   {formatSentSummary(latest.createdAt ? latest.createdAt.toDate() : null, latest.recipientCount)}
-                </Text>
+                </Meta>
               </View>
             </>
           ) : null}
@@ -131,37 +132,60 @@ export default function AnnouncementScreen() {
             onPress={send}
             disabled={!message.trim() || sending}
           >
-            <Text style={styles.sendText}>{sending ? 'Sending…' : `Send to ${recipientCount} ${recipientCount === 1 ? 'attendee' : 'attendees'}`}</Text>
+            <Body role="button" style={styles.onInk}>{sending ? 'Sending…' : `Send to ${recipientCount} ${recipientCount === 1 ? 'attendee' : 'attendees'}`}</Body>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  scroll: { paddingHorizontal: 24, paddingBottom: 24 },
-  eventCard: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  eventTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 18, color: '#15161A', marginBottom: 4 },
-  eventWhen: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  textarea: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 16, padding: 16, minHeight: 130, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 22 },
-  caption: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 8, marginBottom: 24 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginTop: 8 },
-  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
-  templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
-  templateChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
-  templateText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
-  recentCard: { backgroundColor: 'rgba(226,224,218,0.15)', borderRadius: 16, padding: 16 },
-  recentText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A', lineHeight: 20, marginBottom: 8 },
-  recentStats: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78' },
-  footer: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)', backgroundColor: '#F3F3F5' },
-  sendBtn: { backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  sendBtnDisabled: { backgroundColor: 'rgba(255,159,61,0.4)' },
-  sendText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
+  back: { fontSize: 24 },
+  headerText: { flex: 1, minWidth: 0 },
+  scroll: { paddingHorizontal: space.xl, paddingBottom: space.xl },
+  eventCard: {
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    marginBottom: space.xl,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  textarea: {
+    ...typeScale.bodyLg,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    minHeight: 130,
+    color: palette.ink,
+  },
+  caption: { marginTop: space.sm, marginBottom: space.xl },
+  error: { marginTop: space.sm },
+  sectionLabel: { marginBottom: space.md },
+  templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.xl },
+  templateChip: {
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.sm + 1,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  recentCard: { backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule, borderRadius: radius.ticket, padding: space.lg },
+  recentText: { marginBottom: space.sm },
+  footer: {
+    paddingHorizontal: space.xl,
+    paddingTop: space.md,
+    paddingBottom: space.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: palette.rule,
+    backgroundColor: palette.cream,
+  },
+  sendBtn: { backgroundColor: palette.ink, borderRadius: radius.ticket, paddingVertical: space.lg, alignItems: 'center' },
+  sendBtnDisabled: { backgroundColor: palette.inkSoft },
+  onInk: { color: palette.cream },
 })

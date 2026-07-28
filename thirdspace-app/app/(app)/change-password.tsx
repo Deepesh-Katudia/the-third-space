@@ -1,16 +1,19 @@
 import React, { useMemo, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../hooks/useAuth'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
+import { Banner } from '../../components/Banner'
 import { PasswordStrengthMeter } from '../../components/PasswordStrengthMeter'
 import { validateChangePasswordForm, ChangePasswordFormErrors } from '../../utils/validation'
 import { evaluatePassword } from '../../utils/password'
 import { changePassword } from '../../services/auth'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body } from '../../components/ui/Text'
+import { palette, space } from '../../constants/design'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'auth/wrong-password': 'Your current password is incorrect.',
@@ -63,35 +66,35 @@ export default function ChangePassword() {
 
   if (done) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="cream">
         <StatusBar style="dark" />
         <View style={styles.successWrap}>
-          <Ionicons name="checkmark-circle" size={64} color="#2FA365" />
-          <Text style={styles.successTitle}>Password updated</Text>
-          <Text style={styles.successBody}>Use your new password next time you sign in.</Text>
+          <Ionicons name="checkmark-circle" size={64} color={palette.sage} />
+          <Display role="screenTitle" style={styles.successTitle}>Password updated</Display>
+          <Body role="bodyLg" style={styles.successBody}>Use your new password next time you sign in.</Body>
           <View style={styles.successButton}>
             <AuthButton label="Back to settings" onPress={() => router.back()} variant="primary" />
           </View>
         </View>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.back}>←</Text>
+            <Display style={styles.back}>←</Display>
           </TouchableOpacity>
-          <Text style={styles.title}>Change password</Text>
+          <Display role="screenTitle">Change password</Display>
         </View>
 
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.subtitle}>Enter your current password, then choose a new one.</Text>
+          <Body role="bodyLg" style={styles.subtitle}>Enter your current password, then choose a new one.</Body>
 
-          {banner ? <View style={styles.banner}><Text style={styles.bannerText}>{banner}</Text></View> : null}
+          {banner ? <Banner message={banner} /> : null}
 
           <FormInput
             label="Current password"
@@ -124,24 +127,20 @@ export default function ChangePassword() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 8, paddingBottom: 40 },
-  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#6B6F78', lineHeight: 21, marginBottom: 20 },
-  banner: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, marginBottom: 16 },
-  bannerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30' },
-  submitWrap: { marginTop: 12 },
-  successWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12 },
-  successTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', marginTop: 8 },
-  successBody: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', textAlign: 'center', lineHeight: 21 },
-  successButton: { alignSelf: 'stretch', marginTop: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
+  back: { fontSize: 24 },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.sm, paddingBottom: space.xxl + space.sm },
+  subtitle: { marginBottom: space.xl - 4 },
+  submitWrap: { marginTop: space.md },
+  successWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl + space.sm, gap: space.md },
+  successTitle: { marginTop: space.sm },
+  successBody: { textAlign: 'center' },
+  successButton: { alignSelf: 'stretch', marginTop: space.lg },
 })

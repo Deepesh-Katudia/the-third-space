@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
@@ -11,6 +10,9 @@ import { EmptyState } from '../../components/EmptyState'
 import { updateProfile } from '../../services/profiles'
 import { MESSAGE_PRIVACY_OPTIONS, DEFAULT_MESSAGE_PRIVACY } from '../../utils/profile'
 import { MessagePrivacy } from '../../types/models'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 export default function MessagePrivacyScreen() {
   const router = useRouter()
@@ -34,28 +36,28 @@ export default function MessagePrivacyScreen() {
     }
   }
 
-  if (loading) return <LoadingView />
+  if (loading) return <LoadingView tone="cream" />
 
   if (hasError || !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Screen tone="cream">
         <StatusBar style="dark" />
         <EmptyState emoji="🫥" title="Profile unavailable" body="We couldn't load your settings. Try again." />
         <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Text style={styles.backCenterText}>← Go back</Text>
+          <Body role="bodySm">← Go back</Body>
         </TouchableOpacity>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
-        <Text style={styles.title}>Who can message me</Text>
+        <Display role="screenTitle">Who can message me</Display>
       </View>
 
       <View style={styles.card}>
@@ -72,11 +74,11 @@ export default function MessagePrivacyScreen() {
               accessibilityState={{ selected: isSelected }}
             >
               <View style={styles.rowText}>
-                <Text style={styles.rowLabel}>{option.label}</Text>
-                <Text style={styles.rowHint}>{option.hint}</Text>
+                <Display>{option.label}</Display>
+                <Body role="bodySm" style={styles.rowHint}>{option.hint}</Body>
               </View>
               {isSelected ? (
-                <Ionicons name="checkmark-circle" size={22} color="#FF9F3D" />
+                <Ionicons name="checkmark-circle" size={22} color={palette.clay} />
               ) : (
                 <View style={styles.radioEmpty} />
               )}
@@ -85,29 +87,39 @@ export default function MessagePrivacyScreen() {
         })}
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
-      <Text style={styles.footnote}>
-        This controls who can start a new conversation with you. People you've already accepted can always reach you.
-      </Text>
-    </SafeAreaView>
+      <Body role="bodySm" style={styles.footnote}>
+        This controls who can start a new conversation with you. People you&apos;ve already accepted can always reach you.
+      </Body>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 },
-  back: { fontSize: 24, color: '#15161A' },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  card: { marginHorizontal: 24, backgroundColor: 'white', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.4)' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.lg },
+  back: { fontSize: 24 },
+  card: {
+    marginHorizontal: space.xl,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: space.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.rule,
+  },
   rowLast: { borderBottomWidth: 0 },
-  rowText: { flex: 1, paddingRight: 12 },
-  rowLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  rowHint: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginTop: 3, lineHeight: 17 },
-  radioEmpty: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: 'rgba(107,111,120,0.4)' },
-  backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backCenterText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  footnote: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', marginHorizontal: 24, marginTop: 14, lineHeight: 18 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginHorizontal: 24, marginTop: 10 },
+  rowText: { flex: 1, paddingRight: space.md },
+  rowHint: { marginTop: 3 },
+  radioEmpty: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: palette.rule },
+  backCenter: { alignItems: 'center', paddingBottom: space.xxl + space.sm },
+  footnote: { marginHorizontal: space.xl, marginTop: space.md + 2 },
+  error: { marginHorizontal: space.xl, marginTop: space.sm + 2 },
 })

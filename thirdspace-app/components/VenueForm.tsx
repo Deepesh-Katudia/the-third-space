@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { FormInput } from './FormInput'
 import { AuthButton } from './AuthButton'
 import { BOROUGHS } from '../constants/categories'
 import { Borough, Venue } from '../types/models'
+import { palette, radius, space } from '../constants/design'
+import { Body, Meta } from './ui/Text'
 
 interface VenueFormErrors {
   name?: string
@@ -53,7 +55,7 @@ export function VenueForm({ initial, submitLabel, onSubmit }: VenueFormProps) {
   return (
     <View>
       <FormInput label="Venue name" value={name} onChangeText={setName} error={errors.name} placeholder="Clay Studio BK" />
-      <Text style={styles.label}>Borough</Text>
+      <Meta role="eyebrow" style={styles.label}>Borough</Meta>
       <View style={styles.chipRow}>
         {BOROUGHS.map((b) => (
           <TouchableOpacity
@@ -61,11 +63,11 @@ export function VenueForm({ initial, submitLabel, onSubmit }: VenueFormProps) {
             onPress={() => setBorough(b)}
             style={[styles.chip, borough === b && styles.chipActive]}
           >
-            <Text style={[styles.chipText, borough === b && styles.chipTextActive]}>{b}</Text>
+            <Meta role="eyebrow" tone={borough === b ? 'clay' : 'inkSoft'}>{b}</Meta>
           </TouchableOpacity>
         ))}
       </View>
-      {errors.borough ? <Text style={styles.errorText}>{errors.borough}</Text> : null}
+      {errors.borough ? <Body role="bodySm" tone="clay" style={styles.errorText}>{errors.borough}</Body> : null}
       <FormInput label="Neighborhood" value={neighborhood} onChangeText={setNeighborhood} error={errors.neighborhood} placeholder="Williamsburg" />
       <FormInput label="About your space" value={description} onChangeText={setDescription} error={errors.description} placeholder="A cozy ceramics studio open to the community" />
       <AuthButton label={submitLabel} onPress={handleSubmit} variant="primary" loading={saving} />
@@ -74,11 +76,15 @@ export function VenueForm({ initial, submitLabel, onSubmit }: VenueFormProps) {
 }
 
 const styles = StyleSheet.create({
-  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 8 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-  chip: { borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
-  chipText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  chipTextActive: { color: '#15161A' },
-  errorText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginBottom: 8 },
+  label: { marginBottom: space.sm },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.sm },
+  chip: {
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.sm,
+  },
+  chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  errorText: { marginBottom: space.sm },
 })

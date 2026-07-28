@@ -2,32 +2,13 @@ import { readdirSync, readFileSync, statSync } from 'fs'
 import { join } from 'path'
 
 /**
- * Files still carrying literal colors from the Poppins design system. Each conversion
- * task deletes its own entries. When this list is empty the rule is absolute, and any
- * new literal hex in app/ or components/ fails the build.
+ * The conversion to the two-tone orange ticket system is complete, so this list is
+ * empty and the rule is now absolute: any literal hex in app/ or components/ fails
+ * the build.
  *
  * DO NOT add entries. The list only ever shrinks.
  */
-const NOT_YET_CONVERTED = [
-  'app/(app)/(attender)/profile.tsx',
-  'app/(app)/(hoster)/announcement/[id].tsx',
-  'app/(app)/(hoster)/venue.tsx',
-  'app/(app)/_layout.tsx',
-  'app/(app)/badges.tsx',
-  'app/(app)/become-host.tsx',
-  'app/(app)/change-password.tsx',
-  'app/(app)/connections.tsx',
-  'app/(app)/create-event.tsx',
-  'app/(app)/edit-profile.tsx',
-  'app/(app)/message-privacy.tsx',
-  'app/(app)/message-requests.tsx',
-  'app/(app)/settings.tsx',
-  'app/(app)/venue-setup.tsx',
-  'app/(app)/verify-identity.tsx',
-  'app/_layout.tsx',
-  'components/BadgeGrid.tsx',
-  'components/VenueForm.tsx',
-]
+const NOT_YET_CONVERTED: string[] = []
 
 // Matches only QUOTED hex literals — '#FF9F3D', "#FFF", '#FF9F3Dcc' — because in
 // React Native a color is always a string. Deliberately does NOT match bare hex runs
