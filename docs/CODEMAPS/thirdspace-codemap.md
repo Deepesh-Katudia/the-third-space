@@ -1,5 +1,5 @@
 # The Third Space — Codemap
-_Generated: 2026-07-16. Re-run `/update-codemaps` after major structural changes._
+_Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes._
 
 ## Tech Stack
 
@@ -21,7 +21,7 @@ _Generated: 2026-07-16. Re-run `/update-codemaps` after major structural changes
 
 ---
 
-## Build Status (2026-07-16)
+## Build Status (2026-07-28)
 
 - `npx tsc --noEmit` — **clean**
 - `npx jest` — **216/216 pass**, 37 suites
@@ -38,7 +38,7 @@ _Generated: 2026-07-16. Re-run `/update-codemaps` after major structural changes
 thirdspace-app/
 ├── firebase/config.ts        # Firebase init; exports auth, db, storage
 ├── types/models.ts           # All shared TypeScript types
-├── hooks/                    # 13 hooks
+├── hooks/                    # 14 hooks
 │   ├── useAuth.ts              # Auth state + live role/profile subscriptions
 │   ├── useGoogleAuth.ts        # Google OAuth (placeholder client id if unset)
 │   ├── useProfile.ts           # profiles/{uid} subscription
@@ -51,8 +51,9 @@ thirdspace-app/
 │   ├── useFollowStatus.ts      # Follow edge status for one target
 │   ├── useConnections.ts       # Mutual connections (following ∩ followers)
 │   ├── useAttendanceStats.ts   # Points/tier/events attended
-│   └── usePushRegistration.ts  # Expo push token register + deep-link on tap
-├── services/                 # 9 services
+│   ├── usePushRegistration.ts  # Expo push token register + deep-link on tap
+│   └── useUserLocation.ts      # Module store (useSyncExternalStore) for location resolution
+├── services/                 # 11 services
 │   ├── auth.ts                 # changePassword (reauth then update)
 │   ├── preferences.ts          # onboarding opt-ins (AsyncStorage)
 │   ├── events.ts               # Event CRUD + registrations + subscriptions
@@ -62,7 +63,8 @@ thirdspace-app/
 │   ├── chat.ts                 # Group chats + DMs + read state
 │   ├── follows.ts              # Follow edge writes + subscriptions
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
-│   └── pushTokens.ts           # users/{uid}/pushTokens CRUD
+│   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
+│   └── location.ts             # detectBorough() (5s timeout, never throws)
 ├── components/               # 22 components + components/ui/ design primitives
 ├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
 ├── utils/                    # 15 pure modules (all unit-tested)
@@ -92,6 +94,7 @@ thirdspace-app/
         ├── guest-list/[id].tsx # Who's going (gated)
         ├── create-event.tsx  venue-setup.tsx  edit-profile.tsx
         ├── filters.tsx  connections.tsx  badges.tsx
+        ├── borough-picker.tsx  # Borough selection modal (Discover → location override)
         ├── message-requests.tsx  message-privacy.tsx
         ├── settings.tsx  change-password.tsx
         ├── become-host.tsx  verify-identity.tsx
@@ -195,6 +198,17 @@ when signed in with setup incomplete.
 
 ## Key Invariants & Gotchas
 
+- **Location resolves through a chain, never blocks** — `hooks/useUserLocation.ts` is a module
+  store (like `useDiscoverFilters`, because the picker is a separate route from Discover) that
+  resolves `manual > gps > profile > default`. `services/location.ts` never throws: opt-out,
+  denial, GPS failure, a 5s timeout and non-NYC locations all resolve to `null` and fall through.
+- **`CommunityEvent.borough` is optional and that is load-bearing** — events created before
+  location filtering have none, and `filterByBorough` shows those in EVERY borough rather than
+  hiding them. Making it required needs a backfill first.
+- **The feed widens rather than emptying** — a borough with no events falls back to all of NYC
+  with an on-screen explanation, so the entry screen is never blank.
+- **A manual borough pick is permanent until changed** — GPS never silently overrides it, and
+  "All of NYC" is a real stored choice (`{ borough: null }`), distinct from never having chosen.
 - **Venue keyed by uid** — `venues/{uid}` uses the hoster's UID as doc id. 1:1 hoster → venue.
 - **Denormalized event fields** — `venueName` + `neighborhood` copied at creation so cards render
   without a join. `borough` intentionally NOT copied; feed filters by category/search only.
