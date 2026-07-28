@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -10,6 +10,8 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
 import { useUpcomingEvents } from '../../../hooks/useUpcomingEvents'
 import { useDiscoverFilters } from '../../../hooks/useDiscoverFilters'
+import { useUserLocation, resolveLocation } from '../../../hooks/useUserLocation'
+import { filterByBorough } from '../../../utils/locationFilter'
 import { applyEventFilters, hasActiveFilters } from '../../../utils/eventFilters'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { Screen } from '../../../components/ui/Screen'
@@ -30,12 +32,25 @@ const CATEGORY_CHIPS: { label: string; value: EventCategory | 'All' }[] = [
 export default function Discover() {
   const router = useRouter()
   const { user } = useAuth()
-  const { profile } = useProfile(user?.uid)
+  const { profile, loading: profileLoading } = useProfile(user?.uid)
   const { events, loading, hasError } = useUpcomingEvents()
   const { filters, query, setQuery, setFilters, reset } = useDiscoverFilters()
 
+  // Only `borough` is read here — the picker route owns setBorough.
+  const { borough } = useUserLocation()
+
+  // The profile supplies the fallback borough, so wait for it to load before
+  // resolving. resolveLocation fully overwrites state, so a re-run is harmless.
+  useEffect(() => {
+    if (profileLoading) return
+    resolveLocation(profile?.borough ?? null)
+  }, [profileLoading, profile?.borough])
+
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
-  const visible = useMemo(() => applyEventFilters(events, filters, query), [events, filters, query])
+  const filtered = useMemo(() => applyEventFilters(events, filters, query), [events, filters, query])
+  // Location composes around the existing filters rather than being folded into
+  // EventFilters, so "Clear filters" never silently resets the user's location.
+  const { events: visible, widened } = useMemo(() => filterByBorough(filtered, borough), [filtered, borough])
 
   const activeCategory: EventCategory | 'All' =
     filters.categories.length === 1 ? filters.categories[0] : 'All'
@@ -49,7 +64,10 @@ export default function Discover() {
         <View style={styles.headerRow}>
           <Display role="screenTitle" style={styles.tagline}>Let&apos;s find your third space</Display>
           <View style={styles.rightCol}>
-            <CityChip label="NYC + Brooklyn" />
+            <CityChip
+              label={borough ?? 'All of NYC'}
+              onPress={() => router.push('/(app)/borough-picker')}
+            />
             <TouchableOpacity onPress={() => router.push('/(app)/(attender)/profile')}>
               {profile?.photoURL ? (
                 <Image source={{ uri: profile.photoURL }} style={styles.userAvatar} />
@@ -99,6 +117,12 @@ export default function Discover() {
             )
           })}
         </ScrollView>
+
+        {widened ? (
+          <Meta role="eyebrow" tone="clay" style={styles.widenedNotice}>
+            No events in {borough} yet — showing all of NYC
+          </Meta>
+        ) : null}
 
         {loading ? (
           <LoadingView />
@@ -176,4 +200,5 @@ const styles = StyleSheet.create({
     borderColor: palette.rule,
   },
   chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  widenedNotice: { marginBottom: space.md },
 })
