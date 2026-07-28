@@ -18,12 +18,23 @@ describe('filterByBorough', () => {
     expect(result.widened).toBe(false)
   })
 
-  it('always includes events that have no borough yet', () => {
-    // Events created before this feature shipped must not vanish from the feed.
+  it('includes events that have no borough yet alongside a real match', () => {
+    // Events created before this feature shipped must not vanish from the feed,
+    // but they ride along with a genuine match rather than counting as one.
+    const bk = event('a', 'Brooklyn')
     const legacy = event('legacy')
-    const result = filterByBorough([legacy, event('b', 'Queens')], 'Brooklyn')
-    expect(result.events).toEqual([legacy])
+    const result = filterByBorough([bk, legacy, event('b', 'Queens')], 'Brooklyn')
+    expect(result.events).toEqual([bk, legacy])
     expect(result.widened).toBe(false)
+  })
+
+  it('widens when the only events present are legacy (borough-less), not a real match', () => {
+    // A single borough-less event must not silently disable the widen rule.
+    const legacy = event('legacy')
+    const queens = event('b', 'Queens')
+    const result = filterByBorough([legacy, queens], 'Brooklyn')
+    expect(result.events).toEqual([legacy, queens])
+    expect(result.widened).toBe(true)
   })
 
   it('widens to every borough when the selected one has nothing', () => {
