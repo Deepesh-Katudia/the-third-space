@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, TextInputProps } from 'react-native'
+import { View, TextInput, TouchableOpacity, StyleSheet, TextInputProps } from 'react-native'
+import { palette, radius, space, type as typeScale } from '../constants/design'
+import { Body, Meta } from './ui/Text'
 
 interface FormInputProps extends TextInputProps {
   label: string
@@ -12,9 +14,9 @@ export function FormInput({ label, error, prefix, secureTextEntry, ...props }: F
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Meta role="eyebrow" style={styles.label}>{label}</Meta>
       <View style={styles.inputWrapper}>
-        {prefix ? <Text style={styles.prefix}>{prefix}</Text> : null}
+        {prefix ? <Body role="bodyLg" tone="ink" style={styles.prefix}>{prefix}</Body> : null}
         <TextInput
           style={[
             styles.input,
@@ -22,7 +24,7 @@ export function FormInput({ label, error, prefix, secureTextEntry, ...props }: F
             prefix ? styles.inputWithPrefix : null,
           ]}
           secureTextEntry={hidden}
-          placeholderTextColor="#6B6F78"
+          placeholderTextColor={palette.inkSoft}
           autoCapitalize="none"
           {...props}
         />
@@ -32,47 +34,32 @@ export function FormInput({ label, error, prefix, secureTextEntry, ...props }: F
             style={styles.toggle}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.toggleText}>{hidden ? 'Show' : 'Hide'}</Text>
+            <Meta role="eyebrow" tone="clay">{hidden ? 'Show' : 'Hide'}</Meta>
           </TouchableOpacity>
         )}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <Body role="bodySm" tone="clay" style={styles.errorText}>{error}</Body> : null}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16 },
-  label: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 14,
-    color: '#6B6F78',
-    marginBottom: 6,
-  },
+  container: { marginBottom: space.lg },
+  label: { marginBottom: space.xs + 2 },
   inputWrapper: { position: 'relative' },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 16,
-    color: '#15161A',
+    ...typeScale.bodyLg,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket - 2,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 2,
+    color: palette.ink,
     borderWidth: 1,
   },
-  inputNormal: { borderColor: 'rgba(226,224,218,0.4)' },
-  inputError: { borderColor: '#FF6A5B' },
+  inputNormal: { borderColor: palette.rule },
+  inputError: { borderColor: palette.clay },
   inputWithPrefix: { paddingLeft: 44 },
-  prefix: {
-    position: 'absolute',
-    left: 16,
-    top: 15,
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 16,
-    color: '#15161A',
-    zIndex: 1,
-  },
-  toggle: { position: 'absolute', right: 16, top: 14 },
-  toggleText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  errorText: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#FF3B30', marginTop: 4 },
+  prefix: { position: 'absolute', left: space.lg, top: 15, zIndex: 1 },
+  toggle: { position: 'absolute', right: space.lg, top: space.lg },
+  errorText: { marginTop: space.xs },
 })

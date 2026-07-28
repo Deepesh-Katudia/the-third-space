@@ -1,19 +1,25 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { PasswordEvaluation, PasswordStrength } from '../utils/password'
+import { palette, space } from '../constants/design'
+import { Body, Meta } from './ui/Text'
+
+type AccentTone = 'clay' | 'sage'
 
 interface StrengthMeta {
   label: string
-  color: string
+  /** The palette has no red/amber/green ladder — the filled segment count carries
+   *  the four levels, and clay vs sage carries "not there yet" vs "good". */
+  tone: AccentTone
   segments: number
 }
 
 const STRENGTH: Record<PasswordStrength, StrengthMeta> = {
-  weak: { label: 'Weak', color: '#FF3B30', segments: 1 },
-  fair: { label: 'Fair', color: '#B0721F', segments: 2 },
-  good: { label: 'Good', color: '#FF9F3D', segments: 3 },
-  strong: { label: 'Strong', color: '#2FA365', segments: 4 },
+  weak: { label: 'Weak', tone: 'clay', segments: 1 },
+  fair: { label: 'Fair', tone: 'clay', segments: 2 },
+  good: { label: 'Good', tone: 'sage', segments: 3 },
+  strong: { label: 'Strong', tone: 'sage', segments: 4 },
 }
 
 const CLASS_CHIPS = [
@@ -47,9 +53,12 @@ export function PasswordStrengthMeter({ evaluation }: Props) {
     <View style={styles.wrap}>
       <View style={styles.barRow}>
         {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={[styles.segment, { backgroundColor: i < meta.segments ? meta.color : '#E2E0DA' }]} />
+          <View
+            key={i}
+            style={[styles.segment, { backgroundColor: i < meta.segments ? palette[meta.tone] : palette.rule }]}
+          />
         ))}
-        <Text style={[styles.strengthLabel, { color: meta.color }]}>{meta.label}</Text>
+        <Meta role="eyebrow" tone={meta.tone} style={styles.strengthLabel}>{meta.label}</Meta>
       </View>
 
       <View style={styles.chips}>
@@ -57,7 +66,7 @@ export function PasswordStrengthMeter({ evaluation }: Props) {
           const on = checks[chip.key]
           return (
             <View key={chip.key} style={[styles.chip, on && styles.chipOn]}>
-              <Text style={[styles.chipText, on && styles.chipTextOn]}>{chip.text}</Text>
+              <Meta role="eyebrow" tone={on ? 'clay' : 'inkSoft'}>{chip.text}</Meta>
             </View>
           )
         })}
@@ -69,9 +78,9 @@ export function PasswordStrengthMeter({ evaluation }: Props) {
             <Ionicons
               name={req.met ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={req.met ? '#2FA365' : '#A2A7AE'}
+              color={req.met ? palette.sage : palette.inkSoft}
             />
-            <Text style={[styles.reqText, req.met && styles.reqTextMet]}>{req.label}</Text>
+            <Body role="bodySm" tone={req.met ? 'ink' : 'inkSoft'} style={styles.reqText}>{req.label}</Body>
           </View>
         ))}
       </View>
@@ -80,20 +89,20 @@ export function PasswordStrengthMeter({ evaluation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: -4, marginBottom: 16, gap: 10 },
-  barRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  wrap: { marginTop: -space.xs, marginBottom: space.lg, gap: space.sm + 2 },
+  barRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
   segment: { flex: 1, height: 5, borderRadius: 3 },
-  strengthLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, minWidth: 46, textAlign: 'right' },
-  chips: { flexDirection: 'row', gap: 8 },
+  strengthLabel: { minWidth: 46, textAlign: 'right' },
+  chips: { flexDirection: 'row', gap: space.sm },
   chip: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', backgroundColor: 'white',
+    paddingHorizontal: space.sm + 2,
+    paddingVertical: space.xs,
+    borderRadius: space.sm,
+    borderWidth: 1,
+    borderColor: palette.rule,
   },
-  chipOn: { backgroundColor: '#15161A', borderColor: '#15161A' },
-  chipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#A2A7AE' },
-  chipTextOn: { color: 'white' },
-  reqs: { gap: 6 },
-  reqRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reqText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78', flex: 1 },
-  reqTextMet: { color: '#15161A' },
+  chipOn: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  reqs: { gap: space.xs + 2 },
+  reqRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  reqText: { flex: 1 },
 })

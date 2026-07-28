@@ -1,5 +1,7 @@
 import React from 'react'
-import { Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { TouchableOpacity, StyleSheet } from 'react-native'
+import { palette, radius, space } from '../constants/design'
+import { Meta } from './ui/Text'
 
 interface InterestChipProps {
   label: string
@@ -14,24 +16,21 @@ export function InterestChip({ label, selected, onPress }: InterestChipProps) {
       activeOpacity={0.7}
       style={[styles.chip, selected && styles.chipSelected]}
     >
-      <Text style={[styles.label, selected && styles.labelSelected]}>
+      <Meta role="eyebrow" tone={selected ? 'clay' : 'inkSoft'}>
         {selected ? '✓ ' : ''}
         {label}
-      </Text>
+      </Meta>
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   chip: {
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm + 1,
     borderWidth: 1,
-    borderColor: 'rgba(226,224,218,0.6)',
-    backgroundColor: 'white',
+    borderColor: palette.rule,
   },
-  chipSelected: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
-  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
-  labelSelected: { color: '#15161A' },
+  chipSelected: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
 })

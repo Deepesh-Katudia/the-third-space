@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -14,6 +13,9 @@ import { createProfile } from '../../services/profiles'
 import { pickImage, uploadProfilePhoto } from '../../services/photos'
 import { ageFromDOB } from '../../utils/profile'
 import { avatarColor, initials } from '../../utils/avatar'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 const BIO_LIMIT = 300
 const MIN_INTERESTS = 3
@@ -73,12 +75,12 @@ export default function CreateProfile() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Make yourself real.</Text>
-          <Text style={styles.subtitle}>A photo and a few interests help people recognize you at events.</Text>
+          <Display role="screenTitle" style={styles.title}>Make yourself real.</Display>
+          <Body role="bodyLg" style={styles.subtitle}>A photo and a few interests help people recognize you at events.</Body>
 
           <View style={styles.photoWrap}>
             <TouchableOpacity style={styles.photoSlot} onPress={handlePickPhoto} accessibilityRole="button" accessibilityLabel="Pick a profile photo">
@@ -90,35 +92,35 @@ export default function CreateProfile() {
                 </View>
               )}
             </TouchableOpacity>
-            <Text style={styles.photoHint}>Add a photo</Text>
+            <Body role="bodySm">Add a photo</Body>
           </View>
 
-          <Text style={styles.fieldLabel}>Short bio</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Short bio</Meta>
           <TextInput
             style={styles.bioInput}
             placeholder="Illustrator, new to Brooklyn, always up for good coffee…"
-            placeholderTextColor="#6B6F78"
+            placeholderTextColor={palette.inkSoft}
             value={bio}
             onChangeText={(t) => setBio(t.slice(0, BIO_LIMIT))}
             multiline
             textAlignVertical="top"
           />
-          <Text style={styles.counter}>{bio.length}/{BIO_LIMIT}</Text>
+          <Meta style={styles.counter}>{bio.length}/{BIO_LIMIT}</Meta>
 
           <FormInput label="Neighborhood" value={neighborhood} onChangeText={setNeighborhood} placeholder="Williamsburg" />
 
-          <Text style={styles.fieldLabel}>Borough</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Borough</Meta>
           <View style={styles.chipWrap}>
             {BOROUGHS.map((b) => (
               <InterestChip key={b} label={b} selected={borough === b} onPress={() => setBorough(b)} />
             ))}
           </View>
 
-          <Text style={styles.fieldLabel}>Date of birth</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Date of birth</Meta>
           <TouchableOpacity style={styles.dobBtn} onPress={() => setShowPicker(true)}>
-            <Text style={styles.dobText}>{dob.toLocaleDateString()} · age {age}</Text>
+            <Body role="bodyLg" tone="ink">{dob.toLocaleDateString()} · age {age}</Body>
           </TouchableOpacity>
-          {age < MIN_AGE ? <Text style={styles.ageError}>You must be at least {MIN_AGE}.</Text> : null}
+          {age < MIN_AGE ? <Body role="bodySm" tone="clay" style={styles.ageError}>You must be at least {MIN_AGE}.</Body> : null}
           {showPicker ? (
             <DateTimePicker
               value={dob}
@@ -128,14 +130,14 @@ export default function CreateProfile() {
             />
           ) : null}
 
-          <Text style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Text>
+          <Meta role="eyebrow" style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Meta>
           <View style={styles.chipWrap}>
             {INTEREST_OPTIONS.map((label) => (
               <InterestChip key={label} label={label} selected={interests.includes(label)} onPress={() => toggleInterest(label)} />
             ))}
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
           <View style={styles.submitWrap}>
             <AuthButton
@@ -148,30 +150,45 @@ export default function CreateProfile() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 32, paddingBottom: 40 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78', lineHeight: 22, marginBottom: 28 },
-  photoWrap: { alignItems: 'center', marginBottom: 28 },
-  photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: 8 },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.xxl, paddingBottom: space.xxl + space.sm },
+  title: { marginBottom: space.sm },
+  subtitle: { marginBottom: space.xxl - space.xs },
+  photoWrap: { alignItems: 'center', marginBottom: space.xxl - space.xs },
+  photoSlot: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: space.sm },
   photoImg: { width: 96, height: 96 },
   photoFallback: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center' },
-  photoInitials: { fontFamily: 'Poppins_600SemiBold', fontSize: 32, color: 'white' },
-  photoHint: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  fieldLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A', marginBottom: 10, marginTop: 8 },
-  bioInput: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, padding: 16, minHeight: 96, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  counter: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', alignSelf: 'flex-end', marginTop: 6, marginBottom: 16 },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  dobBtn: { backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 8 },
-  dobText: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
-  ageError: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#FF3B30', marginBottom: 12 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30', marginBottom: 12 },
-  submitWrap: { marginTop: 12 },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  photoInitials: { ...typeScale.button, fontSize: 32, lineHeight: 38, color: palette.cream },
+  fieldLabel: { marginBottom: space.sm + 2, marginTop: space.sm },
+  bioInput: {
+    ...typeScale.bodyLg,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    minHeight: 96,
+    color: palette.ink,
+  },
+  counter: { alignSelf: 'flex-end', marginTop: space.xs + 2, marginBottom: space.lg },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.xl - 4 },
+  dobBtn: {
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 2,
+    marginBottom: space.sm,
+  },
+  ageError: { marginBottom: space.md },
+  error: { marginBottom: space.md },
+  submitWrap: { marginTop: space.md },
 })

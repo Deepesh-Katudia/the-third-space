@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { signInWithEmailAndPassword, OAuthProvider, signInWithCredential } from 'firebase/auth'
 import { httpsCallable } from 'firebase/functions'
@@ -9,10 +8,14 @@ import * as WebBrowser from 'expo-web-browser'
 import { auth, functions } from '../../firebase/config'
 import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
+import { Banner } from '../../components/Banner'
 import { validateEmail, validatePhoneNumber, toE164 } from '../../utils/validation'
 import { generateNonce } from '../../utils/crypto'
 import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { StatusBar } from 'expo-status-bar'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, space } from '../../constants/design'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -89,20 +92,20 @@ export default function SignIn() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-            <Text style={styles.backText}>← Back</Text>
+            <Body role="bodySm">← Back</Body>
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to Your Third Space.</Text>
+            <Display role="screenTitle" style={styles.title}>Welcome back</Display>
+            <Body role="bodyLg">Sign in to Your Third Space.</Body>
           </View>
 
-          {banner ? <View style={styles.banner}><Text style={styles.bannerText}>{banner}</Text></View> : null}
+          {banner ? <Banner message={banner} /> : null}
 
           <FormInput
             label="Email or phone number"
@@ -114,14 +117,14 @@ export default function SignIn() {
           <FormInput label="Password" value={password} onChangeText={setPassword} error={errors.password} secureTextEntry placeholder="Your password" />
 
           <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={styles.forgot}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
+            <Meta role="eyebrow" tone="clay">Forgot password?</Meta>
           </TouchableOpacity>
 
           <View style={styles.buttons}>
             <AuthButton label="Sign in" onPress={handleEmailSignIn} variant="primary" loading={loading || isGoogleLoading} />
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
+              <Body role="bodySm">or continue with</Body>
               <View style={styles.dividerLine} />
             </View>
             <AuthButton label="Continue with Google" onPress={promptGoogleSignIn} variant="google" loading={loading || isGoogleLoading} />
@@ -129,32 +132,24 @@ export default function SignIn() {
           </View>
 
           <TouchableOpacity onPress={() => router.push('/(auth)/sign-up')} style={styles.footer}>
-            <Text style={styles.footerText}>New here? <Text style={styles.footerLink}>Create account</Text></Text>
+            <Body role="bodySm">New here? <Meta role="eyebrow" tone="clay">Create account</Meta></Body>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  scroll: { flex: 1, paddingHorizontal: 24 },
-  content: { paddingTop: 40, paddingBottom: 40 },
-  back: { marginBottom: 32 },
-  backText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  header: { marginBottom: 32 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Poppins_400Regular', fontSize: 16, color: '#6B6F78' },
-  banner: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, marginBottom: 16 },
-  bannerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30' },
-  forgot: { alignItems: 'flex-end', marginBottom: 16, marginTop: -8 },
-  forgotText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF9F3D' },
-  buttons: { gap: 12 },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(226,224,218,0.4)' },
-  dividerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  footer: { alignItems: 'center', marginTop: 24 },
-  footerText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
-  footerLink: { color: '#FF9F3D', fontFamily: 'Poppins_600SemiBold' },
+  flex: { flex: 1 },
+  scroll: { flex: 1, paddingHorizontal: space.xl },
+  content: { paddingTop: space.xxl + space.sm, paddingBottom: space.xxl + space.sm },
+  back: { marginBottom: space.xxl },
+  header: { marginBottom: space.xxl },
+  title: { marginBottom: space.sm },
+  forgot: { alignItems: 'flex-end', marginBottom: space.lg, marginTop: -space.sm },
+  buttons: { gap: space.md },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginVertical: space.xs },
+  dividerLine: { flex: 1, height: 1, backgroundColor: palette.rule },
+  footer: { alignItems: 'center', marginTop: space.xl },
 })
