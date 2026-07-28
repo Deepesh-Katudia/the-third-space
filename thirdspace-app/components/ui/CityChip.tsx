@@ -1,13 +1,28 @@
 import React from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { palette, radius, space } from '../../constants/design'
 import { Meta } from './Text'
 
-export function CityChip({ label }: { label: string }) {
+interface CityChipProps {
+  label: string
+  /** Omit for a static label — the hoster Events screen uses it that way. */
+  onPress?: () => void
+}
+
+export function CityChip({ label, onPress }: CityChipProps) {
+  const content = <Meta role="eyebrow" tone="ink">{label}</Meta>
+
+  if (!onPress) return <View style={styles.chip}>{content}</View>
+
   return (
-    <View style={styles.chip}>
-      <Meta role="eyebrow" tone="ink">{label}</Meta>
-    </View>
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.chip}
+      accessibilityRole="button"
+      accessibilityLabel={`Change location, currently ${label}`}
+    >
+      {content}
+    </TouchableOpacity>
   )
 }
 

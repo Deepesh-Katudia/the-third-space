@@ -1,5 +1,5 @@
 import React from 'react'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import { ChipRow } from '../../../components/ui/Chip'
 import { CityChip } from '../../../components/ui/CityChip'
 import { IconButton } from '../../../components/ui/IconButton'
@@ -49,5 +49,18 @@ describe('chips and buttons', () => {
     expect(keyWarnings).toHaveLength(0)
 
     consoleErrorSpy.mockRestore()
+  })
+
+  it('stays a plain view when no press handler is given', () => {
+    // The hoster Events screen renders it as a static label.
+    const { queryByRole } = render(<CityChip label="NYC + Brooklyn" />)
+    expect(queryByRole('button')).toBeNull()
+  })
+
+  it('becomes a button that announces what it changes', () => {
+    const onPress = jest.fn()
+    const { getByLabelText } = render(<CityChip label="Brooklyn" onPress={onPress} />)
+    fireEvent.press(getByLabelText('Change location, currently Brooklyn'))
+    expect(onPress).toHaveBeenCalledTimes(1)
   })
 })
