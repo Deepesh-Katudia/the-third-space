@@ -49,7 +49,7 @@ describe('design palette', () => {
 describe('type scale', () => {
   it('binds each role to exactly one of the three faces', () => {
     const display = ['screenTitle', 'cardTitle', 'stubDay', 'tabLabel'] as const
-    const body = ['body', 'bodySm', 'bodyLg'] as const
+    const body = ['body', 'bodySm', 'bodyLg', 'button'] as const
     const meta = ['meta', 'eyebrow'] as const
 
     for (const role of display) expect(typeScale[role].fontFamily).toMatch(/^Antonio_/)

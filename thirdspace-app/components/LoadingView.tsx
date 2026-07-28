@@ -1,14 +1,20 @@
 import React from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
+import { palette } from '../constants/design'
 
-export function LoadingView() {
+interface LoadingViewProps {
+  /** Must match the screen it stands in for — this fills the whole viewport. */
+  tone?: 'deep' | 'cream'
+}
+
+export function LoadingView({ tone = 'deep' }: LoadingViewProps) {
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#FF9F3D" />
+    <View style={[styles.container, { backgroundColor: tone === 'deep' ? palette.orangeDeep : palette.cream }]}>
+      <ActivityIndicator size="large" color={palette.clay} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F3F5' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 })

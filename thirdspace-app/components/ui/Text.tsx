@@ -5,7 +5,7 @@ import { palette, type as typeScale, TypeRole } from '../../constants/design'
 type Tone = 'ink' | 'inkSoft' | 'clay' | 'sage'
 
 export type DisplayRole = 'screenTitle' | 'cardTitle' | 'stubDay' | 'tabLabel'
-export type BodyRole = 'body' | 'bodySm' | 'bodyLg'
+export type BodyRole = 'body' | 'bodySm' | 'bodyLg' | 'button'
 export type MetaRole = 'meta' | 'eyebrow'
 
 interface TextProps<R extends TypeRole = TypeRole> {
@@ -13,13 +13,19 @@ interface TextProps<R extends TypeRole = TypeRole> {
   tone?: Tone
   style?: StyleProp<TextStyle>
   numberOfLines?: number
+  /** Announce changes to screen readers — used by Toast. */
+  accessibilityLiveRegion?: 'none' | 'polite' | 'assertive'
   children: React.ReactNode
 }
 
 function make<R extends TypeRole>(displayName: string, defaultRole: R, defaultTone: Tone) {
-  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, children }: TextProps<R>) {
+  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, accessibilityLiveRegion, children }: TextProps<R>) {
     return (
-      <Text numberOfLines={numberOfLines} style={[typeScale[role], { color: palette[tone] }, style]}>
+      <Text
+        numberOfLines={numberOfLines}
+        accessibilityLiveRegion={accessibilityLiveRegion}
+        style={[typeScale[role], { color: palette[tone] }, style]}
+      >
         {children}
       </Text>
     )

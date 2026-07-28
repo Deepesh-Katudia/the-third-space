@@ -1,5 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { palette, radius, space } from '../constants/design'
+import { Display, Body } from './ui/Text'
 
 interface EmptyStateProps {
   emoji: string
@@ -13,11 +15,11 @@ export function EmptyState({ emoji, title, body, actionLabel, onAction }: EmptyS
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.body}>{body}</Text>
+      <Display role="screenTitle" style={styles.title}>{title}</Display>
+      <Body role="bodyLg" style={styles.body}>{body}</Body>
       {actionLabel && onAction ? (
         <TouchableOpacity onPress={onAction} style={styles.action}>
-          <Text style={styles.actionText}>{actionLabel}</Text>
+          <Body role="bodySm" tone="ink" style={styles.actionText}>{actionLabel}</Body>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -25,10 +27,19 @@ export function EmptyState({ emoji, title, body, actionLabel, onAction }: EmptyS
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 24 },
-  emoji: { fontSize: 40, marginBottom: 12 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 22, color: '#15161A', marginBottom: 8, textAlign: 'center' },
-  body: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#6B6F78', textAlign: 'center' },
-  action: { marginTop: 20, backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  actionText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A' },
+  container: { alignItems: 'center', paddingVertical: space.xxl + space.lg, paddingHorizontal: space.xl },
+  emoji: { fontSize: 40, marginBottom: space.md },
+  title: { marginBottom: space.sm, textAlign: 'center' },
+  body: { textAlign: 'center' },
+  // Ink pill, matching the primary CTA — orange stays reserved for accents.
+  action: {
+    marginTop: space.xl,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.xl,
+    paddingVertical: space.md,
+  },
+  actionText: { textAlign: 'center' },
 })

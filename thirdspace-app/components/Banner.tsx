@@ -1,25 +1,33 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
+import { palette, radius, space } from '../constants/design'
+import { Body } from './ui/Text'
 
 interface BannerProps {
   message: string
   tone?: 'error' | 'success'
 }
 
+/**
+ * The two-tone palette carries no dedicated red/green, and adding one would break the
+ * "eight values, nothing else" rule. Clay (warm, urgent) and sage (cool, settled) are
+ * already AA on cream and on both orange tones, so they carry the semantics instead.
+ */
 export function Banner({ message, tone = 'error' }: BannerProps) {
-  const isError = tone === 'error'
   return (
-    <View style={[styles.banner, isError ? styles.error : styles.success]}>
-      <Text style={[styles.text, isError ? styles.errorText : styles.successText]}>{message}</Text>
+    <View style={styles.banner}>
+      <Body role="bodySm" tone={tone === 'error' ? 'clay' : 'sage'}>{message}</Body>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  banner: { borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 16 },
-  error: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-  success: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  text: { fontFamily: 'Poppins_500Medium', fontSize: 14 },
-  errorText: { color: '#FF3B30' },
-  successText: { color: '#2FA365' },
+  banner: {
+    borderWidth: 1,
+    borderColor: palette.rule,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    marginBottom: space.lg,
+  },
 })

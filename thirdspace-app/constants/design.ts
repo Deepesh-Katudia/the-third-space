@@ -40,7 +40,7 @@ export const font = {
 
 export type TypeRole =
   | 'screenTitle' | 'cardTitle' | 'stubDay' | 'tabLabel'
-  | 'body' | 'bodySm' | 'bodyLg'
+  | 'body' | 'bodySm' | 'bodyLg' | 'button'
   | 'meta' | 'eyebrow'
 
 interface TypeStyle {
@@ -60,6 +60,8 @@ export const type: Record<TypeRole, TypeStyle> = {
   bodyLg: { fontFamily: font.bodyRegular, fontSize: 15, lineHeight: 22 },
   body:   { fontFamily: font.bodyRegular, fontSize: 13, lineHeight: 19 },
   bodySm: { fontFamily: font.bodyMedium,  fontSize: 11.5, lineHeight: 16 },
+  /** Button and CTA labels — the one place the body face carries semibold weight. */
+  button: { fontFamily: font.bodySemi,    fontSize: 16, lineHeight: 20 },
 
   meta:    { fontFamily: font.metaMedium, fontSize: 10, lineHeight: 14, letterSpacing: 0.4 },
   eyebrow: { fontFamily: font.metaSemi,   fontSize: 10, lineHeight: 14, letterSpacing: 1.4, textTransform: 'uppercase' },
