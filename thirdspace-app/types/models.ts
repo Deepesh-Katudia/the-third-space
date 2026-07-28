@@ -33,9 +33,15 @@ export interface CommunityEvent {
   venueId: string
   venueName: string
   // venueName + neighborhood are denormalized from the venue at event creation
-  // (cards render without a join); borough is intentionally NOT copied — feed
-  // filtering is by category/search only in this build.
+  // (cards render without a join).
   neighborhood: string
+  /**
+   * Denormalized from the venue at creation. OPTIONAL on purpose: events created
+   * before location filtering shipped have none, and `filterByBorough` shows those
+   * in every borough rather than hiding them. Do not make this required without
+   * backfilling first.
+   */
+  borough?: Borough
   registeredCount: number
 }
 

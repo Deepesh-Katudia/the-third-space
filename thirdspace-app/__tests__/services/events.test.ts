@@ -175,6 +175,20 @@ describe('createEvent', () => {
     })
     expect(updateDoc).toHaveBeenCalledWith({ path: 'venues/v1' }, { eventsCount: { __increment: 1 } })
   })
+
+  it('denormalizes the venue borough onto the event so the feed can filter without a join', async () => {
+    ;(addDoc as jest.Mock).mockResolvedValue({ id: 'e1' })
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    const venue = { name: 'V', borough: 'Queens' as const, neighborhood: 'Astoria', description: 'd' }
+    await createEvent('v1', venue, {
+      title: 'T', description: 'd', category: 'Social' as const,
+      startsAt: new Date('2030-01-01'), capacity: 10, ageRequirement: '18+' as const,
+    })
+    expect(addDoc).toHaveBeenCalledWith(
+      { path: 'events' },
+      expect.objectContaining({ borough: 'Queens', neighborhood: 'Astoria' })
+    )
+  })
 })
 
 describe('deleteEventWithRegistrations', () => {
