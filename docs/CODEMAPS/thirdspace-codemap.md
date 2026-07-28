@@ -67,12 +67,12 @@ thirdspace-app/
 │   └── location.ts             # detectBorough() (5s timeout, never throws)
 ├── components/               # 22 components + components/ui/ design primitives
 ├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
-├── utils/                    # 15 pure modules (all unit-tested)
+├── utils/                    # 18 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
 ├── firestore.rules           # deployed, EXCEPT the pending conversations-read null guard
 ├── storage.rules             # NOT deployed (Storage not provisioned)
-└── app/                      # expo-router routes (36 files)
+└── app/                      # expo-router routes (38 files)
     ├── _layout.tsx             # Fonts + useAuth + AuthRedirect guard
     ├── index.tsx               # Immediate redirect
     ├── (auth)/
