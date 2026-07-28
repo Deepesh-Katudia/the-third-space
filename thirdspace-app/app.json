@@ -26,7 +26,13 @@
     "plugins": [
       "expo-router",
       "expo-apple-authentication",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Your Third Space uses your location to show events happening in your borough."
+        }
+      ]
     ],
     "scheme": "thirdspace",
     "experiments": {
