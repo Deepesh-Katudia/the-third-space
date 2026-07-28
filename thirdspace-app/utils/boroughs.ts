@@ -22,8 +22,6 @@ const ALIASES: Record<string, Borough> = {
   kings: 'Brooklyn',
   manhattan: 'Manhattan',
   'new york county': 'Manhattan',
-  'new york': 'Manhattan',
-  'new york city': 'Manhattan',
   queens: 'Queens',
   'queens county': 'Queens',
   bronx: 'Bronx',
@@ -41,7 +39,11 @@ const ALIASES: Record<string, Borough> = {
  */
 export function boroughFromPlace(place: GeocodedPlace | null | undefined): Borough | null {
   if (!place) return null
-  for (const field of [place.subregion, place.city, place.district]) {
+  // `city` is checked last: for NYC, both Apple and Google routinely return
+  // `city: "New York"` for points outside Manhattan, with the real borough
+  // carried in `district` (subLocality). Checking `city` first would confidently
+  // misreport those as Manhattan.
+  for (const field of [place.subregion, place.district, place.city]) {
     if (!field) continue
     const hit = ALIASES[field.trim().toLowerCase()]
     if (hit) return hit

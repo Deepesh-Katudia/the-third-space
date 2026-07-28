@@ -20,7 +20,6 @@ describe('boroughFromPlace', () => {
 
   it('maps the definite-article and short forms', () => {
     expect(boroughFromPlace({ city: 'The Bronx' })).toBe('Bronx')
-    expect(boroughFromPlace({ city: 'New York City' })).toBe('Manhattan')
   })
 
   it('ignores case and surrounding whitespace', () => {
@@ -28,13 +27,20 @@ describe('boroughFromPlace', () => {
     expect(boroughFromPlace({ city: 'KINGS COUNTY' })).toBe('Brooklyn')
   })
 
-  it('checks subregion, then city, then district', () => {
+  it('checks subregion, then district, then city', () => {
     // subregion wins outright when it maps.
     expect(boroughFromPlace({ subregion: 'Kings County', city: 'Manhattan' })).toBe('Brooklyn')
-    // an unmappable subregion falls through to city.
-    expect(boroughFromPlace({ subregion: 'Nassau County', city: 'Queens' })).toBe('Queens')
-    // and then to district.
+    // an unmappable subregion falls through to district.
     expect(boroughFromPlace({ subregion: 'Nassau County', city: 'Hempstead', district: 'Bronx' })).toBe('Bronx')
+    // and then, with no usable district, to city.
+    expect(boroughFromPlace({ subregion: 'Nassau County', city: 'Queens' })).toBe('Queens')
+  })
+
+  it('does not let a NYC-wide city name outrank the real borough in district', () => {
+    // Both Apple and Google routinely return city: "New York" for points outside
+    // Manhattan, carrying the real borough in district (subLocality). city must
+    // never win that race.
+    expect(boroughFromPlace({ city: 'New York', district: 'Brooklyn' })).toBe('Brooklyn')
   })
 
   it('returns null for a place outside NYC rather than guessing', () => {
