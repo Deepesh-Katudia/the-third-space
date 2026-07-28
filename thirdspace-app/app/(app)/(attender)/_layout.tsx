@@ -5,7 +5,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useChatList } from '../../../hooks/useChatList'
 import { chatUnreadBadge } from '../../../utils/chat'
 import { LoadingView } from '../../../components/LoadingView'
-import { colors, font, floatingNav } from '../../../constants/theme'
+import { palette, tabBar, type as typeScale } from '../../../constants/design'
 
 export default function AttenderLayout() {
   const { user, role, loading } = useAuth()
@@ -19,11 +19,17 @@ export default function AttenderLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.ink,
-        tabBarInactiveTintColor: colors.mutedLight,
-        tabBarLabelStyle: { fontFamily: font.bold, fontSize: 10 },
-        tabBarStyle: floatingNav,
-        tabBarBadgeStyle: { backgroundColor: colors.danger, fontFamily: font.bold, fontSize: 10 },
+        tabBarActiveTintColor: tabBar.activeTintColor,
+        tabBarInactiveTintColor: tabBar.inactiveTintColor,
+        tabBarLabelStyle: typeScale.tabLabel,
+        tabBarStyle: {
+          backgroundColor: tabBar.backgroundColor,
+          borderTopColor: tabBar.borderTopColor,
+          borderTopWidth: tabBar.borderTopWidth,
+          height: tabBar.height,
+          elevation: 0,
+        },
+        tabBarBadgeStyle: { backgroundColor: palette.clay, color: palette.cream, ...typeScale.meta },
       }}
     >
       <Tabs.Screen

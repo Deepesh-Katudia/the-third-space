@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ChatRow, ChatSummary } from '../../../components/ChatRow'
@@ -10,7 +9,9 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useChatList } from '../../../hooks/useChatList'
 import { useMessageRequests } from '../../../hooks/useMessageRequests'
 import { formatRelativeTime } from '../../../utils/chat'
-import { NAV_CLEARANCE } from '../../../constants/theme'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, NAV_CLEARANCE } from '../../../constants/design'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -32,13 +33,13 @@ export default function Chats() {
   )
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <Text style={styles.title}>Chats</Text>
+        <Display role="screenTitle">Chats</Display>
         {requests.length > 0 ? (
           <TouchableOpacity onPress={() => router.push('/(app)/message-requests')} hitSlop={8}>
-            <Text style={styles.requestsLink}>Requests · {requests.length}</Text>
+            <Meta role="eyebrow" tone="clay">Requests · {requests.length}</Meta>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -48,7 +49,7 @@ export default function Chats() {
           const active = filter === f.key
           return (
             <TouchableOpacity key={f.key} onPress={() => setFilter(f.key)} style={[styles.filterPill, active && styles.filterPillActive]}>
-              <Text style={[styles.filterText, active && styles.filterTextActive]}>{f.label}</Text>
+              <Meta role="eyebrow" tone={active ? 'clay' : 'inkSoft'}>{f.label}</Meta>
             </TouchableOpacity>
           )
         })}
@@ -82,19 +83,20 @@ export default function Chats() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 12, marginBottom: 12 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 32, color: '#15161A', letterSpacing: -0.5 },
-  requestsLink: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D' },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, marginBottom: 4 },
-  filterPill: { borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
-  filterPillActive: { backgroundColor: '#15161A', borderColor: '#15161A' },
-  filterText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
-  filterTextActive: { color: 'white' },
-  list: { paddingHorizontal: 24, paddingBottom: NAV_CLEARANCE, paddingTop: 4 },
+  header: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.md, marginBottom: space.md },
+  filterRow: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.xl, marginBottom: space.xs },
+  filterPill: {
+    borderRadius: radius.chip,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.sm - 1,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  filterPillActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  list: { paddingHorizontal: space.xl, paddingBottom: NAV_CLEARANCE, paddingTop: space.xs },
 })

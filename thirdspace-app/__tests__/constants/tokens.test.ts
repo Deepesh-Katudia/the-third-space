@@ -9,10 +9,6 @@ import { join } from 'path'
  * DO NOT add entries. The list only ever shrinks.
  */
 const NOT_YET_CONVERTED = [
-  'app/(app)/(attender)/_layout.tsx',
-  'app/(app)/(attender)/chats.tsx',
-  'app/(app)/(attender)/index.tsx',
-  'app/(app)/(attender)/my-events.tsx',
   'app/(app)/(attender)/profile.tsx',
   'app/(app)/(hoster)/announcement/[id].tsx',
   'app/(app)/(hoster)/venue.tsx',
@@ -25,7 +21,6 @@ const NOT_YET_CONVERTED = [
   'app/(app)/create-event.tsx',
   'app/(app)/edit-profile.tsx',
   'app/(app)/event/[id].tsx',
-  'app/(app)/filters.tsx',
   'app/(app)/guest-list/[id].tsx',
   'app/(app)/member/[uid].tsx',
   'app/(app)/message-privacy.tsx',
@@ -44,11 +39,7 @@ const NOT_YET_CONVERTED = [
   'components/AnnouncementBanner.tsx',
   'components/AttendeeAvatarStack.tsx',
   'components/BadgeGrid.tsx',
-  'components/CategoryTabs.tsx',
   'components/ChatBubble.tsx',
-  'components/ChatRow.tsx',
-  'components/CompactEventRow.tsx',
-  'components/FilterSheet.tsx',
   'components/FormInput.tsx',
   'components/InterestChip.tsx',
   'components/MemberProfileCard.tsx',

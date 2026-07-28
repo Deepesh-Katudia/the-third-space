@@ -1,7 +1,9 @@
 import React from 'react'
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native'
+import { ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
 import { EVENT_CATEGORIES } from '../constants/categories'
 import { EventCategory } from '../types/models'
+import { palette, radius, space } from '../constants/design'
+import { Meta } from './ui/Text'
 
 export type CategoryFilter = 'All' | EventCategory
 
@@ -23,7 +25,7 @@ export function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
             onPress={() => onSelect(filter)}
             style={[styles.chip, isActive && styles.chipActive]}
           >
-            <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{filter}</Text>
+            <Meta role="eyebrow" tone={isActive ? 'clay' : 'inkSoft'}>{filter}</Meta>
           </TouchableOpacity>
         )
       })}
@@ -32,9 +34,14 @@ export function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingVertical: 12 },
-  chip: { borderWidth: 1, borderColor: 'rgba(107,111,120,0.4)', borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
-  chipText: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  chipTextActive: { color: '#15161A' },
+  row: { gap: space.sm, paddingVertical: space.md },
+  chip: {
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.chip,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm,
+  },
+  // Active reads as a filled ticket stub against the deep field, not a color swap.
+  chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
 })

@@ -1,8 +1,10 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native'
 import { EventCategory } from '../types/models'
 import { EVENT_CATEGORIES } from '../constants/categories'
 import { DateFilter, EventFilters, EMPTY_FILTERS } from '../constants/filters'
+import { palette, radius, space } from '../constants/design'
+import { Body, Meta } from './ui/Text'
 
 // Re-exported so existing importers (filters screen) keep resolving these from here.
 export { EMPTY_FILTERS }
@@ -91,7 +93,7 @@ export function FilterSheet({ filters, onChange }: FilterSheetProps) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Meta role="eyebrow" style={styles.sectionTitle}>{title}</Meta>
       {children}
     </View>
   )
@@ -100,7 +102,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity onPress={onPress} style={[styles.chip, active && styles.chipActive]}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+      <Meta role="eyebrow" tone={active ? 'clay' : 'inkSoft'}>{label}</Meta>
     </TouchableOpacity>
   )
 }
@@ -116,26 +118,29 @@ function ToggleRow({
 }) {
   return (
     <View style={styles.toggleRow}>
-      <Text style={styles.toggleLabel}>{label}</Text>
+      <Body role="bodyLg" tone="ink">{label}</Body>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: '#E2E0DA', true: '#FF9F3D' }}
-        thumbColor="white"
+        trackColor={{ false: palette.rule, true: palette.clay }}
+        thumbColor={palette.cream}
       />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingBottom: 12 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderRadius: 100, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', backgroundColor: 'white' },
-  chipActive: { backgroundColor: '#FF9F3D', borderColor: '#FF9F3D' },
-  chipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
-  chipTextActive: { color: '#15161A' },
-  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  toggleLabel: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
+  scroll: { paddingBottom: space.md },
+  section: { marginBottom: space.xl },
+  sectionTitle: { marginBottom: space.md },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  chip: {
+    borderRadius: radius.chip,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm + 1,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: space.xs + 2 },
 })

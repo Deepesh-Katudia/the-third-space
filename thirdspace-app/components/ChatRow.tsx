@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { avatarColor, initials } from '../utils/avatar'
+import { palette, radius, space, type as typeScale } from '../constants/design'
+import { Display, Body, Meta } from './ui/Text'
 
 export interface ChatSummary {
   id: string
@@ -17,6 +19,7 @@ interface ChatRowProps {
   onPress: () => void
 }
 
+/** Chat threads are not event surfaces, so this row carries no ticket notches. */
 export function ChatRow({ chat, onPress }: ChatRowProps) {
   const isGroup = chat.type === 'group'
   return (
@@ -31,17 +34,22 @@ export function ChatRow({ chat, onPress }: ChatRowProps) {
       </View>
       <View style={styles.middle}>
         <View style={styles.topLine}>
-          <Text style={styles.name} numberOfLines={1}>{chat.name}</Text>
-          <Text style={styles.time}>{chat.timestamp}</Text>
+          <Display numberOfLines={1} style={styles.name}>{chat.name}</Display>
+          <Meta>{chat.timestamp}</Meta>
         </View>
         <View style={styles.bottomLine}>
-          <Text style={[styles.preview, chat.unread > 0 && styles.previewUnread]} numberOfLines={1}>
+          <Body
+            role="bodySm"
+            tone={chat.unread > 0 ? 'ink' : 'inkSoft'}
+            numberOfLines={1}
+            style={styles.preview}
+          >
             {chat.lastMessage}
-          </Text>
+          </Body>
           {chat.muted ? <Text style={styles.muted}>🔕</Text> : null}
           {chat.unread > 0 ? (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{chat.unread}</Text>
+              <Meta tone="ink">{chat.unread}</Meta>
             </View>
           ) : null}
         </View>
@@ -51,17 +59,32 @@ export function ChatRow({ chat, onPress }: ChatRowProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md + 2,
+    paddingVertical: space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.rule,
+  },
   avatar: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 17, color: 'white' },
-  middle: { flex: 1 },
-  topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
-  name: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', flex: 1, marginRight: 8 },
-  time: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78' },
-  bottomLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  preview: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78', flex: 1 },
-  previewUnread: { color: '#15161A', fontFamily: 'Poppins_600SemiBold' },
+  // Avatar tints sit outside the two-tone palette on purpose — they encode identity.
+  avatarText: { ...typeScale.bodySm, color: palette.cream },
+  middle: { flex: 1, minWidth: 0 },
+  topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, marginBottom: 3 },
+  name: { flex: 1 },
+  bottomLine: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  preview: { flex: 1 },
   muted: { fontSize: 12 },
-  badge: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: '#FF3B30', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  badgeText: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: 'white' },
+  badge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: radius.pill,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.clay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space.xs + 2,
+  },
 })

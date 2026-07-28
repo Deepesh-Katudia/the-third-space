@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { FilterSheet } from '../../components/FilterSheet'
 import { useDiscoverFilters } from '../../hooks/useDiscoverFilters'
 import { useUpcomingEvents } from '../../hooks/useUpcomingEvents'
 import { applyEventFilters } from '../../utils/eventFilters'
+import { Screen } from '../../components/ui/Screen'
+import { Display, Body, Meta } from '../../components/ui/Text'
+import { palette, radius, space } from '../../constants/design'
 
 export default function Filters() {
   const router = useRouter()
@@ -16,14 +18,14 @@ export default function Filters() {
   const count = useMemo(() => applyEventFilters(events, filters, query).length, [events, filters, query])
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <View style={styles.handle} />
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Filters</Text>
+          <Display role="screenTitle">Filters</Display>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Text style={styles.close}>✕</Text>
+            <Meta style={styles.close}>✕</Meta>
           </TouchableOpacity>
         </View>
       </View>
@@ -34,36 +36,33 @@ export default function Filters() {
 
       <View style={styles.footer}>
         <TouchableOpacity onPress={() => reset()} hitSlop={8}>
-          <Text style={styles.clear}>Clear all</Text>
+          <Body role="button">Clear all</Body>
         </TouchableOpacity>
         <TouchableOpacity style={styles.applyBtn} onPress={() => router.back()}>
-          <Text style={styles.applyText}>Show {count} event{count === 1 ? '' : 's'}</Text>
+          <Body role="button" style={styles.applyText}>Show {count} event{count === 1 ? '' : 's'}</Body>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { paddingHorizontal: 24, paddingTop: 10 },
-  handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(226,224,218,0.7)', marginBottom: 14 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 28, color: '#15161A', letterSpacing: -0.5 },
-  close: { fontSize: 18, color: '#6B6F78' },
-  body: { flex: 1, paddingHorizontal: 24, paddingTop: 8 },
+  header: { paddingHorizontal: space.xl, paddingTop: space.sm + 2 },
+  handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: palette.rule, marginBottom: space.md + 2 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.sm },
+  close: { fontSize: 18 },
+  body: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.sm },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 14,
-    paddingBottom: 8,
+    paddingHorizontal: space.xl,
+    paddingTop: space.md + 2,
+    paddingBottom: space.sm,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(226,224,218,0.5)',
-    gap: 16,
+    borderTopColor: palette.rule,
+    gap: space.lg,
   },
-  clear: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#6B6F78' },
-  applyBtn: { flex: 1, backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
-  applyText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
+  applyBtn: { flex: 1, backgroundColor: palette.ink, borderRadius: radius.ticket, paddingVertical: space.lg - 1, alignItems: 'center' },
+  applyText: { color: palette.cream },
 })
