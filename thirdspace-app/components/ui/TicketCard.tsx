@@ -1,11 +1,14 @@
 import React from 'react'
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { palette, radius, space } from '../../constants/design'
 import { Display, Meta } from './Text'
 
-const PHOTO_HEIGHT = 96
-/** Events carry no image today, so the ticket keeps its silhouette with a color band. */
-const BAND_HEIGHT = 44
+/**
+ * Photo and placeholder share one height so the tear line and notches sit in the same
+ * place whether or not an event has an image — the card never changes shape.
+ */
+const MEDIA_HEIGHT = 120
 const NOTCH = 14
 
 interface TicketCardProps {
@@ -20,19 +23,23 @@ interface TicketCardProps {
 
 export function TicketCard({ tone, photoUri, day, month, onPress, children }: TicketCardProps) {
   const notchColor = tone === 'deep' ? palette.orangeDeep : palette.cream
-  const headerHeight = photoUri ? PHOTO_HEIGHT : BAND_HEIGHT
 
   return (
     <TouchableOpacity testID="ticket-card" onPress={onPress} activeOpacity={0.9} style={styles.card}>
       {photoUri ? (
-        <Image source={{ uri: photoUri }} style={[styles.header, { height: PHOTO_HEIGHT }]} />
+        <Image source={{ uri: photoUri }} style={styles.media} />
       ) : (
-        <View testID="ticket-band" style={[styles.header, styles.band, { height: BAND_HEIGHT }]} />
+        // Events carry no image field yet. Rather than leave a blank strip, the
+        // placeholder is filled and captioned so it reads as "a photo goes here".
+        <View testID="ticket-band" style={[styles.media, styles.band]}>
+          <Ionicons name="image-outline" size={30} color={palette.orangeLight} />
+          <Meta role="eyebrow" style={styles.bandLabel}>No photo yet</Meta>
+        </View>
       )}
 
       <View style={styles.tear} />
-      <View testID="ticket-notch" style={[styles.notch, styles.notchLeft, { top: headerHeight - NOTCH / 2, backgroundColor: notchColor }]} />
-      <View testID="ticket-notch" style={[styles.notch, styles.notchRight, { top: headerHeight - NOTCH / 2, backgroundColor: notchColor }]} />
+      <View testID="ticket-notch" style={[styles.notch, styles.notchLeft, { backgroundColor: notchColor }]} />
+      <View testID="ticket-notch" style={[styles.notch, styles.notchRight, { backgroundColor: notchColor }]} />
 
       <View style={styles.infoWrap}>
         <View style={styles.stub}>
@@ -54,14 +61,24 @@ const styles = StyleSheet.create({
     marginBottom: space.md,
     overflow: 'visible',
   },
-  header: {
+  media: {
     width: '100%',
+    height: MEDIA_HEIGHT,
     borderTopLeftRadius: radius.ticket,
     borderTopRightRadius: radius.ticket,
   },
-  band: { backgroundColor: palette.orangeDeep },
+  // Clay, not orangeDeep: the old band matched the screen behind it and read as a gap
+  // rather than as image space.
+  band: { backgroundColor: palette.clay, alignItems: 'center', justifyContent: 'center', gap: space.xs },
+  bandLabel: { color: palette.orangeLight },
   tear: { borderTopWidth: 1, borderTopColor: palette.rule, borderStyle: 'dashed', marginHorizontal: space.lg },
-  notch: { position: 'absolute', width: NOTCH, height: NOTCH, borderRadius: NOTCH / 2 },
+  notch: {
+    position: 'absolute',
+    width: NOTCH,
+    height: NOTCH,
+    borderRadius: NOTCH / 2,
+    top: MEDIA_HEIGHT - NOTCH / 2,
+  },
   notchLeft: { left: -NOTCH / 2 },
   notchRight: { right: -NOTCH / 2 },
   infoWrap: { flexDirection: 'row', gap: space.md, padding: space.md },

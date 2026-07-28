@@ -4,15 +4,15 @@ import { useRouter, useFocusEffect } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../hooks/useAuth'
 import { getMyRegisteredEvents } from '../../../services/events'
-import { CompactEventRow } from '../../../components/CompactEventRow'
+import { EventCard } from '../../../components/EventCard'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { EmptyState } from '../../../components/EmptyState'
 import { Banner } from '../../../components/Banner'
 import { LoadingView } from '../../../components/LoadingView'
 import { CommunityEvent } from '../../../types/models'
-import { formatDayDate, formatTime, daysUntil } from '../../../utils/eventHelpers'
+import { daysUntil } from '../../../utils/eventHelpers'
 import { Screen } from '../../../components/ui/Screen'
-import { Display, Body, Meta } from '../../../components/ui/Text'
+import { Display, Meta } from '../../../components/ui/Text'
 import { palette, radius, space, NAV_CLEARANCE } from '../../../constants/design'
 
 type TabKey = 'upcoming' | 'hosting' | 'past'
@@ -94,34 +94,35 @@ export default function MyEvents() {
             />
           ) : (
             <>
-              {/* The one ink surface in the feed — "next up" earns the contrast.
-                  Solid rather than a gradient: the ticket system has no gradients. */}
-              <TouchableOpacity activeOpacity={0.92} onPress={() => goEvent(next.id)} style={styles.nextCard}>
-                <Meta role="eyebrow" style={styles.onInkSoft}>NEXT UP · {nextUpLabel(next, now)}</Meta>
-                <Display role="screenTitle" style={styles.nextTitle}>{next.title}</Display>
-                <Body role="bodySm" style={styles.onInkSoft}>{formatDayDate(next.startsAt.toDate())} · {formatTime(next.startsAt.toDate())}</Body>
-                <Body role="bodySm" style={styles.onInkSoft}>{next.venueName} · {next.neighborhood}</Body>
-                <View style={styles.nextFooter}>
-                  <AttendeeAvatarStack
-                    uids={Array.from({ length: Math.min(next.registeredCount, 4) }, (_, i) => `${next.id}:${i}`)}
-                    count={next.registeredCount}
-                    size={28}
-                    ringColor={palette.ink}
-                  />
-                  <TouchableOpacity
-                    style={styles.chatBtn}
-                    onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: next.id } })}
-                  >
-                    <Meta role="eyebrow" tone="ink">Open chat</Meta>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
+              {/* Same card as everywhere else — "next up" earns its emphasis from the
+                  eyebrow and the footer actions, not from a second card shape. */}
+              <Meta role="eyebrow" tone="clay" style={styles.nextLabel}>Next up · {nextUpLabel(next, now)}</Meta>
+              <EventCard
+                event={next}
+                tone="deep"
+                onPress={() => goEvent(next.id)}
+                footer={
+                  <View style={styles.nextFooter}>
+                    <AttendeeAvatarStack
+                      uids={Array.from({ length: Math.min(next.registeredCount, 4) }, (_, i) => `${next.id}:${i}`)}
+                      count={next.registeredCount}
+                      size={28}
+                    />
+                    <TouchableOpacity
+                      style={styles.chatBtn}
+                      onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id: next.id } })}
+                    >
+                      <Meta role="eyebrow" style={styles.onInk}>Open chat</Meta>
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
 
               {restUpcoming.length > 0 ? (
                 <>
                   <Meta role="eyebrow" style={styles.sectionLabel}>Also coming up</Meta>
                   {restUpcoming.map((e) => (
-                    <CompactEventRow key={e.id} event={e} tone="deep" onPress={() => goEvent(e.id)} trailing={<GoingBadge />} />
+                    <EventCard key={e.id} event={e} tone="deep" onPress={() => goEvent(e.id)} trailing={<GoingBadge />} />
                   ))}
                 </>
               ) : null}
@@ -143,7 +144,7 @@ export default function MyEvents() {
             <EmptyState emoji="🕊️" title="No past events" body="Once you've attended events, they'll appear here." />
           ) : (
             past.map((e) => (
-              <CompactEventRow key={e.id} event={e} tone="deep" onPress={() => goEvent(e.id)} trailing={<RateAction />} />
+              <EventCard key={e.id} event={e} tone="deep" onPress={() => goEvent(e.id)} trailing={<RateAction />} />
             ))
           ))}
       </ScrollView>
@@ -188,12 +189,10 @@ const styles = StyleSheet.create({
   bannerWrap: { paddingHorizontal: space.xl, paddingTop: space.sm },
   scroll: { paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: NAV_CLEARANCE },
 
-  nextCard: { backgroundColor: palette.ink, borderRadius: radius.ticket, padding: space.xl, marginBottom: space.sm },
-  nextTitle: { color: palette.cream, marginVertical: space.sm },
-  // Cream at 75% on ink still clears AA; the palette carries no white.
-  onInkSoft: { color: palette.orangeLight },
-  nextFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg },
-  chatBtn: { backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.lg + 2, paddingVertical: space.sm + 1 },
+  nextLabel: { marginBottom: space.sm },
+  nextFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  chatBtn: { backgroundColor: palette.ink, borderRadius: radius.pill, paddingHorizontal: space.lg + 2, paddingVertical: space.sm + 1 },
+  onInk: { color: palette.cream },
 
   sectionLabel: { marginBottom: space.md, marginTop: space.xl },
   goingBadge: { borderWidth: 1, borderColor: palette.rule, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },

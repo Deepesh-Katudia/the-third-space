@@ -1,4 +1,5 @@
 import React from 'react'
+import { Text } from 'react-native'
 import { render } from '@testing-library/react-native'
 import { Timestamp } from 'firebase/firestore'
 import { EventCard } from '../../components/EventCard'
@@ -56,6 +57,27 @@ describe('EventCard', () => {
     const notAgeGated = { ...event, ageRequirement: '18+' } as CommunityEvent
     rerender(<EventCard event={notAgeGated} tone="deep" onPress={() => {}} />)
     expect(queryByText('21+')).toBeNull()
+  })
+
+  it('renders the trailing and footer slots that replaced CompactEventRow', () => {
+    // my-events used to use a second card component for these; the variants are now
+    // slots on this one card, so both must actually render.
+    const { getByText } = render(
+      <EventCard
+        event={event}
+        tone="deep"
+        onPress={() => {}}
+        trailing={<Text>Going</Text>}
+        footer={<Text>Open chat</Text>}
+      />
+    )
+    expect(getByText('Going')).toBeTruthy()
+    expect(getByText('Open chat')).toBeTruthy()
+  })
+
+  it('omits the footer entirely when no footer slot is passed', () => {
+    const { queryByText } = render(<EventCard event={event} tone="deep" onPress={() => {}} />)
+    expect(queryByText('Open chat')).toBeNull()
   })
 
   it('shows Starting soon within the window and not outside it', () => {
