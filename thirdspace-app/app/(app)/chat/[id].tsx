@@ -3,7 +3,6 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   KeyboardAvoidingView, Platform, StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ChatBubble } from '../../../components/ChatBubble'
@@ -11,7 +10,7 @@ import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { Banner } from '../../../components/Banner'
 import { Toast } from '../../../components/Toast'
 import { initials } from '../../../utils/avatar'
-import { shouldShowAuthor, dmConversationId } from '../../../utils/chat'
+import { shouldShowAuthor } from '../../../utils/chat'
 import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
 import { useThreadMessages } from '../../../hooks/useThreadMessages'
@@ -21,6 +20,9 @@ import {
   MessageAuthor, ParticipantInfo,
 } from '../../../services/chat'
 import { Conversation } from '../../../types/models'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../../constants/design'
 
 function clockTime(date: Date | null): string {
   if (!date) return 'now'
@@ -127,21 +129,21 @@ export default function ChatThreadScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
         <View style={[styles.headerAvatar, kind === 'dm' && styles.headerAvatarRound]}>
           <Text style={styles.headerAvatarText}>{initials(headerName)}</Text>
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{headerName}</Text>
-          <Text style={styles.headerMeta}>{kind === 'group' ? 'Group chat' : isPendingOutgoing ? 'Request pending' : 'Direct message'}</Text>
+          <Display numberOfLines={1}>{headerName}</Display>
+          <Meta>{kind === 'group' ? 'Group chat' : isPendingOutgoing ? 'Request pending' : 'Direct message'}</Meta>
         </View>
         {kind === 'group' && recentSeeds.length > 0 ? (
-          <AttendeeAvatarStack uids={recentSeeds} count={recentSeeds.length} size={26} max={3} />
+          <AttendeeAvatarStack uids={recentSeeds} count={recentSeeds.length} size={26} max={3} ringColor={palette.cream} />
         ) : (
           <TouchableOpacity onPress={toggleMute} hitSlop={8}>
             <Text style={styles.muteToggle}>{muted ? '🔕' : '🔔'}</Text>
@@ -155,15 +157,17 @@ export default function ChatThreadScreen() {
             <ChatBubble isSelf={false} isSystem message={{ id: 'sys', author: '', text: 'You registered · welcome to the chat', time: '' }} />
           ) : null}
           {isPendingOutgoing ? (
-            <Banner
-              tone="success"
-              message={`Message request sent. ${headerName} needs to accept before they can reply — you can keep adding to it in the meantime.`}
-            />
+            <View style={styles.bannerWrap}>
+              <Banner
+                tone="success"
+                message={`Message request sent. ${headerName} needs to accept before they can reply — you can keep adding to it in the meantime.`}
+              />
+            </View>
           ) : null}
           {declined ? (
-            <Banner message="This conversation is no longer available." />
+            <View style={styles.bannerWrap}><Banner message="This conversation is no longer available." /></View>
           ) : null}
-          {sendError ? <Banner message={sendError} /> : null}
+          {sendError ? <View style={styles.bannerWrap}><Banner message={sendError} /></View> : null}
           {messages.map((m, i) => {
             const isSelf = m.authorUid === myUid
             const isAnnouncement = m.kind === 'announcement'
@@ -181,9 +185,9 @@ export default function ChatThreadScreen() {
 
         {isPendingIncoming ? (
           <View style={styles.acceptRow}>
-            <Text style={styles.acceptHint}>Accept this request to reply.</Text>
+            <Body role="bodySm" style={styles.flex}>Accept this request to reply.</Body>
             <TouchableOpacity style={styles.acceptBtn} onPress={() => acceptRequest(id)}>
-              <Text style={styles.acceptText}>Accept</Text>
+              <Body role="button" style={styles.onInk}>Accept</Body>
             </TouchableOpacity>
           </View>
         ) : (
@@ -191,42 +195,77 @@ export default function ChatThreadScreen() {
             <TextInput
               style={styles.input}
               placeholder={kind === 'group' ? 'Message the group' : 'Message'}
-              placeholderTextColor="#6B6F78"
+              placeholderTextColor={palette.inkSoft}
               value={draft}
               onChangeText={setDraft}
               multiline
             />
             <TouchableOpacity style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]} onPress={send} disabled={!draft.trim()}>
-              <Text style={styles.sendText}>↑</Text>
+              <Body role="button" style={styles.onInk}>↑</Body>
             </TouchableOpacity>
           </View>
         )}
       </KeyboardAvoidingView>
       {toast ? <Toast message={toast} onDismiss={() => setToast('')} /> : null}
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
   flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(226,224,218,0.5)' },
-  back: { fontSize: 24, color: '#15161A' },
-  headerAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.xl - 4,
+    paddingVertical: space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.rule,
+  },
+  back: { fontSize: 24 },
+  headerAvatar: { width: 40, height: 40, borderRadius: radius.ticket - 2, backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule, alignItems: 'center', justifyContent: 'center' },
   headerAvatarRound: { borderRadius: 20 },
-  headerAvatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  headerText: { flex: 1 },
-  headerTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A' },
-  headerMeta: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78' },
+  headerAvatarText: { ...typeScale.bodySm, color: palette.ink },
+  headerText: { flex: 1, minWidth: 0 },
   muteToggle: { fontSize: 18 },
-  messages: { paddingTop: 16, paddingBottom: 12 },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)', backgroundColor: '#F3F3F5' },
-  input: { flex: 1, maxHeight: 110, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)', borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A' },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FF9F3D', alignItems: 'center', justifyContent: 'center' },
-  sendBtnDisabled: { backgroundColor: 'rgba(255,159,61,0.4)' },
-  sendText: { fontSize: 20, color: '#15161A', fontFamily: 'Poppins_600SemiBold' },
-  acceptRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)' },
-  acceptHint: { flex: 1, fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  acceptBtn: { backgroundColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 22, paddingVertical: 11 },
-  acceptText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A' },
+  messages: { paddingTop: space.lg, paddingBottom: space.md },
+  bannerWrap: { paddingHorizontal: space.lg },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: space.sm + 2,
+    paddingHorizontal: space.lg,
+    paddingTop: space.sm + 2,
+    paddingBottom: space.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: palette.rule,
+    backgroundColor: palette.cream,
+  },
+  input: {
+    ...typeScale.bodyLg,
+    flex: 1,
+    maxHeight: 110,
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.chip,
+    paddingHorizontal: space.lg,
+    paddingTop: space.sm + 2,
+    paddingBottom: space.sm + 2,
+    color: palette.ink,
+  },
+  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: palette.ink, alignItems: 'center', justifyContent: 'center' },
+  sendBtnDisabled: { backgroundColor: palette.inkSoft },
+  onInk: { color: palette.cream },
+  acceptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderTopWidth: 1,
+    borderTopColor: palette.rule,
+  },
+  acceptBtn: { backgroundColor: palette.ink, borderRadius: radius.pill, paddingHorizontal: space.xl - 2, paddingVertical: space.md - 1 },
 })

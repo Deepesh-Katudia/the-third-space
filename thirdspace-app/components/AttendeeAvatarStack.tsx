@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, Image, StyleSheet } from 'react-native'
 import { avatarColor, initials } from '../utils/avatar'
+import { palette, font } from '../constants/design'
 
 interface AttendeeAvatarStackProps {
   /** Seeds (names or uids) used to render initial-based avatars. */
@@ -23,7 +24,7 @@ export function AttendeeAvatarStack({
   photoURLs,
   size = 32,
   max = 4,
-  ringColor = '#FFFFFF',
+  ringColor = palette.orangeLight,
 }: AttendeeAvatarStackProps) {
   const shown = uids.slice(0, max)
   const overflow = count - shown.length
@@ -42,7 +43,7 @@ export function AttendeeAvatarStack({
                 width: size,
                 height: size,
                 borderRadius: size / 2,
-                backgroundColor: photo ? '#E2E0DA' : avatarColor(seed),
+                backgroundColor: photo ? palette.orangeLight : avatarColor(seed),
                 borderColor: ringColor,
                 marginLeft: i === 0 ? 0 : -overlap,
                 zIndex: shown.length - i,
@@ -81,7 +82,9 @@ export function AttendeeAvatarStack({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   avatar: { alignItems: 'center', justifyContent: 'center', borderWidth: 2, overflow: 'hidden' },
-  initials: { fontFamily: 'Poppins_600SemiBold', color: 'white' },
-  overflow: { backgroundColor: '#6B6F78' },
-  overflowText: { fontFamily: 'Poppins_600SemiBold', color: 'white' },
+  // Avatar fills stay outside the two-tone palette on purpose — they encode identity.
+  // Cream initials clear AA on every entry (guarded by contrast.test.ts).
+  initials: { fontFamily: font.bodySemi, color: palette.cream },
+  overflow: { backgroundColor: palette.ink },
+  overflowText: { fontFamily: font.bodySemi, color: palette.cream },
 })

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
-import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
+import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native'
+import { palette, radius, space } from '../constants/design'
+import { Display, Body, Meta } from './ui/Text'
 
 interface RegistrationConfirmationProps {
   visible: boolean
@@ -40,33 +41,34 @@ export function RegistrationConfirmation({
 
   return (
     <Animated.View style={[styles.overlay, { opacity }]} pointerEvents="auto">
-      <LinearGradient colors={['#15161A', '#0E0E10']} style={StyleSheet.absoluteFill} />
+      {/* Flat ink field with two soft blobs — the gradient the old design used has no
+          equivalent in the ticket system, so depth comes from tone, not blending. */}
       <View style={styles.blobTerracotta} />
       <View style={styles.blobSage} />
 
       <Animated.View style={[styles.content, { transform: [{ scale }] }]}>
         <View style={styles.checkCircle}>
-          <Text style={styles.check}>✓</Text>
+          <Display role="screenTitle" style={styles.check}>✓</Display>
         </View>
-        <Text style={styles.heading}>You're in!</Text>
+        <Display role="screenTitle" style={styles.heading}>You&apos;re in!</Display>
 
         <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>{eventTitle}</Text>
-          <Text style={styles.summaryLine}>{dateLine}</Text>
-          <Text style={styles.summaryLine}>{venueLine}</Text>
+          <Display style={styles.onInk}>{eventTitle}</Display>
+          <Body role="bodySm" style={styles.summaryLine}>{dateLine}</Body>
+          <Body role="bodySm" style={styles.summaryLine}>{venueLine}</Body>
           <View style={styles.pointsRow}>
-            <Text style={styles.pointsText}>+{pointsEarned} points earned</Text>
+            <Meta role="eyebrow" tone="ink">+{pointsEarned} points earned</Meta>
           </View>
         </View>
 
         <TouchableOpacity style={styles.primaryAction} onPress={onSeeGuests}>
-          <Text style={styles.primaryActionText}>See who's going</Text>
+          <Body role="button" tone="ink">See who&apos;s going</Body>
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryAction} onPress={onJoinChat}>
-          <Text style={styles.secondaryActionText}>Join the group chat</Text>
+          <Body role="button" style={styles.onInk}>Join the group chat</Body>
         </TouchableOpacity>
         <TouchableOpacity style={styles.dismiss} onPress={onClose} hitSlop={8}>
-          <Text style={styles.dismissText}>Maybe later</Text>
+          <Body role="bodySm" style={styles.summaryLine}>Maybe later</Body>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>
@@ -74,22 +76,34 @@ export function RegistrationConfirmation({
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 50, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  blobTerracotta: { position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(255,159,61,0.25)' },
-  blobSage: { position: 'absolute', bottom: -80, left: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(47,163,101,0.2)' },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space.xxl,
+    backgroundColor: palette.ink,
+    overflow: 'hidden',
+  },
+  blobTerracotta: { position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: 120, backgroundColor: palette.clay },
+  blobSage: { position: 'absolute', bottom: -80, left: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: palette.sage },
   content: { width: '100%', alignItems: 'center' },
-  checkCircle: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#2FA365', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  check: { fontSize: 44, color: 'white', fontFamily: 'Poppins_600SemiBold', lineHeight: 50 },
-  heading: { fontFamily: 'Poppins_800ExtraBold', fontSize: 36, color: '#F3F3F5', marginBottom: 24, letterSpacing: -0.5 },
-  summary: { width: '100%', backgroundColor: 'rgba(255,249,244,0.08)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(226,224,218,0.25)', padding: 20, marginBottom: 24 },
-  summaryTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#F3F3F5', marginBottom: 8 },
-  summaryLine: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(251,247,242,0.7)', marginBottom: 2 },
-  pointsRow: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: 'rgba(255,159,61,0.25)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  pointsText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#E2E0DA' },
-  primaryAction: { width: '100%', backgroundColor: '#FF9F3D', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 12 },
-  primaryActionText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#15161A' },
-  secondaryAction: { width: '100%', backgroundColor: 'rgba(255,249,244,0.1)', borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(226,224,218,0.3)' },
-  secondaryActionText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#F3F3F5' },
-  dismiss: { marginTop: 16 },
-  dismissText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(251,247,242,0.6)' },
+  checkCircle: { width: 84, height: 84, borderRadius: 42, backgroundColor: palette.sage, alignItems: 'center', justifyContent: 'center', marginBottom: space.xl },
+  check: { color: palette.cream },
+  heading: { color: palette.cream, marginBottom: space.xl },
+  summary: {
+    width: '100%',
+    backgroundColor: palette.inkSoft,
+    borderRadius: radius.chip,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    padding: space.xl,
+    marginBottom: space.xl,
+  },
+  onInk: { color: palette.cream },
+  summaryLine: { color: palette.orangeLight, marginBottom: 2 },
+  pointsRow: { marginTop: space.md, alignSelf: 'flex-start', backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },
+  primaryAction: { width: '100%', backgroundColor: palette.orangeLight, borderRadius: radius.ticket, paddingVertical: space.lg, alignItems: 'center', marginBottom: space.md },
+  secondaryAction: { width: '100%', backgroundColor: palette.inkSoft, borderRadius: radius.ticket, paddingVertical: space.lg, alignItems: 'center', borderWidth: 1, borderColor: palette.rule },
+  dismiss: { marginTop: space.lg },
 })

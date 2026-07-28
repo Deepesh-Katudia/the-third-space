@@ -1,6 +1,8 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { TouchableOpacity, StyleSheet } from 'react-native'
 import { Announcement } from '../types/models'
+import { palette, radius, space } from '../constants/design'
+import { Body, Meta } from './ui/Text'
 
 interface AnnouncementBannerProps {
   announcement: Announcement
@@ -10,16 +12,25 @@ interface AnnouncementBannerProps {
 export function AnnouncementBanner({ announcement, onPress }: AnnouncementBannerProps) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
-      <Text style={styles.label}>📣 Latest from the host</Text>
-      <Text style={styles.text} numberOfLines={3}>{announcement.text}</Text>
-      <Text style={styles.cta}>Open chat →</Text>
+      <Meta role="eyebrow" tone="clay" style={styles.label}>📣 Latest from the host</Meta>
+      <Body role="bodyLg" tone="ink" numberOfLines={3}>{announcement.text}</Body>
+      <Meta role="eyebrow" tone="clay" style={styles.cta}>Open chat →</Meta>
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: 'rgba(226,224,218,0.22)', borderLeftWidth: 3, borderLeftColor: '#FF9F3D', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 24 },
-  label: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#3A3A3A', letterSpacing: 0.4, marginBottom: 6 },
-  text: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  cta: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D', marginTop: 8 },
+  card: {
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderLeftWidth: 3,
+    borderLeftColor: palette.clay,
+    borderRadius: radius.ticket,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md + 2,
+    marginBottom: space.xl,
+  },
+  label: { marginBottom: space.xs + 2 },
+  cta: { marginTop: space.sm },
 })

@@ -10,6 +10,9 @@ import { LoadingView } from '../../../components/LoadingView'
 import { EmptyState } from '../../../components/EmptyState'
 import { CommunityEvent, Registration } from '../../../types/models'
 import { avatarColor, initials } from '../../../utils/avatar'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space, type as typeScale } from '../../../constants/design'
 
 export default function GuestList() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -44,15 +47,15 @@ export default function GuestList() {
 
   if (event === null) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.back}>←</Text>
+            <Display style={styles.back}>←</Display>
           </TouchableOpacity>
         </View>
         <EmptyState emoji="🫥" title="Event not found" body="This event may have been cancelled by the venue." />
-      </SafeAreaView>
+      </Screen>
     )
   }
 
@@ -62,44 +65,44 @@ export default function GuestList() {
   const hostStat = venue ? `Hosting · ${venue.eventsCount} event${venue.eventsCount === 1 ? '' : 's'}` : 'Host'
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Who's going</Text>
-          <Text style={styles.subtitle}>{event.title} · {total} going</Text>
+          <Display role="screenTitle">Who&apos;s going</Display>
+          <Body role="bodySm">{event.title} · {total} going</Body>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <Body role="bodySm" tone="clay" style={styles.error}>{error}</Body> : null}
 
         {youAreGoing ? (
           <View style={styles.youBanner}>
-            <Text style={styles.youText}>✓ You're going to this event</Text>
+            <Meta role="eyebrow" tone="sage">✓ You&apos;re going to this event</Meta>
           </View>
         ) : null}
 
-        <Text style={styles.sectionLabel}>Host</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Host</Meta>
         <View style={styles.hostCard}>
           <View style={[styles.avatar, styles.hostAvatar, { backgroundColor: avatarColor(hostName) }]}>
             <Text style={styles.avatarText}>{initials(hostName)}</Text>
           </View>
           <View style={styles.rowText}>
-            <Text style={styles.name}>{hostName}</Text>
-            <Text style={styles.meta}>{hostStat}</Text>
+            <Display numberOfLines={1}>{hostName}</Display>
+            <Body role="bodySm">{hostStat}</Body>
           </View>
           <TouchableOpacity style={styles.messageBtn}>
-            <Text style={styles.messageBtnText}>Message</Text>
+            <Meta role="eyebrow" tone="clay">Message</Meta>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionLabel}>Attendees · {attendees.length}</Text>
+        <Meta role="eyebrow" style={styles.sectionLabel}>Attendees · {attendees.length}</Meta>
         {attendees.length === 0 ? (
-          <Text style={styles.emptyAttendees}>No one has registered yet. Be the first.</Text>
+          <Body role="bodySm" style={styles.emptyAttendees}>No one has registered yet. Be the first.</Body>
         ) : (
           attendees.map((a) => {
             const metaParts = [a.neighborhood, (a.interestsPreview ?? []).join(', ')].filter(Boolean)
@@ -117,12 +120,12 @@ export default function GuestList() {
                   </View>
                 )}
                 <View style={styles.rowText}>
-                  <Text style={styles.name}>
+                  <Display numberOfLines={1}>
                     {a.displayName}{a.age ? `, ${a.age}` : ''}
-                  </Text>
-                  {metaParts.length > 0 ? <Text style={styles.meta}>{metaParts.join(' · ')}</Text> : null}
+                  </Display>
+                  {metaParts.length > 0 ? <Body role="bodySm" numberOfLines={1}>{metaParts.join(' · ')}</Body> : null}
                 </View>
-                <Text style={styles.messageIcon}>✉</Text>
+                <Meta style={styles.messageIcon}>✉</Meta>
               </TouchableOpacity>
             )
           })
@@ -131,38 +134,50 @@ export default function GuestList() {
 
       <SafeAreaView edges={['bottom']} style={styles.footer}>
         <TouchableOpacity style={styles.chatBtn} onPress={() => router.push({ pathname: '/(app)/chat/[id]', params: { id } })}>
-          <Text style={styles.chatBtnText}>Open group chat</Text>
+          <Body role="button" style={styles.onInk}>Open group chat</Body>
         </TouchableOpacity>
       </SafeAreaView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-  back: { fontSize: 24, color: '#15161A' },
-  headerText: {},
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 24, color: '#15161A', letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  scroll: { paddingHorizontal: 24, paddingBottom: 24 },
-  error: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#FF3B30', marginBottom: 16 },
-  youBanner: { backgroundColor: 'rgba(47,163,101,0.15)', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, marginBottom: 20 },
-  youText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#25804E' },
-  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
-  hostCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  attendeeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-  emptyAttendees: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78', paddingVertical: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
+  back: { fontSize: 24 },
+  headerText: { flex: 1, minWidth: 0 },
+  scroll: { paddingHorizontal: space.xl, paddingBottom: space.xl },
+  error: { marginBottom: space.lg },
+  youBanner: {
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
+    marginBottom: space.xl,
+  },
+  sectionLabel: { marginBottom: space.sm + 2 },
+  hostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.md + 2,
+    marginBottom: space.xl,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  attendeeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm + 2, borderBottomWidth: 1, borderBottomColor: palette.rule },
+  emptyAttendees: { paddingVertical: space.sm },
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  hostAvatar: { borderRadius: 14 },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: 'white' },
-  rowText: { flex: 1 },
-  name: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', marginBottom: 2 },
-  meta: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  messageBtn: { borderWidth: 1, borderColor: '#FF9F3D', borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8 },
-  messageBtnText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#FF9F3D' },
-  messageIcon: { fontSize: 18, color: '#6B6F78' },
-  footer: { paddingHorizontal: 24, paddingTop: 12, backgroundColor: '#F3F3F5', borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)' },
-  chatBtn: { backgroundColor: '#15161A', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  chatBtnText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#F3F3F5' },
+  hostAvatar: { borderRadius: radius.ticket },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  avatarText: { ...typeScale.bodySm, color: palette.cream },
+  rowText: { flex: 1, minWidth: 0 },
+  messageBtn: { borderWidth: 1, borderColor: palette.clay, borderRadius: radius.pill, paddingHorizontal: space.lg, paddingVertical: space.sm },
+  messageIcon: { fontSize: 18 },
+  footer: { paddingHorizontal: space.xl, paddingTop: space.md, backgroundColor: palette.orangeLight, borderTopWidth: 1, borderTopColor: palette.rule },
+  chatBtn: { backgroundColor: palette.ink, borderRadius: radius.ticket, paddingVertical: space.lg, alignItems: 'center' },
+  onInk: { color: palette.cream },
 })

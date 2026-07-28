@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native'
+import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../hooks/useAuth'
@@ -15,7 +14,6 @@ import {
 } from '../../../services/events'
 import { formatDayDate, formatTime, spotsLeftText } from '../../../utils/eventHelpers'
 import { POINTS_PER_EVENT } from '../../../utils/points'
-import { CATEGORY_COLORS } from '../../../constants/categories'
 import { Banner } from '../../../components/Banner'
 import { EmptyState } from '../../../components/EmptyState'
 import { LoadingView } from '../../../components/LoadingView'
@@ -24,6 +22,12 @@ import { RegistrationConfirmation } from '../../../components/RegistrationConfir
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
 import { subscribeAnnouncements } from '../../../services/announcements'
 import { CommunityEvent, Registration, Announcement } from '../../../types/models'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space } from '../../../constants/design'
+
+const NOTCH = 14
+const HERO_HEIGHT = 190
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -68,18 +72,17 @@ export default function EventDetail() {
 
   if (event === null) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Screen tone="deep">
         <EmptyState emoji="🫥" title="Event not found" body="This event may have been cancelled by the venue." />
         <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Text style={styles.backText}>← Go back</Text>
+          <Body role="bodySm">← Go back</Body>
         </TouchableOpacity>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   const startsAt = event.startsAt.toDate()
   const soldOut = event.registeredCount >= event.capacity
-  const tint = CATEGORY_COLORS[event.category]
   // Registered users (and the owner) see real attendee avatars from the
   // subscription. Non-registered users only get count-driven blurred placeholders.
   const lockedSeeds = Array.from({ length: Math.min(event.registeredCount, 3) }, (_, i) => `${event.id}:${i}`)
@@ -133,38 +136,40 @@ export default function EventDetail() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Hero */}
-        <LinearGradient colors={[tint, '#15161A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        {/* Hero — the ink stub of one big ticket, torn off above the detail body. */}
+        <View style={styles.hero}>
           <SafeAreaView edges={['top']} style={styles.heroBar}>
             <TouchableOpacity style={styles.heroBtn} onPress={() => router.back()} hitSlop={8}>
-              <Text style={styles.heroBtnText}>←</Text>
+              <Body role="button" style={styles.onInk}>←</Body>
             </TouchableOpacity>
             <TouchableOpacity style={styles.heroBtn} onPress={() => setSaved((s) => !s)} hitSlop={8}>
-              <Text style={styles.heroBtnText}>{saved ? '♥' : '♡'}</Text>
+              <Body role="button" style={styles.onInk}>{saved ? '♥' : '♡'}</Body>
             </TouchableOpacity>
           </SafeAreaView>
           <View style={styles.heroFooter}>
             <View style={styles.categoryChip}>
-              <Text style={styles.categoryText}>{event.category}</Text>
+              <Meta role="eyebrow" tone="ink">{event.category}</Meta>
             </View>
           </View>
-        </LinearGradient>
+        </View>
+        <View style={[styles.notch, styles.notchLeft]} />
+        <View style={[styles.notch, styles.notchRight]} />
 
         <View style={styles.body}>
-          <Text style={styles.title}>{event.title}</Text>
-          <Text style={styles.venue}>{event.venueName} · {event.neighborhood}</Text>
+          <Display role="screenTitle" style={styles.title}>{event.title}</Display>
+          <Body role="bodyLg" style={styles.venue}>{event.venueName} · {event.neighborhood}</Body>
 
           {/* Info cards */}
           <View style={styles.infoRow}>
             <View style={styles.infoCard}>
-              <Text style={styles.infoLabel}>WHEN</Text>
-              <Text style={styles.infoValue}>{formatDayDate(startsAt)}</Text>
-              <Text style={styles.infoTime}>{formatTime(startsAt)}</Text>
+              <Meta role="eyebrow" style={styles.infoLabel}>When</Meta>
+              <Display>{formatDayDate(startsAt)}</Display>
+              <Body role="bodySm">{formatTime(startsAt)}</Body>
             </View>
             <View style={styles.infoCard}>
-              <Text style={styles.infoLabel}>SPOTS</Text>
-              <Text style={styles.infoValue}>{spotsLeftText(event.capacity, event.registeredCount)}</Text>
-              <Text style={styles.infoFree}>Free</Text>
+              <Meta role="eyebrow" style={styles.infoLabel}>Spots</Meta>
+              <Display>{spotsLeftText(event.capacity, event.registeredCount)}</Display>
+              <Body role="bodySm" tone="sage">Free</Body>
             </View>
           </View>
 
@@ -178,7 +183,7 @@ export default function EventDetail() {
           ) : null}
 
           {/* Who's going */}
-          <Text style={styles.sectionTitle}>Who's going</Text>
+          <Display role="screenTitle" style={styles.sectionTitle}>Who&apos;s going</Display>
           {isOwner || isRegistered ? (
             <View style={styles.whosGoing}>
               <AttendeeAvatarStack
@@ -186,34 +191,35 @@ export default function EventDetail() {
                 photoURLs={attendees.map((a) => a.photoURL ?? null)}
                 count={attendees.length}
                 size={36}
+                ringColor={palette.orangeDeep}
               />
-              <Text style={styles.whosGoingText}>
+              <Body role="bodySm" tone="ink">
                 {attendees.length} {isOwner ? 'registered' : 'going'}
-              </Text>
+              </Body>
               {attendees.length > 0 ? (
-                <TouchableOpacity onPress={() => router.push({ pathname: '/(app)/guest-list/[id]', params: { id: event.id } })}>
-                  <Text style={styles.seeAll}>See all →</Text>
+                <TouchableOpacity style={styles.seeAll} onPress={() => router.push({ pathname: '/(app)/guest-list/[id]', params: { id: event.id } })}>
+                  <Meta role="eyebrow" tone="clay">See all →</Meta>
                 </TouchableOpacity>
               ) : null}
             </View>
           ) : (
             <View style={styles.whosGoingLocked}>
               <View style={styles.lockedAvatars}>
-                <AttendeeAvatarStack uids={lockedSeeds} count={3} size={36} max={3} />
+                <AttendeeAvatarStack uids={lockedSeeds} count={3} size={36} max={3} ringColor={palette.orangeDeep} />
                 <View style={styles.blurredGroup}>
                   <View style={styles.blurredAvatar} />
                   <View style={[styles.blurredAvatar, { marginLeft: -11 }]} />
                 </View>
               </View>
-              <Text style={styles.lockedText}>Register to unlock who's going</Text>
+              <Body role="bodySm" style={styles.lockedText}>Register to unlock who&apos;s going</Body>
             </View>
           )}
 
           {/* About */}
           {event.description ? (
             <>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.description}>{event.description}</Text>
+              <Display role="screenTitle" style={styles.sectionTitle}>About</Display>
+              <Body role="bodyLg" tone="ink" style={styles.description}>{event.description}</Body>
             </>
           ) : null}
         </View>
@@ -223,26 +229,24 @@ export default function EventDetail() {
       <SafeAreaView edges={['bottom']} style={styles.footer}>
         <View style={styles.footerInner}>
           <View>
-            <Text style={styles.footerPrice}>Free</Text>
-            <Text style={styles.footerSpots}>{spotsLeftText(event.capacity, event.registeredCount)}</Text>
+            <Display role="stubDay" tone="clay">Free</Display>
+            <Body role="bodySm">{spotsLeftText(event.capacity, event.registeredCount)}</Body>
           </View>
           {isOwner ? (
-            <TouchableOpacity style={[styles.cta, styles.ctaDanger]} onPress={handleCancelEvent}>
-              <Text style={styles.ctaDangerText}>Cancel event</Text>
+            <TouchableOpacity style={[styles.cta, styles.ctaOutlineDanger]} onPress={handleCancelEvent}>
+              <Body role="button" tone="clay">Cancel event</Body>
             </TouchableOpacity>
           ) : isRegistered ? (
-            <TouchableOpacity style={[styles.cta, styles.ctaOutline]} onPress={handleCancelRegistration} disabled={busy}>
-              <Text style={styles.ctaOutlineText}>{busy ? '…' : "You're going ✓"}</Text>
+            <TouchableOpacity style={[styles.cta, styles.ctaOutlineGoing]} onPress={handleCancelRegistration} disabled={busy}>
+              <Body role="button" tone="sage">{busy ? '…' : "You're going ✓"}</Body>
             </TouchableOpacity>
           ) : soldOut ? (
             <View style={[styles.cta, styles.ctaDisabled]}>
-              <Text style={styles.ctaDisabledText}>Sold out</Text>
+              <Body role="button">Sold out</Body>
             </View>
           ) : (
-            <TouchableOpacity style={styles.cta} onPress={handleRegister} disabled={busy}>
-              <LinearGradient colors={['#FF9F3D', '#FFB75B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaGradient}>
-                <Text style={styles.ctaText}>{busy ? '…' : 'Register'}</Text>
-              </LinearGradient>
+            <TouchableOpacity style={[styles.cta, styles.ctaPrimary]} onPress={handleRegister} disabled={busy}>
+              <Body role="button" style={styles.onInk}>{busy ? '…' : 'Register'}</Body>
             </TouchableOpacity>
           )}
         </View>
@@ -269,53 +273,61 @@ export default function EventDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
+  container: { flex: 1, backgroundColor: palette.orangeDeep },
   scroll: { paddingBottom: 120 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
-  backText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
 
-  hero: { height: 280, justifyContent: 'space-between' },
-  heroBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8 },
-  heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(21,22,26,0.4)', alignItems: 'center', justifyContent: 'center' },
-  heroBtnText: { fontSize: 20, color: 'white' },
-  heroFooter: { padding: 20 },
-  categoryChip: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  categoryText: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#15161A' },
+  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', backgroundColor: palette.ink },
+  heroBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: space.xl - 4, paddingTop: space.sm },
+  heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: palette.inkSoft, alignItems: 'center', justifyContent: 'center' },
+  onInk: { color: palette.cream },
+  heroFooter: { padding: space.xl - 4 },
+  categoryChip: { alignSelf: 'flex-start', backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },
 
-  body: { paddingHorizontal: 24, paddingTop: 20 },
-  title: { fontFamily: 'Poppins_800ExtraBold', fontSize: 30, color: '#15161A', marginBottom: 6, letterSpacing: -0.5 },
-  venue: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#6B6F78', marginBottom: 20 },
+  // The tear notches that make the hero read as a ticket stub, painted in the
+  // screen tone so they punch through the ink band.
+  notch: {
+    position: 'absolute',
+    width: NOTCH,
+    height: NOTCH,
+    borderRadius: NOTCH / 2,
+    top: HERO_HEIGHT - NOTCH / 2,
+    backgroundColor: palette.orangeDeep,
+  },
+  notchLeft: { left: -NOTCH / 2 },
+  notchRight: { right: -NOTCH / 2 },
 
-  infoRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  infoCard: { flex: 1, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  infoLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#6B6F78', letterSpacing: 0.6, marginBottom: 6 },
-  infoValue: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15161A', marginBottom: 2 },
-  infoTime: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  infoFree: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#2FA365' },
+  body: { paddingHorizontal: space.xl, paddingTop: space.xl },
+  title: { marginBottom: space.xs + 2 },
+  venue: { marginBottom: space.xl },
 
-  sectionTitle: { fontFamily: 'Poppins_800ExtraBold', fontSize: 20, color: '#15161A', marginBottom: 12, marginTop: 4 },
-  whosGoing: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  whosGoingText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#15161A' },
-  seeAll: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#FF9F3D', marginLeft: 'auto' },
-  whosGoingLocked: { marginBottom: 24 },
-  lockedAvatars: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  infoRow: { flexDirection: 'row', gap: space.md, marginBottom: space.xl },
+  infoCard: {
+    flex: 1,
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  infoLabel: { marginBottom: space.xs + 2 },
+
+  sectionTitle: { marginBottom: space.md, marginTop: space.xs },
+  whosGoing: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.xl },
+  seeAll: { marginLeft: 'auto' },
+  whosGoingLocked: { marginBottom: space.xl },
+  lockedAvatars: { flexDirection: 'row', alignItems: 'center', marginBottom: space.sm + 2 },
   blurredGroup: { flexDirection: 'row', marginLeft: -11 },
-  blurredAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(107,111,120,0.35)', borderWidth: 2, borderColor: '#F3F3F5' },
-  lockedText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78', fontStyle: 'italic' },
+  blurredAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: palette.rule, borderWidth: 2, borderColor: palette.orangeDeep },
+  lockedText: { fontStyle: 'italic' },
 
-  description: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#15161A', lineHeight: 23, marginBottom: 8 },
+  description: { marginBottom: space.sm },
 
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,249,244,0.98)', borderTopWidth: 1, borderTopColor: 'rgba(226,224,218,0.5)' },
-  footerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 14, paddingBottom: 6 },
-  footerPrice: { fontFamily: 'Poppins_800ExtraBold', fontSize: 22, color: '#15161A' },
-  footerSpots: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B6F78' },
-  cta: { borderRadius: 100, overflow: 'hidden' },
-  ctaGradient: { paddingVertical: 16, paddingHorizontal: 44, alignItems: 'center' },
-  ctaText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: 'white' },
-  ctaOutline: { borderWidth: 1.5, borderColor: '#2FA365', paddingVertical: 14, paddingHorizontal: 28 },
-  ctaOutlineText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#2FA365' },
-  ctaDanger: { borderWidth: 1.5, borderColor: '#FF3B30', paddingVertical: 14, paddingHorizontal: 28 },
-  ctaDangerText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#FF3B30' },
-  ctaDisabled: { backgroundColor: 'rgba(107,111,120,0.15)', paddingVertical: 16, paddingHorizontal: 44 },
-  ctaDisabledText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#6B6F78' },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.orangeLight, borderTopWidth: 1, borderTopColor: palette.rule },
+  footerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.md + 2, paddingBottom: space.xs + 2 },
+  cta: { borderRadius: radius.pill, overflow: 'hidden', paddingVertical: space.md + 2, paddingHorizontal: space.xxl },
+  ctaPrimary: { backgroundColor: palette.ink },
+  ctaOutlineGoing: { borderWidth: 1.5, borderColor: palette.sage },
+  ctaOutlineDanger: { borderWidth: 1.5, borderColor: palette.clay },
+  ctaDisabled: { backgroundColor: palette.rule },
 })

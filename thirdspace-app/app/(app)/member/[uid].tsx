@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { MemberProfileCard, Member } from '../../../components/MemberProfileCard'
@@ -11,6 +10,9 @@ import { useAuth } from '../../../hooks/useAuth'
 import { dmConversationId } from '../../../utils/chat'
 import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
+import { Screen } from '../../../components/ui/Screen'
+import { Display, Body, Meta } from '../../../components/ui/Text'
+import { palette, radius, space } from '../../../constants/design'
 
 export default function MemberProfile() {
   const { uid } = useLocalSearchParams<{ uid: string }>()
@@ -33,15 +35,15 @@ export default function MemberProfile() {
 
   if (hasError || !profile) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.back}>←</Text>
+            <Display style={styles.back}>←</Display>
           </TouchableOpacity>
         </View>
         <EmptyState emoji="🫥" title="Profile unavailable" body="This member's profile couldn't be loaded." />
-      </SafeAreaView>
+      </Screen>
     )
   }
 
@@ -61,11 +63,11 @@ export default function MemberProfile() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={styles.back}>←</Text>
+          <Display style={styles.back}>←</Display>
         </TouchableOpacity>
       </View>
 
@@ -82,15 +84,15 @@ export default function MemberProfile() {
           }}
         />
 
-        {member.bio ? <Text style={styles.bio}>{member.bio}</Text> : null}
+        {member.bio ? <Body role="bodyLg" tone="ink" style={styles.bio}>{member.bio}</Body> : null}
 
         {member.interests.length > 0 ? (
           <>
-            <Text style={styles.sectionLabel}>Interests</Text>
+            <Meta role="eyebrow" style={styles.sectionLabel}>Interests</Meta>
             <View style={styles.interestWrap}>
               {member.interests.map((it) => (
                 <View key={it} style={styles.interestChip}>
-                  <Text style={styles.interestText}>{it}</Text>
+                  <Meta role="eyebrow" tone="ink">{it}</Meta>
                 </View>
               ))}
             </View>
@@ -99,7 +101,7 @@ export default function MemberProfile() {
 
         {profile.vibePhotos.length > 0 ? (
           <>
-            <Text style={styles.sectionLabel}>Vibe</Text>
+            <Meta role="eyebrow" style={styles.sectionLabel}>Vibe</Meta>
             <View style={styles.vibeStrip}>
               {profile.vibePhotos.map((url, i) => (
                 <Image key={i} source={{ uri: url }} style={styles.vibePhoto} />
@@ -109,25 +111,29 @@ export default function MemberProfile() {
         ) : null}
 
         <TouchableOpacity style={styles.blockBtn}>
-          <Text style={styles.blockText}>Block or report</Text>
+          <Body role="bodySm">Block or report</Body>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F3F5' },
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
-  back: { fontSize: 24, color: '#15161A' },
-  scroll: { paddingHorizontal: 24, paddingBottom: 32 },
-  bio: { fontFamily: 'Poppins_400Regular', fontSize: 15, color: '#15161A', lineHeight: 23, marginBottom: 20 },
-  sectionLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
-  interestWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 },
-  interestChip: { backgroundColor: 'white', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(226,224,218,0.6)' },
-  interestText: { fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: '#3A3A3A' },
-  vibeStrip: { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  vibePhoto: { flex: 1, height: 110, borderRadius: 16, backgroundColor: 'rgba(226,224,218,0.3)' },
-  blockBtn: { alignItems: 'center', paddingVertical: 10 },
-  blockText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78' },
+  header: { paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.xs },
+  back: { fontSize: 24 },
+  scroll: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
+  bio: { marginBottom: space.xl },
+  sectionLabel: { marginBottom: space.md },
+  interestWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.xxl - 4 },
+  interestChip: {
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.sm,
+    borderWidth: 1,
+    borderColor: palette.rule,
+  },
+  vibeStrip: { flexDirection: 'row', gap: space.sm + 2, marginBottom: space.xxl - 4 },
+  vibePhoto: { flex: 1, height: 110, borderRadius: radius.ticket, backgroundColor: palette.orangeLight },
+  blockBtn: { alignItems: 'center', paddingVertical: space.sm + 2 },
 })

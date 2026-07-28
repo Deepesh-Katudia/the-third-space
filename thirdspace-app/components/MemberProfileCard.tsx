@@ -1,7 +1,8 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { avatarColor, initials } from '../utils/avatar'
+import { palette, radius, space, font } from '../constants/design'
+import { Display, Body, Meta } from './ui/Text'
 
 export interface Member {
   uid: string
@@ -31,7 +32,8 @@ export function MemberProfileCard({ member, isFollowing, onToggleFollow, onMessa
 
   return (
     <View style={styles.card}>
-      <LinearGradient colors={[tint, '#15161A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover} />
+      {/* Flat ink cover — the ticket system has no gradients. */}
+      <View style={styles.cover} />
       {member.photoURL ? (
         <Image source={{ uri: member.photoURL }} style={styles.avatar} />
       ) : (
@@ -41,13 +43,13 @@ export function MemberProfileCard({ member, isFollowing, onToggleFollow, onMessa
       )}
 
       <View style={styles.body}>
-        <Text style={styles.name}>{member.name}, {member.age}</Text>
-        <Text style={styles.neighborhood}>{member.neighborhood}</Text>
+        <Display role="screenTitle">{member.name}, {member.age}</Display>
+        <Body role="bodySm" style={styles.neighborhood}>{member.neighborhood}</Body>
 
         <View style={styles.chips}>
-          <View style={styles.chip}><Text style={styles.chipText}>{member.tier}</Text></View>
-          <View style={styles.chip}><Text style={styles.chipText}>{member.points.toLocaleString()} pts</Text></View>
-          <View style={styles.chip}><Text style={styles.chipText}>{member.eventCount} events</Text></View>
+          <View style={styles.chip}><Meta role="eyebrow" tone="ink">{member.tier}</Meta></View>
+          <View style={styles.chip}><Meta role="eyebrow" tone="ink">{member.points.toLocaleString()} pts</Meta></View>
+          <View style={styles.chip}><Meta role="eyebrow" tone="ink">{member.eventCount} events</Meta></View>
         </View>
 
         {showActions ? (
@@ -56,12 +58,12 @@ export function MemberProfileCard({ member, isFollowing, onToggleFollow, onMessa
               style={[styles.followBtn, isFollowing && styles.followingBtn]}
               onPress={onToggleFollow}
             >
-              <Text style={[styles.followText, isFollowing && styles.followingText]}>
+              <Body role="button" tone={isFollowing ? 'clay' : 'ink'} style={isFollowing ? undefined : styles.onInk}>
                 {isFollowing ? 'Following' : 'Follow'}
-              </Text>
+              </Body>
             </TouchableOpacity>
             <TouchableOpacity style={styles.messageBtn} onPress={onMessage}>
-              <Text style={styles.messageText}>Message request</Text>
+              <Body role="button" tone="ink">Message request</Body>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -71,21 +73,36 @@ export function MemberProfileCard({ member, isFollowing, onToggleFollow, onMessa
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: 'white', borderRadius: 22, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)', overflow: 'hidden' },
-  cover: { height: 140 },
-  avatar: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: '#F3F3F5', alignItems: 'center', justifyContent: 'center', marginTop: -48, marginLeft: 20, overflow: 'hidden' },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 34, color: 'white' },
-  body: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 },
-  name: { fontFamily: 'Poppins_800ExtraBold', fontSize: 26, color: '#15161A', letterSpacing: -0.5 },
-  neighborhood: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#6B6F78', marginTop: 2, marginBottom: 14 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
-  chip: { backgroundColor: 'rgba(226,224,218,0.22)', borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  chipText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#3A3A3A' },
-  actions: { flexDirection: 'row', gap: 12 },
-  followBtn: { flex: 1, backgroundColor: '#FF9F3D', borderRadius: 100, paddingVertical: 13, alignItems: 'center' },
-  followingBtn: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#FF9F3D' },
-  followText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A' },
-  followingText: { color: '#FF9F3D' },
-  messageBtn: { flex: 1, borderWidth: 1.5, borderColor: 'rgba(226,224,218,0.9)', borderRadius: 100, paddingVertical: 13, alignItems: 'center' },
-  messageText: { fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#15161A' },
+  card: {
+    backgroundColor: palette.orangeLight,
+    borderRadius: radius.chip + 2,
+    marginBottom: space.xl,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    overflow: 'hidden',
+  },
+  cover: { height: 140, backgroundColor: palette.ink },
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 4,
+    borderColor: palette.orangeLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -48,
+    marginLeft: space.xl - 4,
+    overflow: 'hidden',
+  },
+  // Avatar tints stay outside the two-tone palette — they encode identity.
+  avatarText: { fontFamily: font.bodySemi, fontSize: 34, color: palette.cream },
+  body: { paddingHorizontal: space.xl - 4, paddingTop: space.md, paddingBottom: space.xl - 4 },
+  neighborhood: { marginTop: 2, marginBottom: space.md + 2 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.lg + 2 },
+  chip: { borderWidth: 1, borderColor: palette.rule, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },
+  actions: { flexDirection: 'row', gap: space.md },
+  followBtn: { flex: 1, backgroundColor: palette.ink, borderRadius: radius.pill, paddingVertical: space.md + 1, alignItems: 'center' },
+  followingBtn: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: palette.clay },
+  onInk: { color: palette.cream },
+  messageBtn: { flex: 1, borderWidth: 1.5, borderColor: palette.rule, borderRadius: radius.pill, paddingVertical: space.md + 1, alignItems: 'center' },
 })

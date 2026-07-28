@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { avatarColor, initials } from '../utils/avatar'
+import { palette, radius, space, font } from '../constants/design'
+import { Body, Meta } from './ui/Text'
 
 export interface ChatMessage {
   id: string
@@ -24,7 +26,7 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
     return (
       <View style={styles.systemRow}>
         <View style={styles.systemPill}>
-          <Text style={styles.systemText}>{message.text}</Text>
+          <Meta style={styles.center}>{message.text}</Meta>
         </View>
       </View>
     )
@@ -34,9 +36,9 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
     return (
       <View style={styles.announceRow}>
         <View style={styles.announceCard}>
-          <Text style={styles.announceLabel}>📣 Announcement · {message.author}</Text>
-          <Text style={styles.announceText}>{message.text}</Text>
-          <Text style={styles.announceTime}>{message.time}</Text>
+          <Meta role="eyebrow" tone="clay" style={styles.announceLabel}>📣 Announcement · {message.author}</Meta>
+          <Body role="bodyLg" tone="ink">{message.text}</Body>
+          <Meta style={styles.time}>{message.time}</Meta>
         </View>
       </View>
     )
@@ -46,8 +48,8 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
     return (
       <View style={[styles.row, styles.rowSelf]}>
         <View style={[styles.bubble, styles.bubbleSelf]}>
-          <Text style={styles.selfText}>{message.text}</Text>
-          <Text style={styles.selfTime}>{message.time}</Text>
+          <Body role="bodyLg" style={styles.onInk}>{message.text}</Body>
+          <Meta style={[styles.time, styles.onInk]}>{message.time}</Meta>
         </View>
       </View>
     )
@@ -63,10 +65,10 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
         <View style={styles.avatarSpacer} />
       )}
       <View style={styles.otherCol}>
-        {showAuthor ? <Text style={styles.author}>{message.author}</Text> : null}
+        {showAuthor ? <Meta style={styles.author}>{message.author}</Meta> : null}
         <View style={[styles.bubble, styles.bubbleOther]}>
-          <Text style={styles.otherText}>{message.text}</Text>
-          <Text style={styles.otherTime}>{message.time}</Text>
+          <Body role="bodyLg" tone="ink">{message.text}</Body>
+          <Meta style={styles.time}>{message.time}</Meta>
         </View>
       </View>
     </View>
@@ -74,26 +76,32 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 12, paddingHorizontal: 16 },
+  row: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm, marginBottom: space.md, paddingHorizontal: space.lg },
   rowSelf: { justifyContent: 'flex-end' },
   avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   avatarSpacer: { width: 30 },
-  avatarText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: 'white' },
+  // Avatar tints sit outside the two-tone palette on purpose — they encode identity.
+  avatarText: { fontFamily: font.bodySemi, fontSize: 12, color: palette.cream },
   otherCol: { maxWidth: '76%' },
-  author: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#6B6F78', marginBottom: 4, marginLeft: 4 },
-  bubble: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleOther: { backgroundColor: 'white', borderTopLeftRadius: 4, borderWidth: 1, borderColor: 'rgba(226,224,218,0.5)' },
-  bubbleSelf: { backgroundColor: '#FF9F3D', borderTopRightRadius: 4, maxWidth: '76%' },
-  otherText: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  selfText: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  otherTime: { fontFamily: 'Poppins_500Medium', fontSize: 10, color: '#6B6F78', marginTop: 4, alignSelf: 'flex-end' },
-  selfTime: { fontFamily: 'Poppins_500Medium', fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 4, alignSelf: 'flex-end' },
-  systemRow: { alignItems: 'center', marginBottom: 14, paddingHorizontal: 16 },
-  systemPill: { backgroundColor: 'rgba(107,111,120,0.15)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6 },
-  systemText: { fontFamily: 'Poppins_500Medium', fontSize: 12, color: '#6B6F78', textAlign: 'center' },
-  announceRow: { paddingHorizontal: 16, marginBottom: 14 },
-  announceCard: { backgroundColor: 'rgba(226,224,218,0.22)', borderLeftWidth: 3, borderLeftColor: '#FF9F3D', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
-  announceLabel: { fontFamily: 'Poppins_600SemiBold', fontSize: 11, color: '#3A3A3A', letterSpacing: 0.4, marginBottom: 5 },
-  announceText: { fontFamily: 'Poppins_500Medium', fontSize: 15, color: '#15161A', lineHeight: 21 },
-  announceTime: { fontFamily: 'Poppins_500Medium', fontSize: 10, color: '#6B6F78', marginTop: 5 },
+  author: { marginBottom: space.xs, marginLeft: space.xs },
+  bubble: { borderRadius: 18, paddingHorizontal: space.md + 2, paddingVertical: space.sm + 2 },
+  bubbleOther: { backgroundColor: palette.orangeLight, borderTopLeftRadius: 4, borderWidth: 1, borderColor: palette.rule },
+  bubbleSelf: { backgroundColor: palette.ink, borderTopRightRadius: 4, maxWidth: '76%' },
+  onInk: { color: palette.cream },
+  time: { marginTop: space.xs, alignSelf: 'flex-end' },
+  center: { textAlign: 'center' },
+  systemRow: { alignItems: 'center', marginBottom: space.md + 2, paddingHorizontal: space.lg },
+  systemPill: { backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule, borderRadius: radius.pill, paddingHorizontal: space.md + 2, paddingVertical: space.xs + 2 },
+  announceRow: { paddingHorizontal: space.lg, marginBottom: space.md + 2 },
+  announceCard: {
+    backgroundColor: palette.orangeLight,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderLeftWidth: 3,
+    borderLeftColor: palette.clay,
+    borderRadius: radius.ticket,
+    paddingHorizontal: space.md + 2,
+    paddingVertical: space.md,
+  },
+  announceLabel: { marginBottom: 5 },
 })
