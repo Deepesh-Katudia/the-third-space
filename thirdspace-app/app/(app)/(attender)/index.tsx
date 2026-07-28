@@ -120,7 +120,7 @@ export default function Discover() {
 
         {widened ? (
           <Meta role="eyebrow" tone="clay" style={styles.widenedNotice}>
-            No events in {borough} yet — showing all of NYC
+            Nothing matching in {borough} — showing all of NYC
           </Meta>
         ) : null}
 
