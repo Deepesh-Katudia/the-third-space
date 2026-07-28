@@ -16,6 +16,12 @@ interface LocationState {
 let state: LocationState = { borough: null, source: 'default', loading: true }
 const listeners = new Set<() => void>()
 
+// Invalidates any in-flight resolveLocation chain. Without this, a manual pick made
+// while GPS/permission resolution is still in flight (the dialog + fix window can be
+// long) gets silently clobbered when that chain finally resolves — violating "a
+// manual borough pick is permanent until changed."
+let epoch = 0
+
 function emit(): void {
   listeners.forEach((l) => l())
 }
@@ -31,6 +37,7 @@ function getSnapshot(): LocationState {
 
 /** A deliberate choice. Wins over GPS permanently, until changed again. */
 export function setBorough(next: Borough | null): void {
+  epoch++ // invalidate any resolveLocation chain in flight
   state = { borough: next, source: 'manual', loading: false }
   emit()
   setLocationOverride(next).catch(() => {
@@ -40,13 +47,17 @@ export function setBorough(next: Borough | null): void {
 
 /**
  * Runs the resolution chain: manual > gps > profile > default. Safe to call more
- * than once; each call fully overwrites the state.
+ * than once; each call fully overwrites the state — except that a manual pick made
+ * while this chain is still awaiting the permission dialog / GPS fix must win. The
+ * epoch check before each assignment guards exactly that race.
  */
 export async function resolveLocation(profileBorough: Borough | null): Promise<void> {
+  const mine = ++epoch
   state = { ...state, loading: true }
   emit()
 
   const override = await getLocationOverride()
+  if (mine !== epoch) return
   if (override) {
     state = { borough: override.borough, source: 'manual', loading: false }
     emit()
@@ -54,6 +65,7 @@ export async function resolveLocation(profileBorough: Borough | null): Promise<v
   }
 
   const gps = await detectBorough()
+  if (mine !== epoch) return
   if (gps) {
     state = { borough: gps, source: 'gps', loading: false }
     emit()

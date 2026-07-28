@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { useUserLocation, resolveLocation, setBorough } from '../../hooks/useUserLocation'
 import { detectBorough } from '../../services/location'
 import { getLocationOverride, setLocationOverride } from '../../services/preferences'
+import { Borough } from '../../types/models'
 
 jest.mock('../../services/location', () => ({ detectBorough: jest.fn() }))
 jest.mock('../../services/preferences', () => ({
@@ -81,5 +82,29 @@ describe('useUserLocation', () => {
     await act(async () => { await resolveLocation(null) })
     act(() => { result.current.setBorough('Queens') })
     expect(setLocationOverride).toHaveBeenCalledWith('Queens')
+  })
+
+  it('does not let an in-flight resolveLocation overwrite a manual pick made mid-chain', async () => {
+    // The permission-dialog + GPS window can be long; a manual pick made during
+    // that window must win permanently, not get clobbered when the GPS chain
+    // finally resolves.
+    let releaseGps: (borough: Borough | null) => void = () => {}
+    ;(detectBorough as jest.Mock).mockReturnValue(
+      new Promise<Borough | null>((resolve) => { releaseGps = resolve })
+    )
+
+    const { result } = renderHook(() => useUserLocation())
+    let pending: Promise<void> = Promise.resolve()
+    act(() => { pending = resolveLocation('Queens') })
+
+    act(() => { result.current.setBorough('Manhattan') })
+
+    await act(async () => {
+      releaseGps('Brooklyn')
+      await pending
+    })
+
+    expect(result.current.source).toBe('manual')
+    expect(result.current.borough).toBe('Manhattan')
   })
 })
