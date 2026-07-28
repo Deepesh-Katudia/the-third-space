@@ -50,7 +50,7 @@ export async function createEvent(venueId: string, venue: Venue, input: CreateEv
     venueId,
     venueName: venue.name,
     neighborhood: venue.neighborhood,
-    borough: venue.borough,
+    ...(venue.borough ? { borough: venue.borough } : {}),
     registeredCount: 0,
     createdAt: serverTimestamp(),
   })
