@@ -12,6 +12,7 @@ import { submitVerification } from '../../services/profiles'
 import { canSubmitVerification } from '../../utils/verification'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 const VERIFY_DELAY_MS = 2000
@@ -94,6 +95,9 @@ export default function VerifyIdentity() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
+        {/* exit() already knows both entry paths — replace()'d from create-profile
+            (no history) vs push()'d from the profile tab. */}
+        <BackButton onPress={exit} />
         <Display role="screenTitle">Verify your identity</Display>
       </View>
       <View style={styles.body}>
@@ -142,7 +146,7 @@ function CaptureSlot({ label, uri, onPress }: { label: string; uri: string | nul
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.sm },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.sm },
   body: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.sm },
   subtitle: { marginBottom: space.xl },
   slot: {

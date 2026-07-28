@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { getPushEnabled, setPushEnabled } from '../../services/pushTokens'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 export default function Settings() {
@@ -47,9 +48,7 @@ export default function Settings() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Settings</Display>
       </View>
 
@@ -86,7 +85,6 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.lg },
-  back: { fontSize: 24 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

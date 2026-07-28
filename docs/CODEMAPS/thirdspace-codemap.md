@@ -135,7 +135,16 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 
 `Screen` (tone: deep|cream), `Display`/`Body`/`Meta` (one type face each, role unions
 narrowed per face), `TicketCard` (tear line + tone-matched notches), `ChipRow`, `CityChip`,
-`IconButton`.
+`IconButton`, `BackButton`.
+
+- **`BackButton` is the only back affordance** — every pushed screen uses it, so the arrow
+  looks and behaves the same everywhere. It falls back to `router.replace(fallbackHref)`
+  when `canGoBack()` is false, which matters because push notifications `router.push()`
+  straight into `chat/[id]`, `event/[id]` and `member/[uid]`: on a cold start from a
+  notification those screens have no history and a bare `back()` is a dead button.
+- **Tab roots and setup gates deliberately have none.** The 7 tab screens have no back
+  destination, and `role-select` / `create-profile` / `venue-setup` are forward-only
+  steps guarded by `resolveAuthRoute` — a back there would fight the auth redirect.
 
 ---
 

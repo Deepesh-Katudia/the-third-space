@@ -10,6 +10,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 // Resolves its own profile so one failed read renders a neutral placeholder
@@ -51,9 +52,7 @@ export default function Connections() {
     <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Connections</Display>
       </View>
 
@@ -80,7 +79,6 @@ export default function Connections() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   list: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
   row: {
     flexDirection: 'row',

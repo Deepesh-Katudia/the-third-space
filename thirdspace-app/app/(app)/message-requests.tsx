@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { EmptyState } from '../../components/EmptyState'
 import { LoadingView } from '../../components/LoadingView'
@@ -10,10 +9,10 @@ import { useMessageRequests } from '../../hooks/useMessageRequests'
 import { acceptRequest, declineRequest } from '../../services/chat'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 export default function MessageRequests() {
-  const router = useRouter()
   const { user } = useAuth()
   const { requests, loading } = useMessageRequests(user?.uid)
 
@@ -21,9 +20,7 @@ export default function MessageRequests() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Requests</Display>
       </View>
 
@@ -76,7 +73,6 @@ export default function MessageRequests() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   scroll: { paddingHorizontal: space.xl, paddingBottom: space.xl },
   infoBanner: { backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule, borderRadius: radius.ticket, padding: space.lg, marginBottom: space.xl },
   card: {

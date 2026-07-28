@@ -16,6 +16,7 @@ import { LoadingView } from '../../components/LoadingView'
 import { AgeRequirement, EventCategory } from '../../types/models'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 function defaultStart(): Date {
@@ -85,9 +86,9 @@ export default function CreateEvent() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Body role="bodySm">← Cancel</Body>
-        </TouchableOpacity>
+        <View style={styles.back}>
+          <BackButton label="Cancel" />
+        </View>
         <Display role="screenTitle" style={styles.title}>Create an event</Display>
         {banner ? <Banner message={banner} /> : null}
 

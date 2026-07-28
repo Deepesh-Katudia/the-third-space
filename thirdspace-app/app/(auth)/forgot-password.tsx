@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import { View, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../../firebase/config'
@@ -10,6 +10,7 @@ import { validateEmail } from '../../utils/validation'
 import { StatusBar } from 'expo-status-bar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { space } from '../../constants/design'
 
 export default function ForgotPassword() {
@@ -37,9 +38,9 @@ export default function ForgotPassword() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Body role="bodySm">← Back</Body>
-        </TouchableOpacity>
+        <View style={styles.back}>
+          <BackButton label="Back" fallbackHref="/(auth)/sign-in" />
+        </View>
 
         {sent ? (
           <View style={styles.successContainer}>

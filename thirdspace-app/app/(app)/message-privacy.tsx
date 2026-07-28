@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../hooks/useAuth'
@@ -12,10 +11,10 @@ import { MESSAGE_PRIVACY_OPTIONS, DEFAULT_MESSAGE_PRIVACY } from '../../utils/pr
 import { MessagePrivacy } from '../../types/models'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 export default function MessagePrivacyScreen() {
-  const router = useRouter()
   const { user } = useAuth()
   const { profile, loading, hasError } = useProfile(user?.uid)
   const [pending, setPending] = useState<MessagePrivacy | null>(null)
@@ -43,9 +42,9 @@ export default function MessagePrivacyScreen() {
       <Screen tone="cream">
         <StatusBar style="dark" />
         <EmptyState emoji="🫥" title="Profile unavailable" body="We couldn't load your settings. Try again." />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Body role="bodySm">← Go back</Body>
-        </TouchableOpacity>
+        <View style={styles.backCenter}>
+          <BackButton label="Go back" />
+        </View>
       </Screen>
     )
   }
@@ -54,9 +53,7 @@ export default function MessagePrivacyScreen() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Who can message me</Display>
       </View>
 
@@ -98,7 +95,6 @@ export default function MessagePrivacyScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.lg },
-  back: { fontSize: 24 },
   card: {
     marginHorizontal: space.xl,
     backgroundColor: palette.orangeLight,

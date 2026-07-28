@@ -24,6 +24,7 @@ import { subscribeAnnouncements } from '../../../services/announcements'
 import { CommunityEvent, Registration, Announcement } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
+import { BackButton } from '../../../components/ui/BackButton'
 import { palette, radius, space } from '../../../constants/design'
 
 const NOTCH = 14
@@ -74,9 +75,9 @@ export default function EventDetail() {
     return (
       <Screen tone="deep">
         <EmptyState emoji="🫥" title="Event not found" body="This event may have been cancelled by the venue." />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Body role="bodySm">← Go back</Body>
-        </TouchableOpacity>
+        <View style={styles.backCenter}>
+          <BackButton label="Go back" />
+        </View>
       </Screen>
     )
   }
@@ -139,9 +140,7 @@ export default function EventDetail() {
         {/* Hero — the ink stub of one big ticket, torn off above the detail body. */}
         <View style={styles.hero}>
           <SafeAreaView edges={['top']} style={styles.heroBar}>
-            <TouchableOpacity style={styles.heroBtn} onPress={() => router.back()} hitSlop={8}>
-              <Body role="button" style={styles.onInk}>←</Body>
-            </TouchableOpacity>
+            <BackButton variant="circle" />
             <TouchableOpacity style={styles.heroBtn} onPress={() => setSaved((s) => !s)} hitSlop={8}>
               <Body role="button" style={styles.onInk}>{saved ? '♥' : '♡'}</Body>
             </TouchableOpacity>

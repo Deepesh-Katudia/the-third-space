@@ -19,6 +19,7 @@ import { formatDayDate, formatTime } from '../../../../utils/eventHelpers'
 import { CommunityEvent, Announcement } from '../../../../types/models'
 import { Screen } from '../../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../../components/ui/Text'
+import { BackButton } from '../../../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../../../constants/design'
 
 const TEMPLATES = [
@@ -76,9 +77,7 @@ export default function AnnouncementScreen() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <View style={styles.headerText}>
           <Display role="screenTitle">Send announcement</Display>
           <Body role="bodySm">To {recipientCount} registered {recipientCount === 1 ? 'attendee' : 'attendees'}</Body>
@@ -143,7 +142,6 @@ export default function AnnouncementScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   headerText: { flex: 1, minWidth: 0 },
   scroll: { paddingHorizontal: space.xl, paddingBottom: space.xl },
   eventCard: {

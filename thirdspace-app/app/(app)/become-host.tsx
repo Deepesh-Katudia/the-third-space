@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { doc, updateDoc } from 'firebase/firestore'
@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { AuthButton } from '../../components/AuthButton'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 const PERKS = [
@@ -43,9 +44,7 @@ export default function BecomeHost() {
     <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Become a host</Display>
       </View>
 
@@ -88,7 +87,6 @@ export default function BecomeHost() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.lg },
-  back: { fontSize: 24 },
   body: { flex: 1, paddingHorizontal: space.xl, paddingTop: space.sm },
   heading: { marginBottom: space.sm + 2 },
   subtitle: { marginBottom: space.xxl - space.xs },

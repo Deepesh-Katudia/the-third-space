@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { BadgeGrid } from '../../components/BadgeGrid'
 import { LoadingView } from '../../components/LoadingView'
@@ -16,10 +15,10 @@ import { redeemReward } from '../../services/profiles'
 import { REWARDS } from '../../constants/rewards'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space } from '../../constants/design'
 
 export default function Badges() {
-  const router = useRouter()
   const { user } = useAuth()
   const { profile, loading: profileLoading, hasError: profileHasError } = useProfile(user?.uid)
   const { attendedEvents, loading: attendanceLoading, hasError: attendanceHasError } = useAttendanceStats(user?.uid)
@@ -34,9 +33,7 @@ export default function Badges() {
       <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Display style={styles.back}>←</Display>
-          </TouchableOpacity>
+          <BackButton />
           <Display role="screenTitle">Points & badges</Display>
         </View>
         <EmptyState emoji="🫥" title="Couldn't load your points" body="Check your connection and try again." />
@@ -66,9 +63,7 @@ export default function Badges() {
     <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Points & badges</Display>
       </View>
 
@@ -120,7 +115,6 @@ export default function Badges() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   scroll: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
 
   hero: { backgroundColor: palette.ink, borderRadius: radius.chip + 2, padding: space.xl, marginBottom: space.xxl - 4, alignItems: 'center' },

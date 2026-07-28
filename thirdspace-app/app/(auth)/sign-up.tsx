@@ -17,6 +17,7 @@ import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { StatusBar } from 'expo-status-bar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, space } from '../../constants/design'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -98,6 +99,10 @@ export default function SignUp() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.back}>
+            <BackButton label="Back" fallbackHref="/(auth)/onboarding" />
+          </View>
+
           <View style={styles.header}>
             <Display role="screenTitle" style={styles.title}>Create your account</Display>
             <Body role="bodyLg">Join Your Third Space — NYC&apos;s community app.</Body>
@@ -145,6 +150,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flex: 1, paddingHorizontal: space.xl },
   content: { paddingTop: space.xxl, paddingBottom: space.xxl + space.sm },
+  back: { marginBottom: space.xl },
   header: { marginBottom: space.xxl - space.xs },
   title: { marginBottom: space.sm },
   buttons: { marginTop: space.sm, gap: space.md },

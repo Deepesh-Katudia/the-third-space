@@ -12,6 +12,7 @@ import { CommunityEvent, Registration } from '../../../types/models'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
+import { BackButton } from '../../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../../constants/design'
 
 export default function GuestList() {
@@ -50,9 +51,7 @@ export default function GuestList() {
       <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Display style={styles.back}>←</Display>
-          </TouchableOpacity>
+          <BackButton />
         </View>
         <EmptyState emoji="🫥" title="Event not found" body="This event may have been cancelled by the venue." />
       </Screen>
@@ -68,9 +67,7 @@ export default function GuestList() {
     <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <View style={styles.headerText}>
           <Display role="screenTitle">Who&apos;s going</Display>
           <Body role="bodySm">{event.title} · {total} going</Body>
@@ -143,7 +140,6 @@ export default function GuestList() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   headerText: { flex: 1, minWidth: 0 },
   scroll: { paddingHorizontal: space.xl, paddingBottom: space.xl },
   error: { marginBottom: space.lg },

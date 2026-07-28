@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
@@ -13,6 +13,7 @@ import { evaluatePassword } from '../../utils/password'
 import { changePassword } from '../../services/auth'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, space } from '../../constants/design'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -85,9 +86,7 @@ export default function ChangePassword() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Display style={styles.back}>←</Display>
-          </TouchableOpacity>
+          <BackButton />
           <Display role="screenTitle">Change password</Display>
         </View>
 
@@ -134,7 +133,6 @@ export default function ChangePassword() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.md },
-  back: { fontSize: 24 },
   scroll: { flex: 1, paddingHorizontal: space.xl },
   content: { paddingTop: space.sm, paddingBottom: space.xxl + space.sm },
   subtitle: { marginBottom: space.xl - 4 },

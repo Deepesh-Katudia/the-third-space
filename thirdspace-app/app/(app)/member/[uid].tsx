@@ -12,6 +12,7 @@ import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
+import { BackButton } from '../../../components/ui/BackButton'
 import { palette, radius, space } from '../../../constants/design'
 
 export default function MemberProfile() {
@@ -38,9 +39,7 @@ export default function MemberProfile() {
       <Screen tone="deep">
         <StatusBar style="dark" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Display style={styles.back}>←</Display>
-          </TouchableOpacity>
+          <BackButton />
         </View>
         <EmptyState emoji="🫥" title="Profile unavailable" body="This member's profile couldn't be loaded." />
       </Screen>
@@ -66,9 +65,7 @@ export default function MemberProfile() {
     <Screen tone="deep">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -120,7 +117,6 @@ export default function MemberProfile() {
 
 const styles = StyleSheet.create({
   header: { paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.xs },
-  back: { fontSize: 24 },
   scroll: { paddingHorizontal: space.xl, paddingBottom: space.xxl },
   bio: { marginBottom: space.xl },
   sectionLabel: { marginBottom: space.md },

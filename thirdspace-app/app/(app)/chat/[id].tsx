@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   KeyboardAvoidingView, Platform, StyleSheet,
 } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ChatBubble } from '../../../components/ChatBubble'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
@@ -22,6 +22,7 @@ import {
 import { Conversation } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
+import { BackButton } from '../../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../../constants/design'
 
 function clockTime(date: Date | null): string {
@@ -33,7 +34,6 @@ export default function ChatThreadScreen() {
   const params = useLocalSearchParams<{ id: string; kind?: string; name?: string }>()
   const id = params.id
   const kind: 'group' | 'dm' = params.kind === 'dm' ? 'dm' : 'group'
-  const router = useRouter()
   const { user } = useAuth()
   const myUid = user?.uid ?? ''
   const { profile } = useProfile(myUid || undefined)
@@ -132,9 +132,7 @@ export default function ChatThreadScreen() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <View style={[styles.headerAvatar, kind === 'dm' && styles.headerAvatarRound]}>
           <Text style={styles.headerAvatarText}>{initials(headerName)}</Text>
         </View>
@@ -222,7 +220,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: palette.rule,
   },
-  back: { fontSize: 24 },
   headerAvatar: { width: 40, height: 40, borderRadius: radius.ticket - 2, backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule, alignItems: 'center', justifyContent: 'center' },
   headerAvatarRound: { borderRadius: 20 },
   headerAvatarText: { ...typeScale.bodySm, color: palette.ink },

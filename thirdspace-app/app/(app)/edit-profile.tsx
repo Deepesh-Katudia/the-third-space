@@ -16,6 +16,7 @@ import { pickImage, uploadProfilePhoto } from '../../services/photos'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, radius, space, type as typeScale } from '../../constants/design'
 
 const BIO_LIMIT = 300
@@ -98,9 +99,9 @@ export default function EditProfile() {
       <Screen tone="cream">
         <StatusBar style="dark" />
         <EmptyState emoji="🫥" title="Profile unavailable" body="We couldn't load your profile. Try again." />
-        <TouchableOpacity onPress={() => router.back()} style={styles.backCenter}>
-          <Body role="bodySm">← Go back</Body>
-        </TouchableOpacity>
+        <View style={styles.backCenter}>
+          <BackButton label="Go back" />
+        </View>
       </Screen>
     )
   }
@@ -109,9 +110,7 @@ export default function EditProfile() {
     <Screen tone="cream">
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Display style={styles.back}>←</Display>
-        </TouchableOpacity>
+        <BackButton />
         <Display role="screenTitle">Edit profile</Display>
         <View style={styles.headerSpacer} />
       </View>
@@ -179,7 +178,6 @@ export default function EditProfile() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.sm, paddingBottom: space.sm },
-  back: { fontSize: 24 },
   headerSpacer: { width: 24 },
   backCenter: { alignItems: 'center', paddingBottom: space.xxl + space.sm },
   scroll: { flex: 1, paddingHorizontal: space.xl },

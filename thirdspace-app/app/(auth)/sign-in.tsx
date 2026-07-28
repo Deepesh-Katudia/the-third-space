@@ -15,6 +15,7 @@ import { useGoogleAuth } from '../../hooks/useGoogleAuth'
 import { StatusBar } from 'expo-status-bar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { BackButton } from '../../components/ui/BackButton'
 import { palette, space } from '../../constants/design'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -96,9 +97,9 @@ export default function SignIn() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-            <Body role="bodySm">← Back</Body>
-          </TouchableOpacity>
+          <View style={styles.back}>
+            <BackButton label="Back" fallbackHref="/(auth)/onboarding" />
+          </View>
 
           <View style={styles.header}>
             <Display role="screenTitle" style={styles.title}>Welcome back</Display>
