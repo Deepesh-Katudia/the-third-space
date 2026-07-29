@@ -277,6 +277,13 @@ test('socials values are bounded by type and per-platform length', async () => {
   await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: { nested: 'map' } }))
   await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: '' }))
   await assertSucceeds(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'x'.repeat(30) }))
+  // Character set, matching utils/socials.ts exactly — a client bypassing the SDK
+  // validation should never be able to store an unusable/broken-link handle.
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'has space' }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'Caps' }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { x: 'has.dot' }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { tiktok: 'a' }))
+  await assertSucceeds(setDoc(doc(me, 'profiles/me/private/socials'), { tiktok: 'ab' }))
 })
 
 test('an unauthenticated client cannot read socials', async () => {

@@ -39,15 +39,18 @@ service cloud.firestore {
     }
 
     // hasOnly (used on the socials write rule) bounds key NAMES only — it says
-    // nothing about value type or size. This bounds the value too: absent is fine
-    // (that's "not set"), but if present it must be a non-empty string under the
-    // platform's handle length limit. size() > 0 means an empty string is never a
-    // valid stored value — clearing a handle means omitting the key, not `''`.
-    function validSocial(key, maxLen) {
+    // nothing about value type, size, or character set. This bounds the value too:
+    // absent is fine (that's "not set"), but if present it must be a string within
+    // the platform's handle length range AND matching its character-set pattern —
+    // matching utils/socials.ts exactly, so the client's own validation can never
+    // accept something the rules reject (or the reverse). Clearing a handle means
+    // omitting the key, not `''` — that's why minLen is never 0.
+    function validSocial(key, minLen, maxLen, pattern) {
       return !(key in request.resource.data)
         || (request.resource.data[key] is string
-            && request.resource.data[key].size() > 0
-            && request.resource.data[key].size() <= maxLen);
+            && request.resource.data[key].size() >= minLen
+            && request.resource.data[key].size() <= maxLen
+            && request.resource.data[key].matches(pattern));
     }
 
     match /users/{uid} {
@@ -109,7 +112,9 @@ service cloud.firestore {
         // clearing a handle goes through setDoc(doc, {}), not deleteDoc.
         allow create, update: if signedIn() && request.auth.uid == uid
           && request.resource.data.keys().hasOnly(['instagram', 'tiktok', 'x'])
-          && validSocial('instagram', 30) && validSocial('tiktok', 24) && validSocial('x', 15);
+          && validSocial('instagram', 1, 30, '^[a-z0-9._]+$')
+          && validSocial('tiktok', 2, 24, '^[a-z0-9._]+$')
+          && validSocial('x', 1, 15, '^[a-z0-9_]+$');
         allow delete: if signedIn() && request.auth.uid == uid;
       }
     }
