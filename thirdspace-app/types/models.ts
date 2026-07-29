@@ -119,6 +119,15 @@ export interface Follow {
   createdAt: Timestamp | null
 }
 
+// ── Social handles ────────────────────────────────────────────────────────
+// Stored at profiles/{uid}/private/socials, NOT on the profile document.
+// profiles/{uid} is `allow read: if signedIn()`, so a handle kept there would be
+// readable by every signed-in member and "connections only" could not hold.
+export type SocialPlatform = 'instagram' | 'tiktok' | 'x'
+
+/** Handles are stored WITHOUT a leading '@', lowercased. An absent key means not set. */
+export type SocialHandles = Partial<Record<SocialPlatform, string>>
+
 // ── Chat & Messaging (sub-project C) ──────────────────────────────────────
 // Messages denormalize their author; createdAt is null for the brief window
 // before serverTimestamp resolves in the local snapshot.
