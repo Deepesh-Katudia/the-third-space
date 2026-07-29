@@ -3,10 +3,15 @@ import { render, fireEvent } from '@testing-library/react-native'
 import { SocialChips } from '../../components/SocialChips'
 
 describe('SocialChips', () => {
-  it('renders one chip per set handle, in platform order', () => {
-    const { getByText } = render(<SocialChips handles={{ x: 'maya', instagram: 'maya.codes' }} onOpen={jest.fn()} />)
-    expect(getByText('@maya.codes')).toBeTruthy()
-    expect(getByText('@maya')).toBeTruthy()
+  it('renders chips in SOCIAL_PLATFORMS order, not the order the keys were written', () => {
+    // Keys deliberately x-first. The row must still read Instagram, TikTok, X —
+    // this is the assertion that fails if anyone "simplifies" the component to
+    // iterate the handles object instead of the platform table.
+    const { getAllByRole } = render(
+      <SocialChips handles={{ x: 'cee', tiktok: 'bee', instagram: 'ay' }} onOpen={jest.fn()} />
+    )
+    const labels = getAllByRole('link').map((node) => node.props.accessibilityLabel)
+    expect(labels).toEqual(['Instagram, @ay', 'TikTok, @bee', 'X, @cee'])
   })
 
   it('renders nothing when no handle is set', () => {
