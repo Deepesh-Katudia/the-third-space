@@ -56,10 +56,10 @@ interface TypeStyle {
 }
 
 export const type: Record<TypeRole, TypeStyle> = {
-  screenTitle: { fontFamily: font.display, fontSize: 34, lineHeight: 36, letterSpacing: 0.5 },
-  cardTitle:   { fontFamily: font.display, fontSize: 19, lineHeight: 22, letterSpacing: 0.4 },
-  stubDay:     { fontFamily: font.display, fontSize: 24, lineHeight: 26, letterSpacing: 0.5, textTransform: 'uppercase' },
-  tabLabel:    { fontFamily: font.display, fontSize: 12, lineHeight: 14, letterSpacing: 0.8 },
+  screenTitle: { fontFamily: font.display, fontSize: 34, lineHeight: 41, letterSpacing: 0.5 },
+  cardTitle:   { fontFamily: font.display, fontSize: 19, lineHeight: 23, letterSpacing: 0.4 },
+  stubDay:     { fontFamily: font.display, fontSize: 24, lineHeight: 29, letterSpacing: 0.5, textTransform: 'uppercase' },
+  tabLabel:    { fontFamily: font.display, fontSize: 12, lineHeight: 15, letterSpacing: 0.8 },
 
   bodyLg: { fontFamily: font.bodyRegular, fontSize: 15, lineHeight: 22 },
   body:   { fontFamily: font.bodyRegular, fontSize: 13, lineHeight: 19 },

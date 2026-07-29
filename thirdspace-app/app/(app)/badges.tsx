@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   hero: { backgroundColor: palette.ink, borderRadius: radius.chip + 2, padding: space.xl, marginBottom: space.xxl - 4, alignItems: 'center' },
   onInk: { color: palette.cream },
   onInkSoft: { color: palette.orangeLight },
-  heroPoints: { fontSize: 52, lineHeight: 58, color: palette.cream, letterSpacing: -1 },
+  heroPoints: { fontSize: 52, lineHeight: 58, color: palette.cream, letterSpacing: 0.8 },
   tierBadge: { backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.md + 2, paddingVertical: space.xs + 1, marginTop: space.sm, marginBottom: space.lg + 2 },
   progressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: palette.inkSoft, overflow: 'hidden' },
   progressFill: { height: 8, borderRadius: 4, backgroundColor: palette.orangeLight },

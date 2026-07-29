@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   logoWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 13 },
   logo: { width: 58, height: 58 },
   dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: palette.ink },
-  wordmark: { fontSize: 37, letterSpacing: -1.2 },
+  wordmark: { fontSize: 37, lineHeight: 45, letterSpacing: 0.5 },
 
   sheet: {
     backgroundColor: palette.cream,

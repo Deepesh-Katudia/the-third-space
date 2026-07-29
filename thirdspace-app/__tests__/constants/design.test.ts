@@ -81,13 +81,14 @@ describe('type scale', () => {
     expect(families.size).toBe(1)
   })
 
-  it('sizes the display roles for a narrow caps face', () => {
-    // A straight family swap at Antonio's sizes reads visibly smaller, because
-    // Bebas 400 is lighter and narrower than Antonio 700.
-    expect(typeScale.screenTitle.fontSize).toBe(34)
-    expect(typeScale.cardTitle.fontSize).toBe(19)
-    expect(typeScale.stubDay.fontSize).toBe(24)
-    expect(typeScale.tabLabel.fontSize).toBe(12)
+  it('gives every display role a line box the caps face can actually fit in', () => {
+    // Bebas Neue's own line box is 1.20em (hhea ascent 900 / descent -300 over
+    // 1000 upem); Android reserves 1.30em with includeFontPadding. Going tighter
+    // crowds and clips multi-line titles — and several screens wrap display text.
+    const display = ['screenTitle', 'cardTitle', 'stubDay', 'tabLabel'] as const
+    for (const role of display) {
+      expect(typeScale[role].lineHeight / typeScale[role].fontSize).toBeGreaterThanOrEqual(1.2)
+    }
   })
 })
 
