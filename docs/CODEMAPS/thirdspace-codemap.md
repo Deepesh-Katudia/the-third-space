@@ -15,7 +15,7 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 | Fonts | Poppins 400/500/600/700/800 (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
-| Tests | Jest (jest-expo) — 48 suites / 297 tests; `@firebase/rules-unit-testing` for rules |
+| Tests | Jest (jest-expo) — 48 suites / 304 tests; `@firebase/rules-unit-testing` for rules |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -24,7 +24,7 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-07-28)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **297/297 pass**, 48 suites
+- `npx jest` — **304/304 pass**, 48 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have an undeployed fix** (conversations read on a non-existent doc). Deploy before testing DMs.
 - Firebase rules otherwise **deployed**. Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
@@ -101,7 +101,7 @@ thirdspace-app/
 
 ---
 
-## Design System (two-tone orange ticket / Antonio)
+## Design System (two-tone orange ticket / Bebas Neue)
 
 Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 `docs/superpowers/specs/2026-07-25-antonio-ticket-redesign-design.md`,
@@ -130,8 +130,13 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
   `event/[id]` hero. `ChatRow` deliberately has none.
 - **Avatar tints are the one deliberate palette exemption** (`utils/avatar.ts`) — they
   encode identity. Guarded separately by `__tests__/components/contrast.test.ts`.
-- **Fonts** — Antonio 600/700 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta.
+- **Fonts** — Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta.
   Uppercase is a token (`eyebrow`, `stubDay`), never an inline `textTransform`.
+- **The display face has ONE weight and no lowercase.** `font.display` is deliberately a
+  single key — a second key pointing at the same file would imply a weight axis Bebas does
+  not have. Hierarchy inside the display face comes from size alone, and every display
+  string (screen titles, event names, member names, tab labels) renders uppercase. That is
+  the intent, not a bug. `__tests__/constants/design.test.ts` guards both properties.
 
 ### `components/ui/` primitives
 
