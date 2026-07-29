@@ -1,5 +1,8 @@
-import { writeBatch, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'
-import { createProfile, updateProfile, getProfile, subscribeProfile, redeemReward, submitVerification } from '../../services/profiles'
+import { writeBatch, getDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore'
+import {
+  createProfile, updateProfile, getProfile, subscribeProfile, redeemReward, submitVerification,
+  setSocials, subscribeSocials,
+} from '../../services/profiles'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
 jest.mock('firebase/firestore', () => ({
@@ -13,6 +16,7 @@ jest.mock('firebase/firestore', () => ({
   writeBatch: jest.fn(),
   updateDoc: jest.fn(),
   getDoc: jest.fn(),
+  setDoc: jest.fn(),
   onSnapshot: jest.fn(),
   increment: (n: number) => ({ __increment: n }),
   serverTimestamp: () => '__serverTimestamp',
@@ -134,5 +138,55 @@ describe('submitVerification', () => {
       { path: 'profiles/u1' },
       { verified: true, verifiedAt: '__serverTimestamp' }
     )
+  })
+})
+
+describe('socials', () => {
+  describe('setSocials', () => {
+    it('overwrites the socials doc with NO merge option, unlike redeemReward\'s merge:true — an absent key is how a member clears a handle', async () => {
+      ;(setDoc as jest.Mock).mockResolvedValue(undefined)
+      await setSocials('u1', { instagram: 'maya' })
+      expect(setDoc).toHaveBeenCalledWith({ path: 'profiles/u1/private/socials' }, { instagram: 'maya' })
+      // Exactly two arguments — no third options object, so this is a full overwrite.
+      expect((setDoc as jest.Mock).mock.calls[0]).toHaveLength(2)
+    })
+  })
+
+  describe('subscribeSocials', () => {
+    it('calls onChange with the handles when the doc exists', () => {
+      let handler: (snap: { exists: () => boolean; data?: () => unknown }) => void = () => {}
+      ;(onSnapshot as jest.Mock).mockImplementation((_ref, fn) => {
+        handler = fn
+        return jest.fn()
+      })
+      const onChange = jest.fn()
+      subscribeSocials('u1', onChange, jest.fn())
+      handler({ exists: () => true, data: () => ({ instagram: 'maya' }) })
+      expect(onChange).toHaveBeenCalledWith({ instagram: 'maya' })
+    })
+
+    it('calls onChange with {} when the doc does not exist', () => {
+      let handler: (snap: { exists: () => boolean; data?: () => unknown }) => void = () => {}
+      ;(onSnapshot as jest.Mock).mockImplementation((_ref, fn) => {
+        handler = fn
+        return jest.fn()
+      })
+      const onChange = jest.fn()
+      subscribeSocials('u1', onChange, jest.fn())
+      handler({ exists: () => false })
+      expect(onChange).toHaveBeenCalledWith({})
+    })
+
+    it('forwards the raw error CODE to onError, unlike subscribeProfile\'s no-arg onError — the caller must tell permission-denied apart from a real failure', () => {
+      let errorHandler: (err: { code: string }) => void = () => {}
+      ;(onSnapshot as jest.Mock).mockImplementation((_ref, _onNext, onErr) => {
+        errorHandler = onErr
+        return jest.fn()
+      })
+      const onError = jest.fn()
+      subscribeSocials('u1', jest.fn(), onError)
+      errorHandler({ code: 'permission-denied' })
+      expect(onError).toHaveBeenCalledWith('permission-denied')
+    })
   })
 })

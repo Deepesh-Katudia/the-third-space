@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native'
 import { useSocials } from '../../hooks/useSocials'
+import { subscribeSocials } from '../../services/profiles'
 
 const mockUnsubscribe = jest.fn()
 let mockOnChange: (handles: Record<string, string>) => void
@@ -14,7 +15,7 @@ jest.mock('../../services/profiles', () => ({
 }))
 
 beforeEach(() => {
-  mockUnsubscribe.mockClear()
+  jest.clearAllMocks()
 })
 
 describe('useSocials', () => {
@@ -51,6 +52,7 @@ describe('useSocials', () => {
     expect(result.current.loading).toBe(false)
     expect(result.current.hasError).toBe(false)
     expect(result.current.handles).toEqual({})
+    expect(subscribeSocials).not.toHaveBeenCalled()
   })
 
   it('clears the previous member handles the moment the uid changes', () => {
