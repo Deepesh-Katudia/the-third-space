@@ -34,7 +34,7 @@ function make<R extends TypeRole>(displayName: string, defaultRole: R, defaultTo
   return Component
 }
 
-/** Antonio. Screen titles, event names, date stubs, tab labels. */
+/** Bebas Neue. Screen titles, event names, date stubs, tab labels. Renders all-caps — the face has no lowercase. */
 export const Display = make<DisplayRole>('Display', 'cardTitle' as DisplayRole, 'ink')
 /** Inter. Descriptions, locations, form and chat copy. */
 export const Body = make<BodyRole>('Body', 'body' as BodyRole, 'inkSoft')

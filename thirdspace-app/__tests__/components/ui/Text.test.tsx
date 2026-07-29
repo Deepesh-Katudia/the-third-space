@@ -11,10 +11,11 @@ function StyleSheetFlatten(style: unknown): Record<string, unknown> {
 }
 
 describe('text primitives', () => {
-  it('renders Display in Antonio at the card-title role by default', () => {
+  it('renders Display in Bebas Neue at the card-title role by default', () => {
     const { getByText } = render(<Display>Ceramics Night</Display>)
     const style = flat(getByText('Ceramics Night').props.style)
     expect(style.fontFamily).toBe(typeScale.cardTitle.fontFamily)
+    expect(style.fontFamily).toMatch(/^BebasNeue_/)
     expect(style.color).toBe(palette.ink)
   })
 

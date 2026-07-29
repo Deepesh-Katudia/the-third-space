@@ -29,8 +29,12 @@ export const palette = {
 export type PaletteKey = keyof typeof palette
 
 export const font = {
-  displaySemi: 'Antonio_600SemiBold',
-  displayBold: 'Antonio_700Bold',
+  /**
+   * Bebas Neue ships ONE weight (400) and has no lowercase. There is deliberately a
+   * single display key: two keys pointing at the same file would imply a weight axis
+   * the face does not have. Hierarchy inside the display face comes from size alone.
+   */
+  display: 'BebasNeue_400Regular',
   bodyRegular: 'Inter_400Regular',
   bodyMedium: 'Inter_500Medium',
   bodySemi: 'Inter_600SemiBold',
@@ -52,10 +56,10 @@ interface TypeStyle {
 }
 
 export const type: Record<TypeRole, TypeStyle> = {
-  screenTitle: { fontFamily: font.displayBold, fontSize: 30, lineHeight: 34, letterSpacing: -0.2 },
-  cardTitle:   { fontFamily: font.displayBold, fontSize: 17, lineHeight: 21 },
-  stubDay:     { fontFamily: font.displaySemi, fontSize: 22, lineHeight: 24, textTransform: 'uppercase' },
-  tabLabel:    { fontFamily: font.displaySemi, fontSize: 11, lineHeight: 13, letterSpacing: 0.3 },
+  screenTitle: { fontFamily: font.display, fontSize: 30, lineHeight: 34, letterSpacing: -0.2 },
+  cardTitle:   { fontFamily: font.display, fontSize: 17, lineHeight: 21 },
+  stubDay:     { fontFamily: font.display, fontSize: 22, lineHeight: 24, textTransform: 'uppercase' },
+  tabLabel:    { fontFamily: font.display, fontSize: 11, lineHeight: 13, letterSpacing: 0.3 },
 
   bodyLg: { fontFamily: font.bodyRegular, fontSize: 15, lineHeight: 22 },
   body:   { fontFamily: font.bodyRegular, fontSize: 13, lineHeight: 19 },

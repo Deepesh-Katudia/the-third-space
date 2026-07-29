@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { View, ActivityIndicator } from 'react-native'
 import { useFonts } from 'expo-font'
-import { Antonio_600SemiBold, Antonio_700Bold } from '@expo-google-fonts/antonio'
+import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue'
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { IBMPlexMono_500Medium, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono'
 import { useAuth } from '../hooks/useAuth'
@@ -37,7 +37,7 @@ function AuthRedirect({ user, role, hasProfile, loading }: AuthRedirectProps) {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Antonio_600SemiBold, Antonio_700Bold,
+    BebasNeue_400Regular,
     Inter_400Regular, Inter_500Medium, Inter_600SemiBold,
     IBMPlexMono_500Medium, IBMPlexMono_600SemiBold,
   })

@@ -52,7 +52,7 @@ describe('type scale', () => {
     const body = ['body', 'bodySm', 'bodyLg', 'button'] as const
     const meta = ['meta', 'eyebrow'] as const
 
-    for (const role of display) expect(typeScale[role].fontFamily).toMatch(/^Antonio_/)
+    for (const role of display) expect(typeScale[role].fontFamily).toMatch(/^BebasNeue_/)
     for (const role of body) expect(typeScale[role].fontFamily).toMatch(/^Inter_/)
     for (const role of meta) expect(typeScale[role].fontFamily).toMatch(/^IBMPlexMono_/)
   })
@@ -60,8 +60,9 @@ describe('type scale', () => {
   it('reserves uppercase for eyebrows, chips and the date stub', () => {
     expect(typeScale.eyebrow.textTransform).toBe('uppercase')
     expect(typeScale.stubDay.textTransform).toBe('uppercase')
-    // Sentence case for names and titles — Antonio has real weights, so hierarchy
-    // does not need shouting.
+    // screenTitle/cardTitle carry no textTransform token — Bebas Neue has no lowercase,
+    // so the glyphs render as caps either way; the token is reserved for roles where
+    // caps are a deliberate style choice rather than a font limitation.
     expect(typeScale.screenTitle.textTransform).toBeUndefined()
     expect(typeScale.cardTitle.textTransform).toBeUndefined()
   })
