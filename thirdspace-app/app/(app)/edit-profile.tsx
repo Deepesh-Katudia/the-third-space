@@ -210,19 +210,30 @@ export default function EditProfile() {
           </View>
 
           <Meta role="eyebrow" style={styles.fieldLabel}>Socials — only your connections can see these</Meta>
-          {SOCIAL_PLATFORMS.map((p) => (
-            <FormInput
-              key={p.id}
-              label={p.label}
-              prefix="@"
-              value={socialInputs[p.id]}
-              onChangeText={(t) => setSocialInputs((prev) => ({ ...prev, [p.id]: t }))}
-              error={socialErrors[p.id]}
-              placeholder="yourhandle"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          ))}
+          {socialsLoading ? (
+            <Body role="bodySm" style={styles.socialsNotice}>Loading your handles…</Body>
+          ) : !socialsSeeded ? (
+            // Rendering editable fields here would let someone type a handle that the
+            // save path then silently drops — setSocials is skipped when the form never
+            // loaded the stored set, because it is a full overwrite.
+            <Body role="bodySm" tone="clay" style={styles.socialsNotice}>
+              We couldn&apos;t load your handles, so they can&apos;t be edited right now. Your saved handles are unchanged.
+            </Body>
+          ) : (
+            SOCIAL_PLATFORMS.map((p) => (
+              <FormInput
+                key={p.id}
+                label={p.label}
+                prefix="@"
+                value={socialInputs[p.id]}
+                onChangeText={(t) => setSocialInputs((prev) => ({ ...prev, [p.id]: t }))}
+                error={socialErrors[p.id]}
+                placeholder="yourhandle"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            ))
+          )}
 
           <Meta role="eyebrow" style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Meta>
           <View style={styles.chipWrap}>
@@ -262,6 +273,7 @@ const styles = StyleSheet.create({
   // Avatar tints stay outside the two-tone palette — they encode identity.
   photoInitials: { ...typeScale.button, fontSize: 32, lineHeight: 38, color: palette.cream },
   fieldLabel: { marginBottom: space.sm + 2, marginTop: space.sm },
+  socialsNotice: { marginBottom: space.lg },
   bioInput: {
     ...typeScale.bodyLg,
     backgroundColor: palette.orangeLight,
