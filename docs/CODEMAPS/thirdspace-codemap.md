@@ -69,13 +69,11 @@ thirdspace-app/
 │   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
 │   └── location.ts             # detectBorough() (5s timeout, never throws)
 ├── components/               # 20 components + 7 under components/ui/ design primitives
-│   ├── SocialChips.tsx         # Instagram/TikTok/X clickable chips (mutual-follow gated)
 ├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
 ├── utils/                    # 19 pure modules (all unit-tested)
-│   └── socials.ts              # parseInstagramHandle, parseTikTokHandle, parseXHandle
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
-├── firestore.rules           # deployed, EXCEPT the pending conversations-read null guard
+├── firestore.rules           # TWO changes undeployed: conversations null guard + socials gate
 ├── storage.rules             # NOT deployed (Storage not provisioned)
 └── app/                      # expo-router routes (38 files)
     ├── _layout.tsx             # Fonts + useAuth + AuthRedirect guard
