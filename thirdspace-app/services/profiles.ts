@@ -1,8 +1,8 @@
 import {
-  doc, collection, writeBatch, updateDoc, getDoc, onSnapshot, serverTimestamp, increment, Timestamp,
+  doc, collection, writeBatch, updateDoc, setDoc, getDoc, onSnapshot, serverTimestamp, increment, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { CreateProfileInput, Profile, Reward } from '../types/models'
+import { CreateProfileInput, Profile, Reward, SocialHandles } from '../types/models'
 import { tierForPoints } from '../utils/points'
 
 export async function createProfile(uid: string, input: CreateProfileInput, birthdate: Date): Promise<void> {
@@ -65,4 +65,35 @@ export async function redeemReward(uid: string, reward: Reward, currentPoints: n
     redeemedAt: serverTimestamp(),
   })
   await batch.commit()
+}
+
+// ── Social handles ────────────────────────────────────────────────────────
+// A subcollection doc, not a profile field: profiles/{uid} is readable by every
+// signed-in member, so "connections only" is only enforceable off that document.
+const socialsDoc = (uid: string) => doc(db, 'profiles', uid, 'private', 'socials')
+
+/**
+ * Full overwrite, NOT a merge. The edit form always submits the complete set, so
+ * an absent key is exactly how a member clears a handle they removed. A merge
+ * would make removal impossible.
+ */
+export async function setSocials(uid: string, handles: SocialHandles): Promise<void> {
+  await setDoc(socialsDoc(uid), handles)
+}
+
+/**
+ * onError receives the Firestore error code. 'permission-denied' means the viewer
+ * is neither the owner nor a mutual follow — the rules working as designed, not a
+ * failure. The caller is responsible for telling the two apart.
+ */
+export function subscribeSocials(
+  uid: string,
+  onChange: (handles: SocialHandles) => void,
+  onError: (code: string) => void
+): () => void {
+  return onSnapshot(
+    socialsDoc(uid),
+    (snap) => onChange(snap.exists() ? (snap.data() as SocialHandles) : {}),
+    (err) => onError(err.code)
+  )
 }
