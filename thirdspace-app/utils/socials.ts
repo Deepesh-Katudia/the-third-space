@@ -54,3 +54,23 @@ export function socialUrl(platform: SocialPlatform, handle: string): string {
 export function hasAnyHandle(handles: SocialHandles): boolean {
   return SOCIAL_PLATFORMS.some((p) => Boolean(handles[p.id]))
 }
+
+export interface SocialSeedState {
+  hasUid: boolean
+  loading: boolean
+  /** True only once a read actually SUCCEEDED — the rules allowed it and data arrived. */
+  visible: boolean
+  seeded: boolean
+}
+
+/**
+ * Whether the edit form may copy loaded handles into its inputs.
+ *
+ * `visible` is the load-bearing condition. Without it the form seeds blanks from a
+ * read that never succeeded — no uid yet, offline, or rules-denied all present as
+ * `loading: false, handles: {}` — latches `seeded`, and the next save overwrites the
+ * member's real handles with nothing, because setSocials is a full overwrite.
+ */
+export function shouldSeedSocials(state: SocialSeedState): boolean {
+  return !state.seeded && state.hasUid && !state.loading && state.visible
+}

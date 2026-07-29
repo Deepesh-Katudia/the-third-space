@@ -1,4 +1,4 @@
-import { normalizeHandle, isValidHandle, socialUrl, hasAnyHandle, SOCIAL_PLATFORMS } from '../../utils/socials'
+import { normalizeHandle, isValidHandle, socialUrl, hasAnyHandle, SOCIAL_PLATFORMS, shouldSeedSocials } from '../../utils/socials'
 
 describe('normalizeHandle', () => {
   it('strips a leading @', () => {
@@ -83,5 +83,31 @@ describe('hasAnyHandle', () => {
 describe('SOCIAL_PLATFORMS', () => {
   it('is the single ordered source both the form and the chips read', () => {
     expect(SOCIAL_PLATFORMS.map((p) => p.id)).toEqual(['instagram', 'tiktok', 'x'])
+  })
+})
+
+describe('shouldSeedSocials', () => {
+  const base = { hasUid: true, loading: false, visible: true, seeded: false }
+
+  it('seeds once the owner read has actually succeeded', () => {
+    expect(shouldSeedSocials(base)).toBe(true)
+  })
+
+  it('does NOT seed before there is a uid — the pre-auth window reports loading:false', () => {
+    expect(shouldSeedSocials({ ...base, hasUid: false })).toBe(false)
+  })
+
+  it('does NOT seed from a read that never succeeded', () => {
+    // Denied or failed reads land on visible:false with empty handles. Seeding here
+    // then saving would overwrite the member's real handles with blanks.
+    expect(shouldSeedSocials({ ...base, visible: false })).toBe(false)
+  })
+
+  it('does NOT seed while still loading', () => {
+    expect(shouldSeedSocials({ ...base, loading: true })).toBe(false)
+  })
+
+  it('does NOT re-seed once seeded, so a later emission cannot clobber edits in progress', () => {
+    expect(shouldSeedSocials({ ...base, seeded: true })).toBe(false)
   })
 })

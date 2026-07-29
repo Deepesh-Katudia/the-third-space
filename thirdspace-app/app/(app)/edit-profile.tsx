@@ -11,7 +11,7 @@ import { LoadingView } from '../../components/LoadingView'
 import { EmptyState } from '../../components/EmptyState'
 import { BOROUGHS } from '../../constants/categories'
 import { Borough, SocialHandles, SocialPlatform } from '../../types/models'
-import { SOCIAL_PLATFORMS, normalizeHandle, isValidHandle } from '../../utils/socials'
+import { SOCIAL_PLATFORMS, normalizeHandle, isValidHandle, shouldSeedSocials } from '../../utils/socials'
 import { useSocials } from '../../hooks/useSocials'
 import { updateProfile, setSocials } from '../../services/profiles'
 import { pickImage, uploadProfilePhoto } from '../../services/photos'
@@ -29,7 +29,7 @@ export default function EditProfile() {
   const router = useRouter()
   const { user } = useAuth()
   const { profile, loading, hasError } = useProfile(user?.uid)
-  const { handles: loadedSocials, loading: socialsLoading } = useSocials(user?.uid)
+  const { handles: loadedSocials, loading: socialsLoading, visible: socialsVisible } = useSocials(user?.uid)
 
   const [seeded, setSeeded] = useState(false)
   const [photoUri, setPhotoUri] = useState<string | null>(null)
@@ -57,16 +57,22 @@ export default function EditProfile() {
     setSeeded(true)
   }, [profile, seeded])
 
-  // Socials load on their own subscription, so they need their own seed guard.
+  // Socials load on their own subscription, so they need their own seed guard — and
+  // it must key off a read that SUCCEEDED, not merely one that stopped loading.
   useEffect(() => {
-    if (socialsSeeded || socialsLoading) return
+    if (!shouldSeedSocials({
+      hasUid: Boolean(user?.uid),
+      loading: socialsLoading,
+      visible: socialsVisible,
+      seeded: socialsSeeded,
+    })) return
     setSocialInputs({
       instagram: loadedSocials.instagram ?? '',
       tiktok: loadedSocials.tiktok ?? '',
       x: loadedSocials.x ?? '',
     })
     setSocialsSeeded(true)
-  }, [loadedSocials, socialsLoading, socialsSeeded])
+  }, [loadedSocials, socialsLoading, socialsVisible, socialsSeeded, user?.uid])
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
 
@@ -91,6 +97,14 @@ export default function EditProfile() {
     }
     return out
   }, [socialInputs])
+
+  // setSocials is a full overwrite, so writing from a form that never loaded the
+  // stored handles would erase them. Writing when nothing changed is also a needless
+  // failure surface on every profile save.
+  const socialsChanged = useMemo(
+    () => SOCIAL_PLATFORMS.some((p) => (loadedSocials[p.id] ?? '') !== (cleanedSocials[p.id] ?? '')),
+    [loadedSocials, cleanedSocials]
+  )
 
   const canSubmit =
     interests.length >= MIN_INTERESTS &&
@@ -125,7 +139,9 @@ export default function EditProfile() {
         borough,
         photoURL,
       })
-      await setSocials(user.uid, cleanedSocials)
+      if (socialsSeeded && socialsChanged) {
+        await setSocials(user.uid, cleanedSocials)
+      }
       router.back()
     } catch {
       setError("Couldn't save changes. Try again.")
