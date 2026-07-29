@@ -15,7 +15,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 | Fonts | Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
-| Tests | Jest (jest-expo) — 51 suites / 329 tests; `@firebase/rules-unit-testing` for rules (31/31) |
+| Tests | Jest (jest-expo) — 51 suites / 338 tests; `@firebase/rules-unit-testing` for rules (31/31) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -24,13 +24,13 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-07-29)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **329/329 pass**, 51 suites
+- `npx jest` — **338/338 pass**, 51 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
-  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, and — because the edit
-  form now only writes socials when the handles actually changed — saving a **changed** social handle
-  fails and the Socials section never appears; other profile edits are unaffected.
+  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, the Socials section never
+  appears for anyone, and the edit form shows handles as unloadable rather than letting them be edited.
+  Other profile edits are unaffected.
 - Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
 
 ---
