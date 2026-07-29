@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
     borderWidth: 1,
     borderColor: palette.rule,
-    gap: 2,
+    gap: space.xs - 2,
   },
 })

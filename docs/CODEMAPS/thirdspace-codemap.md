@@ -28,8 +28,9 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
-  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave and the Socials section
-  silently never appears for anyone.
+  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, and — because the edit
+  form now only writes socials when the handles actually changed — saving a **changed** social handle
+  fails and the Socials section never appears; other profile edits are unaffected.
 - Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
 
 ---
