@@ -15,7 +15,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 | Fonts | Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
-| Tests | Jest (jest-expo) — 48 suites / 304 tests; `@firebase/rules-unit-testing` for rules |
+| Tests | Jest (jest-expo) — 51 suites / 329 tests; `@firebase/rules-unit-testing` for rules (31/31) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -24,10 +24,13 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-07-29)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **304/304 pass**, 48 suites
+- `npx jest` — **329/329 pass**, 51 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
-- Firestore rules **have an undeployed fix** (conversations read on a non-existent doc). Deploy before testing DMs.
-- Firebase rules otherwise **deployed**. Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
+- Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
+  `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
+  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave and the Socials section
+  silently never appears for anyone.
+- Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
 
 ---
 
@@ -37,7 +40,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 thirdspace-app/
 ├── firebase/config.ts        # Firebase init; exports auth, db, storage
 ├── types/models.ts           # All shared TypeScript types
-├── hooks/                    # 14 hooks
+├── hooks/                    # 15 hooks
 │   ├── useAuth.ts              # Auth state + live role/profile subscriptions
 │   ├── useGoogleAuth.ts        # Google OAuth (placeholder client id if unset)
 │   ├── useProfile.ts           # profiles/{uid} subscription
@@ -51,7 +54,8 @@ thirdspace-app/
 │   ├── useConnections.ts       # Mutual connections (following ∩ followers)
 │   ├── useAttendanceStats.ts   # Points/tier/events attended
 │   ├── usePushRegistration.ts  # Expo push token register + deep-link on tap
-│   └── useUserLocation.ts      # Module store (useSyncExternalStore) for location resolution
+│   ├── useUserLocation.ts      # Module store (useSyncExternalStore) for location resolution
+│   └── useSocials.ts           # Instagram/TikTok/X handles for mutual-follow gated profiles
 ├── services/                 # 11 services
 │   ├── auth.ts                 # changePassword (reauth then update)
 │   ├── preferences.ts          # onboarding opt-ins (AsyncStorage)
@@ -64,9 +68,11 @@ thirdspace-app/
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
 │   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
 │   └── location.ts             # detectBorough() (5s timeout, never throws)
-├── components/               # 19 components + 7 under components/ui/ design primitives
+├── components/               # 20 components + 7 under components/ui/ design primitives
+│   ├── SocialChips.tsx         # Instagram/TikTok/X clickable chips (mutual-follow gated)
 ├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
-├── utils/                    # 18 pure modules (all unit-tested)
+├── utils/                    # 19 pure modules (all unit-tested)
+│   └── socials.ts              # parseInstagramHandle, parseTikTokHandle, parseXHandle
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
 ├── firestore.rules           # deployed, EXCEPT the pending conversations-read null guard
@@ -188,6 +194,7 @@ when signed in with setup incomplete.
 | `users/{uid}/chatReads/{threadId}` | `{ readCount, muted }` | Drives unread + mute |
 | `profiles/{uid}` | `Profile` | Includes points, tier, verified, messagePrivacy |
 | `profiles/{uid}/redemptions/{id}` | `Redemption` | Append-only log |
+| `profiles/{uid}/private/socials` | `SocialHandles` | Instagram/TikTok/X. Read gated on a proven mutual follow |
 | `venues/{uid}` | `Venue` | Keyed by hoster uid — 1:1 |
 | `events/{eventId}` | `CommunityEvent` | `cancelled: true` rather than deleted |
 | `events/{id}/registrations/{uid}` | `Registration` + profile snippet | |
@@ -224,6 +231,18 @@ when signed in with setup incomplete.
 - **Delete is batched** — `deleteEvent` batches in chunks of 400 (Firestore limit).
 - **Connections are computed client-side** — intersection of following ∩ followers. No counters, no
   Cloud Functions. Connector badge unlocks at 3 mutuals.
+- **Social handles are off the profile document on purpose** — `profiles/{uid}` is
+  `allow read: if signedIn()`, so anything stored there is readable by every signed-in
+  member regardless of what the UI renders. Handles live at `profiles/{uid}/private/socials`
+  where the read can actually be gated. Moving them onto the profile doc would turn the
+  connections-only promise into decoration.
+- **The socials gate lives in firestore.rules, not the screen** — `useSocials` translates a
+  `permission-denied` read into `visible: false`, and the profile screens render whatever
+  came back rather than re-deciding with `useConnections`. Two copies of the check would
+  eventually disagree, and the UI copy would be the wrong one.
+- **A mutual follow needs BOTH edge docs** — `exists()` on one direction only proves a
+  one-way follow. The rules check `follower_target` and `target_follower`; the rules tests
+  cover each one-way case separately.
 - **Rules that dereference `resource.data` must guard `resource == null`** — a read of a doc that does
   not exist yet evaluates the rule with `resource == null`, and dereferencing it throws → PERMISSION_DENIED
   rather than an empty snapshot. `conversations` read allows `resource == null` so the first DM can probe
