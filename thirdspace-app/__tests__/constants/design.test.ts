@@ -72,6 +72,23 @@ describe('type scale', () => {
       expect(role.lineHeight).toBeGreaterThanOrEqual(role.fontSize)
     }
   })
+
+  it('resolves every display role to one family — the face has a single weight', () => {
+    // Bebas Neue has no weight axis. Two display families, or a second Bebas file
+    // pretending to be a weight, would be a mistake; this is the guard that says so.
+    const display = ['screenTitle', 'cardTitle', 'stubDay', 'tabLabel'] as const
+    const families = new Set(display.map((role) => typeScale[role].fontFamily))
+    expect(families.size).toBe(1)
+  })
+
+  it('sizes the display roles for a narrow caps face', () => {
+    // A straight family swap at Antonio's sizes reads visibly smaller, because
+    // Bebas 400 is lighter and narrower than Antonio 700.
+    expect(typeScale.screenTitle.fontSize).toBe(34)
+    expect(typeScale.cardTitle.fontSize).toBe(19)
+    expect(typeScale.stubDay.fontSize).toBe(24)
+    expect(typeScale.tabLabel.fontSize).toBe(12)
+  })
 })
 
 describe('layout tokens', () => {
