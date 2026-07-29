@@ -12,7 +12,7 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 | Cloud Functions | `functions/` workspace — push fan-out triggers (excluded from app tsconfig) |
 | Auth Providers | Email/password, Apple Sign-In, Google OAuth |
 | Push | expo-notifications + Expo Push API (sender lives in Cloud Functions) |
-| Fonts | Poppins 400/500/600/700/800 (expo-google-fonts) |
+| Fonts | Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
 | Tests | Jest (jest-expo) — 48 suites / 304 tests; `@firebase/rules-unit-testing` for rules |
