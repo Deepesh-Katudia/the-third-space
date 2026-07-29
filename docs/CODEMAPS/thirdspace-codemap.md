@@ -1,5 +1,5 @@
 # The Third Space — Codemap
-_Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes._
+_Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes._
 
 ## Tech Stack
 
@@ -21,7 +21,7 @@ _Generated: 2026-07-28. Re-run `/update-codemaps` after major structural changes
 
 ---
 
-## Build Status (2026-07-28)
+## Build Status (2026-07-29)
 
 - `npx tsc --noEmit` — **clean**
 - `npx jest` — **304/304 pass**, 48 suites

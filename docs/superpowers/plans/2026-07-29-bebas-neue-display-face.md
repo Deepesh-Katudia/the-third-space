@@ -323,7 +323,11 @@ MSG
 Run `npx expo start` and check on a device or simulator, in this order — most-likely-to-fail first:
 
 1. **Tab bar labels.** 12px condensed caps is the smallest display setting in the app and the highest legibility risk. If DISCOVER / MY EVENTS / CHATS / PROFILE are cramped or clipped, `tabLabel` needs another point of size or tracking.
-2. **Discover screen title.** "LET'S FIND YOUR THIRD SPACE" wraps in a `maxWidth: 200` container (`app/(app)/(attender)/index.tsx:161`). Confirm it still wraps to a sensible number of lines at 34px.
-3. **A long event card title.** Confirm `numberOfLines` truncation still looks deliberate.
-4. **A member profile.** Names now render as `SARAH, 27`. Confirm that reads as intended rather than as a bug.
-5. **Date stub** on an event card.
+2. **Multi-line screen titles on Android.** Bebas Neue's natural line box is 1.20em and Android
+   reserves 1.30em with `includeFontPadding`. The tokens now clear 1.2, but the fastest places to
+   confirm nothing crowds or clips are the hard line breaks in `become-host.tsx` and
+   `role-select.tsx`, and the Discover tagline in its `maxWidth: 200` box.
+3. **Discover screen title.** "LET'S FIND YOUR THIRD SPACE" wraps in a `maxWidth: 200` container (`app/(app)/(attender)/index.tsx:161`). Confirm it still wraps to a sensible number of lines at 34px.
+4. **A long event card title.** Confirm `numberOfLines` truncation still looks deliberate.
+5. **A member profile.** Names now render as `SARAH, 27`. Confirm that reads as intended rather than as a bug.
+6. **Date stub** on an event card.
