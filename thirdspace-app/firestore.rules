@@ -38,6 +38,18 @@ service cloud.firestore {
       return delta == 50 || delta == -50 || delta == -500 || delta == -800;
     }
 
+    // hasOnly (used on the socials write rule) bounds key NAMES only — it says
+    // nothing about value type or size. This bounds the value too: absent is fine
+    // (that's "not set"), but if present it must be a non-empty string under the
+    // platform's handle length limit. size() > 0 means an empty string is never a
+    // valid stored value — clearing a handle means omitting the key, not `''`.
+    function validSocial(key, maxLen) {
+      return !(key in request.resource.data)
+        || (request.resource.data[key] is string
+            && request.resource.data[key].size() > 0
+            && request.resource.data[key].size() <= maxLen);
+    }
+
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
 
@@ -79,16 +91,26 @@ service cloud.firestore {
       // docs, so it is provable here with two exists() calls — well inside the
       // per-request document access budget.
       match /private/socials {
+        // Doc ids are built by string concatenation, never by inspecting the
+        // follower/target fields — safe today because no supported auth provider
+        // (email/password, Apple, Google) can mint a uid containing '_'. If a future
+        // auth path ever could, 'a_b_c' would parse ambiguously and this needs revisiting.
         allow read: if signedIn() && (
           request.auth.uid == uid || (
             exists(/databases/$(database)/documents/follows/$(request.auth.uid + '_' + uid)) &&
             exists(/databases/$(database)/documents/follows/$(uid + '_' + request.auth.uid))
           )
         );
-        // hasOnly stops the doc being used as unbounded storage on a path other
-        // members can read.
-        allow write: if signedIn() && request.auth.uid == uid
-          && request.resource.data.keys().hasOnly(['instagram', 'tiktok', 'x']);
+        // hasOnly bounds the key set; validSocial bounds each present value to a
+        // non-empty string within its platform's handle length. Together they stop
+        // the doc being used as unbounded (or wrongly-typed) storage on a path other
+        // members can read. create/update are split from delete because on delete
+        // request.resource is null and .data would raise an evaluation error —
+        // clearing a handle goes through setDoc(doc, {}), not deleteDoc.
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['instagram', 'tiktok', 'x'])
+          && validSocial('instagram', 30) && validSocial('tiktok', 24) && validSocial('x', 15);
+        allow delete: if signedIn() && request.auth.uid == uid;
       }
     }
 

@@ -266,3 +266,29 @@ test('only the owner can write socials, and only the three known keys', async ()
   await assertFails(setDoc(doc(stranger, 'profiles/me/private/socials'), { instagram: 'evil' }))
   await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'maya', payload: 'x'.repeat(100) }))
 })
+
+// The above key-name test reads like a size test but the 'x'.repeat(100) is doing no
+// work there — it fails on the key NAME 'payload', not the length. These test the value
+// bound itself: type, size, and the empty-string-is-not-a-valid-value rule.
+test('socials values are bounded by type and per-platform length', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'x'.repeat(31) }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { x: 'x'.repeat(16) }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: { nested: 'map' } }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: '' }))
+  await assertSucceeds(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'x'.repeat(30) }))
+})
+
+test('an unauthenticated client cannot read socials', async () => {
+  await seedSocials(env, 'other')
+  const anon = env.unauthenticatedContext().firestore()
+  await assertFails(getDoc(doc(anon, 'profiles/other/private/socials')))
+})
+
+test('the private subcollection does not over-grant beyond the socials doc', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'profiles/me/private/somethingElse'), { a: 1 })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'profiles/me/private/somethingElse')))
+})
