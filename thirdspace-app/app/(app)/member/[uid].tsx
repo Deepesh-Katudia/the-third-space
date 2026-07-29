@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, ScrollView, Image, StyleSheet, Linking } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { MemberProfileCard, Member } from '../../../components/MemberProfileCard'
@@ -10,6 +10,9 @@ import { useAuth } from '../../../hooks/useAuth'
 import { dmConversationId } from '../../../utils/chat'
 import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
+import { useSocials } from '../../../hooks/useSocials'
+import { SocialChips } from '../../../components/SocialChips'
+import { hasAnyHandle } from '../../../utils/socials'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { BackButton } from '../../../components/ui/BackButton'
@@ -21,6 +24,7 @@ export default function MemberProfile() {
   const { profile, loading, hasError } = useProfile(uid)
   const { user } = useAuth()
   const { isFollowing, toggle } = useFollowStatus(uid)
+  const { handles: socialHandles, visible: socialsVisible } = useSocials(uid)
   const [banner, setBanner] = useState('')
 
   const handleToggleFollow = async () => {
@@ -31,6 +35,9 @@ export default function MemberProfile() {
       setBanner("Couldn't update follow. Check your connection and try again.")
     }
   }
+
+  // A link that will not open is not worth an error banner on someone's profile.
+  const openSocial = (url: string) => { Linking.openURL(url).catch(() => {}) }
 
   if (loading) return <LoadingView />
 
@@ -93,6 +100,13 @@ export default function MemberProfile() {
                 </View>
               ))}
             </View>
+          </>
+        ) : null}
+
+        {socialsVisible && hasAnyHandle(socialHandles) ? (
+          <>
+            <Meta role="eyebrow" style={styles.sectionLabel}>Socials</Meta>
+            <SocialChips handles={socialHandles} onOpen={openSocial} />
           </>
         ) : null}
 

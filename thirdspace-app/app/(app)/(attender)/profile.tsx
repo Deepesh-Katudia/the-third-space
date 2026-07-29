@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet, Linking } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -9,9 +9,12 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
 import { useAttendanceStats } from '../../../hooks/useAttendanceStats'
 import { useConnections } from '../../../hooks/useConnections'
+import { useSocials } from '../../../hooks/useSocials'
 import { LoadingView } from '../../../components/LoadingView'
+import { SocialChips } from '../../../components/SocialChips'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { messagePrivacyLabel } from '../../../utils/profile'
+import { hasAnyHandle } from '../../../utils/socials'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { palette, radius, space, type as typeScale, NAV_CLEARANCE } from '../../../constants/design'
@@ -23,6 +26,8 @@ export default function Profile() {
   const [notifications, setNotifications] = useState(true)
   const { attendedEvents } = useAttendanceStats(user?.uid)
   const { connectionUids, loading: connectionsLoading, hasError: connectionsHasError } = useConnections(user?.uid)
+  // The owner always passes the rules gate, so `visible` needs no check here.
+  const { handles: myHandles } = useSocials(user?.uid)
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
   const neighborhood = profile?.neighborhood ?? ''
@@ -69,6 +74,16 @@ export default function Profile() {
             onPress={() => router.push('/(app)/connections')}
           />
         </View>
+
+        {hasAnyHandle(myHandles) ? (
+          <>
+            <Meta role="eyebrow" style={styles.sectionLabel}>Socials</Meta>
+            <SocialChips
+              handles={myHandles}
+              onOpen={(url) => { Linking.openURL(url).catch(() => {}) }}
+            />
+          </>
+        ) : null}
 
         <Meta role="eyebrow" style={styles.sectionLabel}>Account</Meta>
         <View style={styles.card}>
