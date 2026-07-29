@@ -41,6 +41,7 @@ describe('useSocials', () => {
     const { result } = renderHook(() => useSocials('other'))
     act(() => { mockOnError('unavailable') })
     expect(result.current.visible).toBe(false)
+    expect(result.current.loading).toBe(false)
     expect(result.current.hasError).toBe(true)
   })
 
@@ -48,7 +49,30 @@ describe('useSocials', () => {
     const { result } = renderHook(() => useSocials(undefined))
     expect(result.current.visible).toBe(false)
     expect(result.current.loading).toBe(false)
+    expect(result.current.hasError).toBe(false)
     expect(result.current.handles).toEqual({})
+  })
+
+  it('clears the previous member handles the moment the uid changes', () => {
+    // Without the reset-before-resubscribe ordering in the effect, member A's
+    // handles would stay on screen AND stay `visible` while B's subscription
+    // resolves — one member's private handles rendered on another's profile.
+    const { result, rerender } = renderHook(
+      ({ uid }: { uid: string | undefined }) => useSocials(uid),
+      {
+        initialProps: { uid: 'other' },
+      }
+    )
+    act(() => { mockOnChange({ instagram: 'maya' }) })
+    expect(result.current.handles).toEqual({ instagram: 'maya' })
+    expect(result.current.visible).toBe(true)
+
+    rerender({ uid: 'someone-else' })
+
+    expect(result.current.handles).toEqual({})
+    expect(result.current.visible).toBe(false)
+    expect(result.current.loading).toBe(true)
+    expect(mockUnsubscribe).toHaveBeenCalled()
   })
 
   it('unsubscribes on unmount', () => {
