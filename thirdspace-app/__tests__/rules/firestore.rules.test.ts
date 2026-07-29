@@ -206,3 +206,63 @@ test('a non-participant cannot read a conversation', async () => {
   const stranger = env.authenticatedContext('stranger').firestore()
   await assertFails(getDoc(doc(stranger, 'conversations/me_you')))
 })
+
+// ── Profile socials (mutual-follow gated) ───────────────────────────────────
+// Socials live at profiles/{uid}/private/socials specifically so the read can be
+// gated. The one-way-follower case below is the whole point: it is the difference
+// between "connections" and "anyone who follows you", and a naive single-exists()
+// rule gets it wrong.
+async function seedSocials(env: RulesTestEnvironment, uid: string) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), `profiles/${uid}/private/socials`), { instagram: 'maya' })
+  })
+}
+
+async function seedFollow(env: RulesTestEnvironment, follower: string, target: string) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), `follows/${follower}_${target}`), { follower, target })
+  })
+}
+
+test('owner can read their own socials', async () => {
+  await seedSocials(env, 'me')
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(getDoc(doc(me, 'profiles/me/private/socials')))
+})
+
+test('a mutual follow can read socials', async () => {
+  await seedSocials(env, 'other')
+  await seedFollow(env, 'me', 'other')
+  await seedFollow(env, 'other', 'me')
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(getDoc(doc(me, 'profiles/other/private/socials')))
+})
+
+test('a one-way follower CANNOT read socials', async () => {
+  await seedSocials(env, 'other')
+  await seedFollow(env, 'me', 'other') // I follow them; they do not follow back
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'profiles/other/private/socials')))
+})
+
+test('a followed-by-only user CANNOT read socials', async () => {
+  await seedSocials(env, 'other')
+  await seedFollow(env, 'other', 'me') // they follow me; I do not follow back
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'profiles/other/private/socials')))
+})
+
+test('a stranger cannot read socials', async () => {
+  await seedSocials(env, 'other')
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'profiles/other/private/socials')))
+})
+
+test('only the owner can write socials, and only the three known keys', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  const stranger = env.authenticatedContext('stranger').firestore()
+  await assertSucceeds(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'maya', x: 'maya' }))
+  await assertSucceeds(setDoc(doc(me, 'profiles/me/private/socials'), {}))
+  await assertFails(setDoc(doc(stranger, 'profiles/me/private/socials'), { instagram: 'evil' }))
+  await assertFails(setDoc(doc(me, 'profiles/me/private/socials'), { instagram: 'maya', payload: 'x'.repeat(100) }))
+})

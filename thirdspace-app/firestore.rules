@@ -72,6 +72,24 @@ service cloud.firestore {
       match /redemptions/{redemptionId} {
         allow read, create: if signedIn() && request.auth.uid == uid;
       }
+
+      // Handles are kept OFF the profile document on purpose: profiles/{uid} is
+      // `allow read: if signedIn()`, so anything stored there is readable by every
+      // signed-in member no matter what the UI renders. A mutual follow is two edge
+      // docs, so it is provable here with two exists() calls — well inside the
+      // per-request document access budget.
+      match /private/socials {
+        allow read: if signedIn() && (
+          request.auth.uid == uid || (
+            exists(/databases/$(database)/documents/follows/$(request.auth.uid + '_' + uid)) &&
+            exists(/databases/$(database)/documents/follows/$(uid + '_' + request.auth.uid))
+          )
+        );
+        // hasOnly stops the doc being used as unbounded storage on a path other
+        // members can read.
+        allow write: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['instagram', 'tiktok', 'x']);
+      }
     }
 
     match /events/{eventId} {
