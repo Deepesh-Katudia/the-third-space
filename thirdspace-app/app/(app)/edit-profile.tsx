@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -10,8 +10,10 @@ import { InterestChip } from '../../components/InterestChip'
 import { LoadingView } from '../../components/LoadingView'
 import { EmptyState } from '../../components/EmptyState'
 import { BOROUGHS } from '../../constants/categories'
-import { Borough } from '../../types/models'
-import { updateProfile } from '../../services/profiles'
+import { Borough, SocialHandles, SocialPlatform } from '../../types/models'
+import { SOCIAL_PLATFORMS, normalizeHandle, isValidHandle } from '../../utils/socials'
+import { useSocials } from '../../hooks/useSocials'
+import { updateProfile, setSocials } from '../../services/profiles'
 import { pickImage, uploadProfilePhoto } from '../../services/photos'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
@@ -27,6 +29,7 @@ export default function EditProfile() {
   const router = useRouter()
   const { user } = useAuth()
   const { profile, loading, hasError } = useProfile(user?.uid)
+  const { handles: loadedSocials, loading: socialsLoading } = useSocials(user?.uid)
 
   const [seeded, setSeeded] = useState(false)
   const [photoUri, setPhotoUri] = useState<string | null>(null)
@@ -37,6 +40,10 @@ export default function EditProfile() {
   const [borough, setBorough] = useState<Borough>('Brooklyn')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // Raw text, normalized only on validate/save — normalizing per keystroke would
+  // fight anyone mid-way through pasting a URL.
+  const [socialInputs, setSocialInputs] = useState<Record<SocialPlatform, string>>({ instagram: '', tiktok: '', x: '' })
+  const [socialsSeeded, setSocialsSeeded] = useState(false)
 
   // Seed the form once from the loaded profile; later realtime updates must not
   // clobber in-progress edits.
@@ -50,11 +57,45 @@ export default function EditProfile() {
     setSeeded(true)
   }, [profile, seeded])
 
+  // Socials load on their own subscription, so they need their own seed guard.
+  useEffect(() => {
+    if (socialsSeeded || socialsLoading) return
+    setSocialInputs({
+      instagram: loadedSocials.instagram ?? '',
+      tiktok: loadedSocials.tiktok ?? '',
+      x: loadedSocials.x ?? '',
+    })
+    setSocialsSeeded(true)
+  }, [loadedSocials, socialsLoading, socialsSeeded])
+
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
-  const canSubmit = interests.length >= MIN_INTERESTS && neighborhood.trim().length > 0
 
   const toggleInterest = (label: string) =>
     setInterests((prev) => (prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]))
+
+  const socialErrors = useMemo(() => {
+    const out: Partial<Record<SocialPlatform, string>> = {}
+    for (const p of SOCIAL_PLATFORMS) {
+      const raw = socialInputs[p.id]
+      if (!raw.trim()) continue
+      if (!isValidHandle(p.id, normalizeHandle(raw))) out[p.id] = `That doesn't look like a ${p.label} handle.`
+    }
+    return out
+  }, [socialInputs])
+
+  const cleanedSocials = useMemo(() => {
+    const out: SocialHandles = {}
+    for (const p of SOCIAL_PLATFORMS) {
+      const handle = normalizeHandle(socialInputs[p.id])
+      if (handle) out[p.id] = handle
+    }
+    return out
+  }, [socialInputs])
+
+  const canSubmit =
+    interests.length >= MIN_INTERESTS &&
+    neighborhood.trim().length > 0 &&
+    Object.keys(socialErrors).length === 0
 
   const handlePickPhoto = async () => {
     try {
@@ -84,6 +125,7 @@ export default function EditProfile() {
         borough,
         photoURL,
       })
+      await setSocials(user.uid, cleanedSocials)
       router.back()
     } catch {
       setError("Couldn't save changes. Try again.")
@@ -150,6 +192,21 @@ export default function EditProfile() {
               <InterestChip key={b} label={b} selected={borough === b} onPress={() => setBorough(b)} />
             ))}
           </View>
+
+          <Meta role="eyebrow" style={styles.fieldLabel}>Socials — only your connections can see these</Meta>
+          {SOCIAL_PLATFORMS.map((p) => (
+            <FormInput
+              key={p.id}
+              label={p.label}
+              prefix="@"
+              value={socialInputs[p.id]}
+              onChangeText={(t) => setSocialInputs((prev) => ({ ...prev, [p.id]: t }))}
+              error={socialErrors[p.id]}
+              placeholder="yourhandle"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          ))}
 
           <Meta role="eyebrow" style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Meta>
           <View style={styles.chipWrap}>
