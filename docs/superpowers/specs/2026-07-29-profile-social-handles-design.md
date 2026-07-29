@@ -100,7 +100,7 @@ Chips follow the existing interest-chip treatment (`member/[uid].tsx:124-131`) s
 
 ## Error handling
 
-- Invalid handle → inline message under that input, save blocked for that field only. The other two still save.
+- Invalid handle → inline message under that input, and **Save is disabled** until it is fixed or cleared. Dropping the bad handle from the payload and saving anyway was the first idea and is worse: the screen navigates back and the handle is silently gone, with nothing left on screen to explain why.
 - Save failure → the existing `edit-profile` error pattern, unchanged.
 - Read denied → section not rendered. Silent by design.
 - Read failed for any other reason → section not rendered. A profile is still useful without it; this is an enhancement, never a blocker.
