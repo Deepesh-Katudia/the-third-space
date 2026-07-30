@@ -42,5 +42,9 @@ Thumbs.db
 .superpowers/
 .lean-plan.md
 
+# Local re-export of the founder report; the committed copy is
+# docs/FOUNDER-PROGRESS-REPORT.docx, rendered from docs/FOUNDER-PROGRESS-REPORT.md
+docs/PROGRESS-REPORT.docx
+
 # Vercel
 .vercel
