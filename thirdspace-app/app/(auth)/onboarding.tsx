@@ -73,7 +73,9 @@ export default function Onboarding() {
   return (
     <Pressable style={styles.field} onPress={reveal.skip} accessible={false}>
       <StatusBar style="dark" />
-      <WelcomeBackdrop reduceMotion={reveal.reduceMotion === true} />
+      {/* !== false (not === true) so the probe's null in-flight state fails safe to
+          "no motion" rather than briefly starting drift loops that then get torn down. */}
+      <WelcomeBackdrop reduceMotion={reveal.reduceMotion !== false} />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
         <View style={styles.logoWrap}>
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
   field: { flex: 1 },
   flex: { flex: 1 },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
-  markRow: { flexDirection: 'row', alignItems: 'center', gap: 13 },
+  markRow: { flexDirection: 'row', alignItems: 'center' },
   logo: { width: 58, height: 58 },
   dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: palette.ink },
   wordmark: { fontSize: 37, lineHeight: 45, letterSpacing: 0.5 },
