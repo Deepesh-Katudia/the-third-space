@@ -24,6 +24,28 @@ export const palette = {
 
   /** Dashed dividers and hairline rules. */
   rule: 'rgba(43,32,21,0.20)',
+
+  /**
+   * Welcome field (app/(auth)/onboarding.tsx) ONLY.
+   *
+   * The system rule is "no gradients — depth comes from tone, not blending". This is
+   * the one granted exception and it is scoped to that single screen; no other surface
+   * may use these. See docs/superpowers/specs/2026-07-30-welcome-screen-design.md.
+   */
+  welcomeSkyTop: '#EE9B62',
+  welcomeSkyBottom: '#FBE6CB',
+
+  /** Glow blobs over the field. Low alpha — six stacked rings accumulate the falloff. */
+  welcomeGlowWarm: 'rgba(255,214,170,0.10)',
+  welcomeGlowClay: 'rgba(230,124,74,0.10)',
+
+  /**
+   * Decorative 3-4px sparks. This is white, which the palette otherwise forbids over
+   * orange — that rule is about TEXT legibility (white on orangeDeep is 1.83:1) and
+   * these dots carry no information, so WCAG contrast does not apply to them.
+   * Do not "fix" this by darkening it; the sparks are the only white in the app.
+   */
+  welcomeSpark: 'rgba(255,255,255,0.85)',
 } as const
 
 export type PaletteKey = keyof typeof palette
@@ -95,3 +117,25 @@ export const tabBar = {
 
 /** Bottom padding a scrollable tab screen needs to clear the tab bar. */
 export const NAV_CLEARANCE = 92
+
+/**
+ * Welcome-screen reveal timeline, in milliseconds. Held here rather than inline so the
+ * whole sequence is readable in one place and its ordering is assertable in tests.
+ *
+ * Text settles at taglineDelay + taglineIn = 970ms; the sheet lands at 1500ms, so the
+ * field holds alone for ~530ms. That pause is the feature — shorten it and the screen
+ * reads as a stutter rather than an arrival.
+ */
+export const motion = {
+  markDelay: 150,
+  markIn: 480,
+  wordmarkDelay: 330,
+  wordmarkIn: 460,
+  taglineDelay: 510,
+  taglineIn: 460,
+  sheetDelay: 1500,
+  sheetIn: 620,
+  /** Ambient loops. One half-cycle each; blobs are offset per index. */
+  driftCycle: 9000,
+  sparkCycle: 5000,
+} as const

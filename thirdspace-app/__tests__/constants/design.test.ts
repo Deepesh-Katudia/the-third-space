@@ -1,4 +1,4 @@
-import { palette, type as typeScale, radius, space, tabBar } from '../../constants/design'
+import { palette, type as typeScale, radius, space, tabBar, motion } from '../../constants/design'
 
 /** WCAG 2.1 relative luminance. */
 function luminance(hex: string): number {
@@ -101,5 +101,44 @@ describe('layout tokens', () => {
   it('gives the tab bar the light orange fill with a clay active state', () => {
     expect(tabBar.backgroundColor).toBe(palette.orangeLight)
     expect(tabBar.activeTintColor).toBe(palette.clay)
+  })
+})
+
+describe('welcome field tokens', () => {
+  it('gives the welcome field two distinct stops, dark to light', () => {
+    expect(palette.welcomeSkyTop).not.toBe(palette.welcomeSkyBottom)
+    expect(luminance(palette.welcomeSkyTop)).toBeLessThan(luminance(palette.welcomeSkyBottom))
+  })
+
+  it('reads ink at AA across the whole gradient', () => {
+    // The wordmark and tagline sit over a range, not a single fill, so ink has to
+    // clear AA at BOTH ends or it fails somewhere in the middle.
+    expect(contrast(palette.ink, palette.welcomeSkyTop)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(palette.ink, palette.welcomeSkyBottom)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('pins why the tagline cannot use inkSoft', () => {
+    // 3.78:1 — under AA. This test exists so that "soften the tagline" is a
+    // deliberate decision with a failing test attached, not a quiet regression.
+    expect(contrast(palette.inkSoft, palette.welcomeSkyTop)).toBeLessThan(4.5)
+  })
+})
+
+describe('welcome motion tokens', () => {
+  it('reveals the sheet only after the tagline has settled', () => {
+    // The whole point of the screen is the held beat. Guarding the ordering here
+    // keeps it true regardless of which driver runs the animation.
+    expect(motion.sheetDelay).toBeGreaterThan(motion.taglineDelay + motion.taglineIn)
+  })
+
+  it('staggers the three intro elements', () => {
+    expect(motion.markDelay).toBeLessThan(motion.wordmarkDelay)
+    expect(motion.wordmarkDelay).toBeLessThan(motion.taglineDelay)
+  })
+
+  it('keeps every duration positive', () => {
+    for (const value of Object.values(motion)) {
+      expect(value).toBeGreaterThan(0)
+    }
   })
 })
