@@ -54,8 +54,8 @@ export function WelcomeBackdrop({ reduceMotion }: WelcomeBackdropProps) {
     // Offsetting each loop keeps the field from pulsing in lockstep, which reads as
     // a glitch rather than as drift.
     const loops = [
-      ...blobDrivers.map((value, i) => cycle(value, motion.driftCycle + i * 900)),
-      ...sparkDrivers.map((value, i) => cycle(value, motion.sparkCycle + i * 400)),
+      ...blobDrivers.map((value, i) => cycle(value, motion.driftCycle + i * motion.driftStagger)),
+      ...sparkDrivers.map((value, i) => cycle(value, motion.sparkCycle + i * motion.sparkStagger)),
     ]
 
     loops.forEach((loop) => loop.start())

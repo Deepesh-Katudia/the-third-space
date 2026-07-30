@@ -137,5 +137,7 @@ export const motion = {
   sheetIn: 620,
   /** Ambient loops. One half-cycle each; blobs are offset per index. */
   driftCycle: 9000,
+  driftStagger: 900,
   sparkCycle: 5000,
+  sparkStagger: 400,
 } as const
