@@ -9,6 +9,8 @@ export interface WelcomeReveal {
   sheet: Animated.Value
   /** null while the accessibility probe is still in flight. */
   reduceMotion: boolean | null
+  /** True once the reveal has landed — reduced-motion settle, animation finish, or skip(). */
+  revealed: boolean
   skip: () => void
 }
 
@@ -28,6 +30,7 @@ export function useWelcomeReveal(): WelcomeReveal {
   const sheet = useRef(new Animated.Value(0)).current
 
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null)
+  const [revealed, setRevealed] = useState(false)
   const running = useRef<Animated.CompositeAnimation | null>(null)
 
   const settle = useCallback(() => {
@@ -35,6 +38,7 @@ export function useWelcomeReveal(): WelcomeReveal {
     wordmark.setValue(1)
     tagline.setValue(1)
     sheet.setValue(1)
+    setRevealed(true)
   }, [mark, wordmark, tagline, sheet])
 
   const skip = useCallback(() => {
@@ -79,7 +83,10 @@ export function useWelcomeReveal(): WelcomeReveal {
     ])
 
     running.current = animation
-    animation.start(() => { running.current = null })
+    animation.start(() => {
+      running.current = null
+      setRevealed(true)
+    })
 
     return () => {
       animation.stop()
@@ -87,5 +94,5 @@ export function useWelcomeReveal(): WelcomeReveal {
     }
   }, [reduceMotion, mark, wordmark, tagline, sheet, settle])
 
-  return { mark, wordmark, tagline, sheet, reduceMotion, skip }
+  return { mark, wordmark, tagline, sheet, reduceMotion, revealed, skip }
 }

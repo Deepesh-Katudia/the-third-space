@@ -27,6 +27,12 @@ describe('useWelcomeReveal', () => {
     expect(values(result.current)).toEqual([0, 0, 0, 0])
   })
 
+  it('is not revealed initially under normal motion', async () => {
+    const { result } = renderHook(() => useWelcomeReveal())
+    await waitFor(() => expect(result.current.reduceMotion).toBe(false))
+    expect(result.current.revealed).toBe(false)
+  })
+
   it('starts every element fully revealed when reduced motion is on', async () => {
     ;(AccessibilityInfo.isReduceMotionEnabled as jest.Mock).mockResolvedValue(true)
     const { result } = renderHook(() => useWelcomeReveal())
@@ -34,11 +40,24 @@ describe('useWelcomeReveal', () => {
     expect(values(result.current)).toEqual([1, 1, 1, 1])
   })
 
+  it('is revealed immediately when reduced motion is on', async () => {
+    ;(AccessibilityInfo.isReduceMotionEnabled as jest.Mock).mockResolvedValue(true)
+    const { result } = renderHook(() => useWelcomeReveal())
+    await waitFor(() => expect(result.current.revealed).toBe(true))
+  })
+
   it('drives everything to the final state on skip', async () => {
     const { result } = renderHook(() => useWelcomeReveal())
     await waitFor(() => expect(result.current.reduceMotion).toBe(false))
     act(() => { result.current.skip() })
     expect(values(result.current)).toEqual([1, 1, 1, 1])
+  })
+
+  it('becomes revealed after skip', async () => {
+    const { result } = renderHook(() => useWelcomeReveal())
+    await waitFor(() => expect(result.current.reduceMotion).toBe(false))
+    act(() => { result.current.skip() })
+    expect(result.current.revealed).toBe(true)
   })
 
   it('is idempotent — skipping twice is harmless', async () => {

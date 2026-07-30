@@ -26,6 +26,17 @@ describe('WelcomeBackdrop', () => {
     expect(loop).not.toHaveBeenCalled()
   })
 
+  it('drives every timing animation on the native thread', () => {
+    // Confirms useNativeDriver is not silently dropped, which would move the ambient
+    // drift onto the JS thread.
+    const timing = jest.spyOn(Animated, 'timing')
+    render(<WelcomeBackdrop reduceMotion={false} />)
+    expect(timing.mock.calls.length).toBeGreaterThan(0)
+    timing.mock.calls.forEach(([, config]) => {
+      expect(config.useNativeDriver).toBe(true)
+    })
+  })
+
   it('stops its loops on unmount', () => {
     // A running Animated.loop holds a reference and keeps ticking after the screen
     // is gone. This is the same class of leak fixed in 977b150.

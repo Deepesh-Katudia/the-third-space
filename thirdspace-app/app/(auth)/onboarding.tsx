@@ -100,7 +100,10 @@ export default function Onboarding() {
 
         {/* Cream sheet lifted off the field — the two-tone pairing that
             replaces the old sunset gradient. */}
-        <Animated.View style={rise(reveal.sheet, 48)}>
+        {/* React Native does not exclude opacity:0 views from hit testing (unlike CSS
+            visibility:hidden) — the sheet's buttons are tappable during the intro unless
+            explicitly disabled here, which would invert the "tap anywhere skips" screen. */}
+        <Animated.View style={rise(reveal.sheet, 48)} pointerEvents={reveal.revealed ? 'auto' : 'none'}>
           <View style={styles.sheet}>
             <Display role="screenTitle" style={styles.heading}>Get Started</Display>
 
@@ -137,7 +140,7 @@ const styles = StyleSheet.create({
   field: { flex: 1 },
   flex: { flex: 1 },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
-  markRow: { flexDirection: 'row', alignItems: 'center' },
+  markRow: { alignItems: 'center' },
   logo: { width: 58, height: 58 },
   dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: palette.ink },
   wordmark: { fontSize: 37, lineHeight: 45, letterSpacing: 0.5 },
