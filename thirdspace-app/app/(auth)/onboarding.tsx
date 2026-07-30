@@ -62,13 +62,16 @@ export default function Onboarding() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
         <View style={styles.logoWrap}>
-          {/* Three-dot mark, laid out with Views — react-native-svg would mean a native rebuild. */}
-          <View style={styles.logo} accessibilityRole="image" accessibilityLabel="ThirdSpace">
-            <View style={[styles.dot, { left: 8, top: 10 }]} />
-            <View style={[styles.dot, { left: 30, top: 10 }]} />
-            <View style={[styles.dot, { left: 19, top: 29 }]} />
+          <View style={styles.markRow}>
+            {/* Three-dot mark, laid out with Views — react-native-svg would mean a native rebuild. */}
+            <View style={styles.logo} accessibilityRole="image" accessibilityLabel="ThirdSpace">
+              <View style={[styles.dot, { left: 8, top: 10 }]} />
+              <View style={[styles.dot, { left: 30, top: 10 }]} />
+              <View style={[styles.dot, { left: 19, top: 29 }]} />
+            </View>
+            <Display role="screenTitle" style={styles.wordmark}>ThirdSpace</Display>
           </View>
-          <Display role="screenTitle" style={styles.wordmark}>ThirdSpace</Display>
+          <Display role="cardTitle" tone="inkSoft" style={styles.tagline}>Your Third Space awaits you</Display>
         </View>
 
         {/* Cream sheet lifted off the deep orange field — the two-tone pairing that
@@ -107,10 +110,12 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   field: { flex: 1, backgroundColor: palette.orangeDeep },
   flex: { flex: 1 },
-  logoWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 13 },
+  logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  markRow: { flexDirection: 'row', alignItems: 'center', gap: 13 },
   logo: { width: 58, height: 58 },
   dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: palette.ink },
   wordmark: { fontSize: 37, lineHeight: 45, letterSpacing: 0.5 },
+  tagline: { textAlign: 'center', paddingHorizontal: space.lg },
 
   sheet: {
     backgroundColor: palette.cream,
