@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, StyleSheet, Animated, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { setOnboardingPrefs } from '../../services/preferences'
 import { Display, Body, Meta } from '../../components/ui/Text'
+import { WelcomeBackdrop } from '../../components/WelcomeBackdrop'
+import { useWelcomeReveal } from '../../hooks/useWelcomeReveal'
 import { palette, radius, space } from '../../constants/design'
 
 interface PermissionRowProps {
@@ -50,6 +52,14 @@ export default function Onboarding() {
   const [location, setLocation] = useState(true)
   const [notifications, setNotifications] = useState(true)
 
+  const reveal = useWelcomeReveal()
+
+  /** Maps a 0->1 driver to a upward slide, so each element rises as it fades in. */
+  const rise = (value: Animated.Value, distance: number) => ({
+    opacity: value,
+    transform: [{ translateY: value.interpolate({ inputRange: [0, 1], outputRange: [distance, 0] }) }],
+  })
+
   const next = async () => {
     // Record the opt-ins before moving on. The OS notification prompt itself is raised
     // later by usePushRegistration, once the user is actually signed in.
@@ -57,65 +67,80 @@ export default function Onboarding() {
     router.push('/(auth)/sign-up')
   }
 
+  // accessible={false} so screen readers do not announce the whole screen as a
+  // button. The skip is a convenience for sighted users waiting out the intro;
+  // VoiceOver users get the reduced-motion path or can act on the real controls.
   return (
-    <View style={styles.field}>
+    <Pressable style={styles.field} onPress={reveal.skip} accessible={false}>
       <StatusBar style="dark" />
+      <WelcomeBackdrop reduceMotion={reveal.reduceMotion === true} />
+
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
         <View style={styles.logoWrap}>
-          <View style={styles.markRow}>
+          <Animated.View style={[styles.markRow, { opacity: reveal.mark, transform: [{ scale: reveal.mark.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }] }]}>
             {/* Three-dot mark, laid out with Views — react-native-svg would mean a native rebuild. */}
             <View style={styles.logo} accessibilityRole="image" accessibilityLabel="ThirdSpace">
               <View style={[styles.dot, { left: 8, top: 10 }]} />
               <View style={[styles.dot, { left: 30, top: 10 }]} />
               <View style={[styles.dot, { left: 19, top: 29 }]} />
             </View>
+          </Animated.View>
+
+          <Animated.View style={rise(reveal.wordmark, 14)}>
             <Display role="screenTitle" style={styles.wordmark}>ThirdSpace</Display>
-          </View>
-          <Display role="cardTitle" tone="inkSoft" style={styles.tagline}>Your Third Space awaits you</Display>
+          </Animated.View>
+
+          <Animated.View style={rise(reveal.tagline, 10)}>
+            {/* ink, not inkSoft: inkSoft is 3.78:1 on welcomeSkyTop, under AA. */}
+            <Meta role="eyebrow" tone="ink" style={styles.tagline}>Your Third Space awaits you...</Meta>
+          </Animated.View>
         </View>
 
-        {/* Cream sheet lifted off the deep orange field — the two-tone pairing that
+        {/* Cream sheet lifted off the field — the two-tone pairing that
             replaces the old sunset gradient. */}
-        <View style={styles.sheet}>
-          <Display role="screenTitle" style={styles.heading}>Get Started</Display>
+        <Animated.View style={rise(reveal.sheet, 48)}>
+          <View style={styles.sheet}>
+            <Display role="screenTitle" style={styles.heading}>Get Started</Display>
 
-          <PermissionRow
-            icon="location"
-            title="Location"
-            body="To see people & groups near you"
-            enabled={location}
-            onToggle={() => setLocation((v) => !v)}
-          />
-          <PermissionRow
-            icon="notifications"
-            title="Notifications"
-            body="So you never miss a thing"
-            enabled={notifications}
-            onToggle={() => setNotifications((v) => !v)}
-          />
+            <PermissionRow
+              icon="location"
+              title="Location"
+              body="To see people & groups near you"
+              enabled={location}
+              onToggle={() => setLocation((v) => !v)}
+            />
+            <PermissionRow
+              icon="notifications"
+              title="Notifications"
+              body="So you never miss a thing"
+              enabled={notifications}
+              onToggle={() => setNotifications((v) => !v)}
+            />
 
-          <TouchableOpacity style={styles.next} onPress={next} activeOpacity={0.9}>
-            <Body role="button" style={styles.onInk}>Next</Body>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.next} onPress={next} activeOpacity={0.9}>
+              <Body role="button" style={styles.onInk}>Next</Body>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.signIn} onPress={() => router.push('/(auth)/sign-in')}>
-            <Meta role="eyebrow" tone="clay">Already have an account?</Meta>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.signIn} onPress={() => router.push('/(auth)/sign-in')}>
+              <Meta role="eyebrow" tone="clay">Already have an account?</Meta>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </SafeAreaView>
-    </View>
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  field: { flex: 1, backgroundColor: palette.orangeDeep },
+  field: { flex: 1 },
   flex: { flex: 1 },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
   markRow: { flexDirection: 'row', alignItems: 'center', gap: 13 },
   logo: { width: 58, height: 58 },
   dot: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: palette.ink },
   wordmark: { fontSize: 37, lineHeight: 45, letterSpacing: 0.5 },
-  tagline: { textAlign: 'center', paddingHorizontal: space.lg },
+  /** eyebrow is 10px — too small for a hero line. Face, caps and tracking stay from the token. */
+  tagline: { fontSize: 13, lineHeight: 18, textAlign: 'center', paddingHorizontal: space.lg },
 
   sheet: {
     backgroundColor: palette.cream,
