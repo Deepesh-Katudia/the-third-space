@@ -109,10 +109,16 @@ the component.
 
 Rendered through `Meta role="eyebrow"` (IBM Plex Mono, uppercase, `letterSpacing: 1.4`),
 which is exactly the comp's treatment: mono, caps, wide tracking. The `eyebrow` token is
-10px, too small for a hero line, so the welcome screen overrides size locally to ~13px /
+10px, too small for a hero line, so the welcome screen overrides size locally to 13px /
 18px line height while keeping the face, caps and tracking from the token. Local size
 override on a shared role is already the pattern in this file — `styles.wordmark`
 overrides `screenTitle`'s 34px to 37px.
+
+**Tone is `ink`, not `inkSoft`.** The comp's tagline looks muted, but `inkSoft` measures
+**3.78:1** against `welcomeSkyTop` — below AA. `ink` is 7.19:1 on the top stop and
+13.09:1 on the bottom, so it is the only palette entry that survives the whole gradient.
+The mono face at 13px with 1.4 tracking already reads as secondary without dropping the
+tone. The measured number is recorded at the token so this is not "softened" later.
 
 **This supersedes the tagline added earlier in this session**, which used
 `Display role="cardTitle"` in sentence case with no ellipsis. That was written before the
@@ -151,16 +157,22 @@ wordmark subtitle. Out of scope here.
 
 Follows the existing convention: hooks and components are tested, routes are not.
 
-`__tests__/hooks/useWelcomeReveal.test.tsx` — fake timers via
-`advanceTimersByTimeAsync`, the pattern documented at
-`__tests__/services/location.test.ts:76`:
+`__tests__/hooks/useWelcomeReveal.test.tsx`:
 
-- values start at 0 and reach 1 only after the full timeline
-- the sheet is still hidden at t=1400 and revealed by t=2200 — pins the delay rather
-  than asserting it "eventually appears"
-- `skip()` short-circuits to the final state
-- reduced motion starts at final state with no timers scheduled
-- unmount clears timers and stops loops
+- all four values start at 0 under normal motion
+- reduced motion starts every value at 1 with **no timers scheduled**
+- `skip()` drives all four to 1 and is idempotent
+- unmount leaves no pending timers
+
+**What is deliberately not asserted in jest, and why.** With `useNativeDriver: true` the
+JS-side `Animated.Value` is not updated while the animation runs — the driver owns it
+natively. A test that advanced fake timers and read `__getValue()` mid-flight would be
+asserting the behaviour of the jest mock, not the app. Interpolated motion is verified on
+device instead.
+
+The *ordering* of the timeline is still guarded deterministically, in the token test:
+`motion.sheetDelay > motion.taglineDelay + motion.taglineIn` proves the sheet cannot
+arrive before the tagline has settled, regardless of driver.
 
 `__tests__/components/WelcomeBackdrop.test.tsx` — renders without crashing;
 `reduceMotion` starts no loop.
