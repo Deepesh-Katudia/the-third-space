@@ -22,6 +22,7 @@ export function FormInput({ label, error, prefix, secureTextEntry, ...props }: F
             styles.input,
             error ? styles.inputError : styles.inputNormal,
             prefix ? styles.inputWithPrefix : null,
+            secureTextEntry ? styles.inputSecure : null,
           ]}
           secureTextEntry={hidden}
           placeholderTextColor={palette.inkSoft}
@@ -58,6 +59,16 @@ const styles = StyleSheet.create({
   },
   inputNormal: { borderColor: palette.rule },
   inputError: { borderColor: palette.clay },
+  /**
+   * The one place in the app that is not uppercase. This field can be revealed
+   * by the Show toggle, and a password shown as HUNTER2 when it is really
+   * hunter2 misrepresents the credential. Correctness, not style.
+   *
+   * Keyed off the secureTextEntry prop, not the `hidden` state — `hidden` flips
+   * when the user taps Show, and keying off it would make the text change case
+   * on tap.
+   */
+  inputSecure: { textTransform: 'none' },
   inputWithPrefix: { paddingLeft: 44 },
   prefix: { position: 'absolute', left: space.lg, top: 15, zIndex: 1 },
   toggle: { position: 'absolute', right: space.lg, top: space.lg },
