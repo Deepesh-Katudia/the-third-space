@@ -99,6 +99,7 @@ thirdspace-app/
         ├── create-event.tsx  venue-setup.tsx  edit-profile.tsx
         ├── filters.tsx  connections.tsx  badges.tsx
         ├── borough-picker.tsx  # Borough selection modal (Discover → location override)
+        ├── category-picker.tsx # Category selection modal (Discover → category dropdown)
         ├── message-requests.tsx  message-privacy.tsx
         ├── settings.tsx  change-password.tsx
         ├── become-host.tsx  verify-identity.tsx
@@ -226,6 +227,17 @@ when signed in with setup incomplete.
   with an on-screen explanation, so the entry screen is never blank.
 - **A manual borough pick is permanent until changed** — GPS never silently overrides it, and
   "All of NYC" is a real stored choice (`{ borough: null }`), distinct from never having chosen.
+- **Event categories are stored as slugs, never display strings** — `constants/categories.ts`
+  holds the id/label/blurb/emoji table and `categoryLabel()` resolves it. Rendering
+  `event.category` raw is a bug. The point is that copy can be reworded without orphaning
+  events, which is exactly what renaming a stored display string would do. There are ten
+  categories and no catch-all; `Social` was deliberately dropped.
+- **`utils/badges.ts` hardcodes the `creative-outlet` slug** — the Creative Soul badge filters
+  on it. A rename that misses that line makes the badge silently unearnable, so
+  `__tests__/utils/badges.test.ts` asserts the slug is a real category to catch it.
+- **Category counts in the picker are borough-scoped but NOT category-scoped** — scoping by
+  the active category would make every row but the current one read zero. A `0` therefore
+  means "none near you", which is what the per-category empty state then explains.
 - **Venue keyed by uid** — `venues/{uid}` uses the hoster's UID as doc id. 1:1 hoster → venue.
 - **Denormalized event fields** — `venueName`, `neighborhood`, and `borough` are all copied from the
   venue at creation so cards render without a join. `borough` is optional because events created before
