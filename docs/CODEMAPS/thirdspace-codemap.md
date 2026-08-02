@@ -136,7 +136,14 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 - **Avatar tints are the one deliberate palette exemption** (`utils/avatar.ts`) — they
   encode identity. Guarded separately by `__tests__/components/contrast.test.ts`.
 - **Fonts** — Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta.
-  Uppercase is a token (`eyebrow`, `stubDay`), never an inline `textTransform`.
+- **Every type role is uppercase, app-wide** — chrome and user-written content alike,
+  including text being typed into a field. It is a token on all ten roles in
+  `constants/design.ts`, never an inline `textTransform`. The transform is
+  display-only: stored values and the accessibility tree keep the casing the user
+  typed, so backing caps off long-form copy later is a one-line change per role.
+  The single exception is `FormInput`'s password field, which sets
+  `textTransform: 'none'` so the Show toggle cannot misrepresent a credential.
+  See `docs/superpowers/specs/2026-08-02-uppercase-typography-design.md`.
 - **The display face has ONE weight and no lowercase.** `font.display` is deliberately a
   single key — a second key pointing at the same file would imply a weight axis Bebas does
   not have. Hierarchy inside the display face comes from size alone, and every display
