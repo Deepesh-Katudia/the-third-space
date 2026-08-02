@@ -57,14 +57,21 @@ describe('type scale', () => {
     for (const role of meta) expect(typeScale[role].fontFamily).toMatch(/^IBMPlexMono_/)
   })
 
-  it('reserves uppercase for eyebrows, chips and the date stub', () => {
-    expect(typeScale.eyebrow.textTransform).toBe('uppercase')
-    expect(typeScale.stubDay.textTransform).toBe('uppercase')
-    // screenTitle/cardTitle carry no textTransform token — Bebas Neue has no lowercase,
-    // so the glyphs render as caps either way; the token is reserved for roles where
-    // caps are a deliberate style choice rather than a font limitation.
-    expect(typeScale.screenTitle.textTransform).toBeUndefined()
-    expect(typeScale.cardTitle.textTransform).toBeUndefined()
+  it('uppercases every role — caps are app-wide by intent', () => {
+    // Supersedes the earlier rule that reserved the token for eyebrow/stubDay.
+    // Display roles are caps regardless (Bebas Neue has no lowercase) but still
+    // carry the token, because under this design caps are a deliberate choice
+    // everywhere rather than a font limitation in some places.
+    // See docs/superpowers/specs/2026-08-02-uppercase-typography-design.md
+    for (const [role, style] of Object.entries(typeScale)) {
+      expect([role, style.textTransform]).toEqual([role, 'uppercase'])
+    }
+  })
+
+  it('tracks the body roles out, since uppercase Inter sets tight', () => {
+    for (const role of ['bodyLg', 'body', 'bodySm', 'button'] as const) {
+      expect(typeScale[role].letterSpacing).toBeGreaterThan(0)
+    }
   })
 
   it('gives every role a line height at least its font size', () => {
