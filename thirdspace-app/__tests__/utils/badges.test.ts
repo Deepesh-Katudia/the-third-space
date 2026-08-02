@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 import { CommunityEvent } from '../../types/models'
 import { computeBadges } from '../../utils/badges'
+import { EVENT_CATEGORIES } from '../../constants/categories'
 
 function event(overrides: Partial<CommunityEvent> & { hour?: number }): CommunityEvent {
   const hour = overrides.hour ?? 14
@@ -8,7 +9,7 @@ function event(overrides: Partial<CommunityEvent> & { hour?: number }): Communit
     id: overrides.id ?? 'e1',
     title: 'Event',
     description: '',
-    category: overrides.category ?? 'Social',
+    category: overrides.category ?? 'lets-eat',
     startsAt: { toDate: () => new Date(2026, 0, 1, hour, 0) } as unknown as Timestamp,
     capacity: 10,
     ageRequirement: '18+',
@@ -38,11 +39,17 @@ describe('computeBadges', () => {
     expect(computeBadges(five, 'Newcomer', 0).find((b) => b.id === 'five-in-a-row')?.earned).toBe(true)
   })
 
-  it('unlocks Creative soul at 3+ attended Creative Arts events', () => {
-    const two = [1, 2].map((n) => event({ id: `e${n}`, category: 'Creative Arts' }))
-    const three = [1, 2, 3].map((n) => event({ id: `e${n}`, category: 'Creative Arts' }))
+  it('unlocks Creative soul at 3+ attended Creative Outlet events', () => {
+    const two = [1, 2].map((n) => event({ id: `e${n}`, category: 'creative-outlet' }))
+    const three = [1, 2, 3].map((n) => event({ id: `e${n}`, category: 'creative-outlet' }))
     expect(computeBadges(two, 'Newcomer', 0).find((b) => b.id === 'creative-soul')?.earned).toBe(false)
     expect(computeBadges(three, 'Newcomer', 0).find((b) => b.id === 'creative-soul')?.earned).toBe(true)
+  })
+
+  it('filters on a slug that is a real category', () => {
+    // badges.ts hardcodes one category slug. If a rename lands without updating
+    // it, the badge goes quietly unearnable — this is the loud failure instead.
+    expect(EVENT_CATEGORIES.map((c) => c.id)).toContain('creative-outlet')
   })
 
   it('unlocks Night owl for an attended event at or after 9pm', () => {

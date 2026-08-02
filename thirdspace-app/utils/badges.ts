@@ -7,7 +7,9 @@ const NIGHT_OWL_HOUR = 21
 const CONNECTOR_THRESHOLD = 3
 
 export function computeBadges(attendedEvents: CommunityEvent[], tier: Tier, connectionsCount: number): Badge[] {
-  const creativeCount = attendedEvents.filter((e) => e.category === 'Creative Arts').length
+  // Slug, not a display string — see constants/categories.ts. A test asserts this
+  // is a real category so a rename fails loudly instead of disabling the badge.
+  const creativeCount = attendedEvents.filter((e) => e.category === 'creative-outlet').length
   const hasNightEvent = attendedEvents.some((e) => e.startsAt.toDate().getHours() >= NIGHT_OWL_HOUR)
 
   return [

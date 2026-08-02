@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { CommunityEvent } from '../types/models'
+import { categoryLabel } from '../constants/categories'
 import { formatEventDate, isStartingSoon } from '../utils/eventHelpers'
 import { palette, space } from '../constants/design'
 import { TicketCard } from './ui/TicketCard'
@@ -29,7 +30,7 @@ export function EventCard({ event, onPress, tone = 'deep', trailing, footer }: E
   const startsAt = event.startsAt.toDate()
   const soldOut = event.registeredCount >= event.capacity
 
-  const chips = [formatEventDate(startsAt), event.category]
+  const chips = [formatEventDate(startsAt), categoryLabel(event.category)]
   if (event.ageRequirement === '21+') chips.push('21+')
   if (isStartingSoon(startsAt, new Date())) chips.push('Starting soon')
 

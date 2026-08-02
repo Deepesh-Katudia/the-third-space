@@ -82,7 +82,7 @@ export function FilterSheet({ filters, onChange }: FilterSheetProps) {
       <Section title="Category">
         <View style={styles.chipWrap}>
           {EVENT_CATEGORIES.map((c) => (
-            <Chip key={c} label={c} active={filters.categories.includes(c)} onPress={() => toggleCategory(c)} />
+            <Chip key={c.id} label={c.label} active={filters.categories.includes(c.id)} onPress={() => toggleCategory(c.id)} />
           ))}
         </View>
       </Section>

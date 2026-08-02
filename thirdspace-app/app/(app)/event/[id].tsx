@@ -22,6 +22,7 @@ import { RegistrationConfirmation } from '../../../components/RegistrationConfir
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
 import { subscribeAnnouncements } from '../../../services/announcements'
 import { CommunityEvent, Registration, Announcement } from '../../../types/models'
+import { categoryLabel } from '../../../constants/categories'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { BackButton } from '../../../components/ui/BackButton'
@@ -147,7 +148,7 @@ export default function EventDetail() {
           </SafeAreaView>
           <View style={styles.heroFooter}>
             <View style={styles.categoryChip}>
-              <Meta role="eyebrow" tone="ink">{event.category}</Meta>
+              <Meta role="eyebrow" tone="ink">{categoryLabel(event.category)}</Meta>
             </View>
           </View>
         </View>

@@ -8,7 +8,7 @@ jest.mock('../../services/events', () => ({ getMyRegisteredEvents: jest.fn() }))
 
 function event(id: string, msFromNow: number): CommunityEvent {
   return {
-    id, title: 'E', description: '', category: 'Social',
+    id, title: 'E', description: '', category: 'lets-eat',
     startsAt: { toMillis: () => Date.now() + msFromNow } as unknown as Timestamp,
     capacity: 10, ageRequirement: '18+', venueId: 'v1', venueName: 'V', neighborhood: 'N', registeredCount: 1,
   }

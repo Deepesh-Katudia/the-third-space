@@ -62,7 +62,7 @@ export default function Discover() {
       <StatusBar style="dark" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
-          <Display role="screenTitle" style={styles.tagline}>Your Third Space awaits you</Display>
+          <Display role="screenTitle" style={styles.tagline}>Your Third Space awaits you.</Display>
           <View style={styles.rightCol}>
             <CityChip
               label={borough ?? 'All of NYC'}

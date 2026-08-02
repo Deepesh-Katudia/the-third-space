@@ -170,7 +170,7 @@ describe('createEvent', () => {
     ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
     const venue = { name: 'V', borough: 'Brooklyn' as const, neighborhood: 'N', description: 'd' }
     await createEvent('v1', venue, {
-      title: 'T', description: 'd', category: 'Social' as const,
+      title: 'T', description: 'd', category: 'lets-eat' as const,
       startsAt: new Date('2030-01-01'), capacity: 10, ageRequirement: '18+' as const,
     })
     expect(updateDoc).toHaveBeenCalledWith({ path: 'venues/v1' }, { eventsCount: { __increment: 1 } })
@@ -181,7 +181,7 @@ describe('createEvent', () => {
     ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
     const venue = { name: 'V', borough: 'Queens' as const, neighborhood: 'Astoria', description: 'd' }
     await createEvent('v1', venue, {
-      title: 'T', description: 'd', category: 'Social' as const,
+      title: 'T', description: 'd', category: 'lets-eat' as const,
       startsAt: new Date('2030-01-01'), capacity: 10, ageRequirement: '18+' as const,
     })
     expect(addDoc).toHaveBeenCalledWith(

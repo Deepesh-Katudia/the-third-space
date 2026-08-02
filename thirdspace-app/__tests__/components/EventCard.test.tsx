@@ -20,7 +20,7 @@ const event = {
   description: 'Throw a pot, meet your neighbours.',
   venueName: 'Clay Studio',
   neighborhood: 'Williamsburg',
-  category: 'Creative Arts',
+  category: 'creative-outlet',
   ageRequirement: '21+',
   capacity: 20,
   registeredCount: 4,

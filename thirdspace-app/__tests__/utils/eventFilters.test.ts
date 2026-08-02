@@ -8,7 +8,7 @@ function ev(over: Omit<Partial<CommunityEvent>, 'startsAt'> & { startsAt: Date }
     id: rest.id ?? 'e',
     title: rest.title ?? 'Event',
     description: '',
-    category: rest.category ?? 'Music',
+    category: rest.category ?? 'stage-time',
     startsAt: { toDate: () => startsAt, toMillis: () => startsAt.getTime() } as unknown as CommunityEvent['startsAt'],
     capacity: 20,
     ageRequirement: rest.ageRequirement ?? '18+',
@@ -31,9 +31,9 @@ describe('applyEventFilters', () => {
   })
 
   it('filters by category (multi-select)', () => {
-    const music = ev({ id: 'm', category: 'Music', startsAt: new Date(2026, 5, 27) })
-    const food = ev({ id: 'f', category: 'Food & Drink', startsAt: new Date(2026, 5, 27) })
-    const out = applyEventFilters([music, food], { ...EMPTY_FILTERS, categories: ['Music'] }, '', NOW)
+    const music = ev({ id: 'm', category: 'stage-time', startsAt: new Date(2026, 5, 27) })
+    const food = ev({ id: 'f', category: 'lets-eat', startsAt: new Date(2026, 5, 27) })
+    const out = applyEventFilters([music, food], { ...EMPTY_FILTERS, categories: ['stage-time'] }, '', NOW)
     expect(out.map((e) => e.id)).toEqual(['m'])
   })
 
@@ -91,7 +91,7 @@ describe('hasActiveFilters', () => {
   it('is true when any dimension is set', () => {
     expect(hasActiveFilters({ ...EMPTY_FILTERS, hide21: true })).toBe(true)
     expect(hasActiveFilters({ ...EMPTY_FILTERS, date: 'today' })).toBe(true)
-    expect(hasActiveFilters({ ...EMPTY_FILTERS, categories: ['Music'] })).toBe(true)
+    expect(hasActiveFilters({ ...EMPTY_FILTERS, categories: ['stage-time'] })).toBe(true)
     expect(hasActiveFilters({ ...EMPTY_FILTERS, neighborhoods: ['Bushwick'] })).toBe(true)
   })
 })

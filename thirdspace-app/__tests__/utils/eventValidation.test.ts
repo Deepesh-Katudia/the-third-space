@@ -5,7 +5,7 @@ const now = new Date('2026-06-10T12:00:00')
 const validInput = {
   title: 'Ceramics Night',
   description: 'Hands-on wheel throwing for beginners.',
-  category: 'Creative Arts',
+  category: 'creative-outlet',
   startsAt: new Date('2026-06-20T19:00:00'),
   capacity: '12',
 }
