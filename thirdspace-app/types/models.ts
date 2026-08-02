@@ -1,15 +1,21 @@
 import { Timestamp } from 'firebase/firestore'
 
+/**
+ * Stored as stable slugs, never display strings. Labels live in
+ * constants/categories.ts and can be reworded freely without orphaning events.
+ * See docs/superpowers/specs/2026-08-02-event-categories-design.md
+ */
 export type EventCategory =
-  | 'Creative Arts'
-  | 'Fitness'
-  | 'Social'
-  | 'Nightlife'
-  | 'Food & Drink'
-  | 'Music'
-  | 'Outdoors'
-  | 'Learning'
-  | 'Wellness'
+  | 'day-drinks-nightlife'
+  | 'lets-get-active'
+  | 'creative-outlet'
+  | 'curious-minds'
+  | 'stage-time'
+  | 'lets-eat'
+  | 'touch-grass'
+  | 'game-time'
+  | 'slow-down'
+  | 'level-up'
 
 export type AgeRequirement = '18+' | '21+'
 
