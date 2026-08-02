@@ -92,19 +92,6 @@ export default function Discover() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.categoryTrigger}
-          onPress={() => router.push({ pathname: '/(app)/category-picker' })}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Meta role="eyebrow" tone="inkSoft">Browse by</Meta>
-          <Display style={styles.categoryTriggerLabel}>
-            {activeCategory ? categoryLabel(activeCategory) : 'All events'}
-          </Display>
-          <Meta tone="ink">▾</Meta>
-        </TouchableOpacity>
-
         {widened ? (
           <Meta role="eyebrow" tone="clay" style={styles.widenedNotice}>
             Nothing matching in {borough} — showing all of NYC
@@ -188,20 +175,5 @@ const styles = StyleSheet.create({
   },
   filterIcon: { fontSize: 18 },
   filterDot: { position: 'absolute', top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: palette.clay },
-  // Full-width trigger rather than a chip row: the category names are long
-  // enough that a horizontal scroll hid most of them behind the screen edge.
-  categoryTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    backgroundColor: palette.orangeLight,
-    borderWidth: 1,
-    borderColor: palette.rule,
-    borderRadius: radius.chip,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.md,
-    marginBottom: space.lg,
-  },
-  categoryTriggerLabel: { flex: 1 },
   widenedNotice: { marginBottom: space.md },
 })

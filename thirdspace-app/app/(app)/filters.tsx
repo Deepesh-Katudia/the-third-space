@@ -6,6 +6,8 @@ import { FilterSheet } from '../../components/FilterSheet'
 import { useDiscoverFilters } from '../../hooks/useDiscoverFilters'
 import { useUpcomingEvents } from '../../hooks/useUpcomingEvents'
 import { applyEventFilters } from '../../utils/eventFilters'
+import { filterByBorough } from '../../utils/locationFilter'
+import { useUserLocation } from '../../hooks/useUserLocation'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
 import { palette, radius, space } from '../../constants/design'
@@ -14,8 +16,18 @@ export default function Filters() {
   const router = useRouter()
   const { filters, query, setFilters, reset } = useDiscoverFilters()
   const { events } = useUpcomingEvents()
+  const { borough } = useUserLocation()
 
   const count = useMemo(() => applyEventFilters(events, filters, query).length, [events, filters, query])
+
+  // Per-category counts are scoped to the browsing borough but NOT to the active
+  // category — scoping by it would make every row but the chosen one read zero.
+  const categoryCounts = useMemo(() => {
+    const scoped = filterByBorough(events, borough).events
+    const map: Record<string, number> = {}
+    for (const e of scoped) map[e.category] = (map[e.category] ?? 0) + 1
+    return map
+  }, [events, borough])
 
   return (
     <Screen tone="cream">
@@ -31,7 +43,7 @@ export default function Filters() {
       </View>
 
       <View style={styles.body}>
-        <FilterSheet filters={filters} onChange={setFilters} />
+        <FilterSheet filters={filters} onChange={setFilters} counts={categoryCounts} />
       </View>
 
       <View style={styles.footer}>

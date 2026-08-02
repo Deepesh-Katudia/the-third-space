@@ -4,7 +4,7 @@ import { EventCategory } from '../types/models'
 import { EVENT_CATEGORIES } from '../constants/categories'
 import { DateFilter, EventFilters, EMPTY_FILTERS } from '../constants/filters'
 import { palette, radius, space } from '../constants/design'
-import { Body, Meta } from './ui/Text'
+import { Display, Body, Meta } from './ui/Text'
 
 // Re-exported so existing importers (filters screen) keep resolving these from here.
 export { EMPTY_FILTERS }
@@ -21,9 +21,15 @@ const NEIGHBORHOODS = ['Williamsburg', 'Bushwick', 'Park Slope', 'Greenpoint', '
 interface FilterSheetProps {
   filters: EventFilters
   onChange: (next: EventFilters) => void
+  /**
+   * Events per category slug, scoped to the browsing borough but NOT to the
+   * active category — scoping by it would make every row but the chosen one
+   * read zero. Omitted in tests and anywhere the feed is not available.
+   */
+  counts?: Record<string, number>
 }
 
-export function FilterSheet({ filters, onChange }: FilterSheetProps) {
+export function FilterSheet({ filters, onChange, counts }: FilterSheetProps) {
   const toggleNeighborhood = (n: string) =>
     onChange({
       ...filters,
@@ -79,11 +85,35 @@ export function FilterSheet({ filters, onChange }: FilterSheetProps) {
         />
       </Section>
 
+      {/* Categories get full rows rather than chips: the names are long and the
+          blurbs are what distinguish Touch Grass from Let's Get Active. This is
+          the app's only category filter — there is deliberately no second one. */}
       <Section title="Category">
-        <View style={styles.chipWrap}>
-          {EVENT_CATEGORIES.map((c) => (
-            <Chip key={c.id} label={c.label} active={filters.categories.includes(c.id)} onPress={() => toggleCategory(c.id)} />
-          ))}
+        <View style={styles.categoryList}>
+          {EVENT_CATEGORIES.map((c, index) => {
+            const active = filters.categories.includes(c.id)
+            const isLast = index === EVENT_CATEGORIES.length - 1
+            return (
+              <TouchableOpacity
+                key={c.id}
+                onPress={() => toggleCategory(c.id)}
+                style={[styles.categoryRow, isLast && styles.categoryRowLast, active && styles.categoryRowActive]}
+                activeOpacity={0.7}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: active }}
+              >
+                <Meta style={styles.categoryEmoji}>{c.emoji}</Meta>
+                <View style={styles.categoryText}>
+                  <Display>{c.label}</Display>
+                  <Body role="bodySm">{c.blurb}</Body>
+                </View>
+                <Meta testID={`count-${c.id}`} tone="clay">{counts?.[c.id] ?? 0}</Meta>
+                <View style={[styles.check, active && styles.checkActive]}>
+                  {active ? <Meta tone="clay" style={styles.checkMark}>✓</Meta> : null}
+                </View>
+              </TouchableOpacity>
+            )
+          })}
         </View>
       </Section>
     </ScrollView>
@@ -143,4 +173,28 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: space.xs + 2 },
+
+  // One bordered card, hairline-divided — the same treatment the borough picker
+  // uses, so the two selection surfaces read as the same kind of control.
+  categoryList: {
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.chip,
+    overflow: 'hidden',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.md + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.rule,
+  },
+  categoryRowLast: { borderBottomWidth: 0 },
+  categoryRowActive: { backgroundColor: palette.orangeLight },
+  categoryEmoji: { fontSize: 20, lineHeight: 24 },
+  categoryText: { flex: 1, gap: space.xs },
+  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: palette.rule, alignItems: 'center', justifyContent: 'center' },
+  checkActive: { borderColor: palette.clay },
+  checkMark: { fontSize: 13, lineHeight: 16 },
 })

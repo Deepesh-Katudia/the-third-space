@@ -1,13 +1,20 @@
-# Event Categories & Category Dropdown — Design
+# Event Categories & Category Filtering — Design
 
 _2026-08-02. Replaces the nine generic categories established in the original event
-model with ten opinionated ones, and replaces Discover's horizontal chip scroll with
-a modal picker._
+model with ten opinionated ones, and moves category selection into the filter sheet._
+
+> **Revised 2026-08-02, same day.** This spec originally called for a standalone
+> category dropdown on Discover *alongside* the filter sheet's category chips, on the
+> reasoning that "jump to one" and "combine several" were different jobs. That was
+> wrong: it shipped two ways to filter by category in one app. The dropdown and its
+> `category-picker.tsx` route were removed and the rich category rows moved into the
+> filter sheet, which is now the only place categories are chosen. Sections below are
+> updated to describe what shipped.
 
 ## Goal
 
-Ten named categories with a point of view, reachable from a dropdown at the top of
-Discover, with honest empty states for the ones that have not filled up yet.
+Ten named categories with a point of view, chosen from one place — the filter sheet —
+with honest empty states for the ones that have not filled up yet.
 
 ## The category set
 
@@ -30,7 +37,7 @@ removing it forces hosts to pick something that actually describes their event.
 The blurbs are not decoration. They ship as data because "Touch Grass" and "Slow
 Down" are not self-describing, and a host guessing wrong is how categories become
 useless. They render in the create-event picker, where miscategorization actually
-happens, and in the dropdown rows.
+happens, and in the filter sheet rows.
 
 ## Store slugs, not labels
 
@@ -75,24 +82,30 @@ export function categoryLabel(id: string): string
 `categoryLabel` returning the raw id for an unknown slug is deliberate: a blank chip
 is a bug that hides, and a visible `touch-grass` is a bug that reports itself.
 
-## The picker route
+## Where categories are chosen
 
-New modal route `app/(app)/category-picker.tsx`, registered in `app/(app)/_layout.tsx`
-alongside the existing `filters` and `borough-picker` modals and built to the same
-shape as `borough-picker.tsx` — same problem (pick one from a list), same solution.
+The filter sheet, and nowhere else. `components/FilterSheet.tsx` renders the ten
+categories as full rows — emoji, label, blurb, count, checkbox — inside one bordered,
+hairline-divided card matching the borough picker's treatment.
 
-Discover's header gets a full-width trigger showing the active category and a chevron.
-Rows show emoji, label, blurb, and a count.
+Rows rather than chips because the names are long ("Stage Time: Comedy + Music") and
+the blurbs are the whole point: they are what distinguishes Touch Grass from Let's
+Get Active. Chips have nowhere to put them.
+
+Selection stays **multi-select**, which is what a filter sheet is for and what the
+sheet already did. The existing "Show N events" footer reflects the combination.
 
 **Counts are computed over the borough-scoped feed**, before the category filter is
 applied — "how many of these are near me". Counting the fully-filtered feed would
-make every row read 0 except the active one; counting all of NYC would make a row
+make every row read 0 except the active ones; counting all of NYC would make a row
 promise events the user cannot see without changing boroughs. Scoping to borough
 makes a `0` mean exactly what the empty state then explains.
 
-Counting is client-side over the existing `subscribeUpcomingEvents` subscription. No
-new query, and no composite index — consistent with the app-wide rule that every
-Firestore query uses single-field `where` only.
+`app/(app)/filters.tsx` computes them and passes them down as an optional `counts`
+prop, keeping `FilterSheet` a presentational component that renders whatever it is
+given. Counting is client-side over the existing `subscribeUpcomingEvents`
+subscription. No new query, and no composite index — consistent with the app-wide
+rule that every Firestore query uses single-field `where` only.
 
 ## Collapsing the drift
 
@@ -100,21 +113,19 @@ Discover currently hardcodes six chips at `app/(app)/(attender)/index.tsx:22`, w
 `components/CategoryTabs.tsx` renders all nine. Two implementations, two subsets,
 already disagreeing with each other and with `EVENT_CATEGORIES`.
 
-Both are deleted. The picker becomes the single reader of `EVENT_CATEGORIES`. Delete
-`components/CategoryTabs.tsx` and its test file if one exists.
+Both are deleted, and so is the standalone dropdown that briefly replaced them.
+`components/FilterSheet.tsx` is the single reader of `EVENT_CATEGORIES` and the single
+place a category is chosen. Discover keeps only the ⚙ filter button, whose existing
+dot indicator already signals that a filter is active.
 
-`components/FilterSheet.tsx` keeps its multi-select — combining several categories is
-a genuinely different job from jumping to one — but starts resolving labels through
-`categoryLabel()` rather than rendering the stored value.
-
-The dropdown writes `filters.categories` as a single-element array, which is the
-contract Discover already implements at `index.tsx:55-58`. The filter sheet and the
-dropdown therefore stay consistent with no new state and no new store.
+There is exactly one category filter in the app. A second entry point — however it is
+justified — is the drift this section exists to prevent.
 
 ## Empty state
 
-Selecting a category with no events renders the existing `EmptyState` component with
-the category's own emoji and label:
+Selecting **exactly one** category with no events renders the existing `EmptyState`
+component with that category's own emoji and label. With several selected the generic
+no-match state applies, since there is no single category to name:
 
 ```
         🎮
@@ -150,9 +161,9 @@ quietly in production.
   known slug to its label and returns the raw input for an unknown one.
 - `__tests__/utils/badges.test.ts` (update): Creative Soul earns on `creative-outlet`,
   plus the guard that the filtered slug is a real category.
-- `__tests__/components/CategoryPicker.test.tsx` (new): renders all ten rows plus
-  All; shows a zero count for an empty category; selecting a row writes a
-  single-element `filters.categories`.
+- `__tests__/components/FilterSheet.test.tsx` (new): renders all ten rows with label
+  and blurb; shows a zero count for an empty category; selecting a second category
+  ADDS to the selection rather than replacing it; deselecting removes it.
 - Existing `eventFilters` tests update to the new slugs. The filtering logic itself
   is unchanged — it compares category values without interpreting them.
 
@@ -167,6 +178,5 @@ quietly in production.
 
 ## Build note
 
-Adding `category-picker.tsx` invalidates expo-router's generated types. Per the
-codemap: run `npx expo start` for ~25s, kill it, then run `tsc`. Use the object form
-`router.push({ pathname: '/(app)/category-picker' })` for the same reason.
+No new routes ship in the final design, so expo-router's generated types need no
+regeneration. `.expo/types/` is gitignored and refreshes on the next `npx expo start`.
