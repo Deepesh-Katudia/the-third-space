@@ -33,9 +33,24 @@ describe('text primitives', () => {
     expect(style.color).toBe(palette.clay)
   })
 
-  it('uppercases the eyebrow role via the token, not the caller', () => {
-    const { getByText } = render(<Meta role="eyebrow">Send announcement</Meta>)
-    expect(flat(getByText('Send announcement').props.style).textTransform).toBe('uppercase')
+  it('uppercases through every face via the token, not the caller', () => {
+    // Callers pass sentence case; the token does the transforming. If a primitive
+    // stopped forwarding typeScale, these would go quiet rather than fail loudly,
+    // so there is one assertion per face.
+    const display = render(<Display role="cardTitle">Ceramics night</Display>)
+    const body = render(<Body role="bodyLg">Do exercise</Body>)
+    const meta = render(<Meta role="eyebrow">Send announcement</Meta>)
+
+    expect(flat(display.getByText('Ceramics night').props.style).textTransform).toBe('uppercase')
+    expect(flat(body.getByText('Do exercise').props.style).textTransform).toBe('uppercase')
+    expect(flat(meta.getByText('Send announcement').props.style).textTransform).toBe('uppercase')
+  })
+
+  it('does not alter the string it renders — caps are display-only', () => {
+    // getByText matches the ORIGINAL casing. This is what keeps Firestore values
+    // and the accessibility tree in the casing the user actually typed.
+    const { getByText } = render(<Body>Loves pottery and bad coffee</Body>)
+    expect(getByText('Loves pottery and bad coffee')).toBeTruthy()
   })
 
   it('each component has its correct displayName', () => {
