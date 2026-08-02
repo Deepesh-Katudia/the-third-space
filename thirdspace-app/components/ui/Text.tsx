@@ -15,15 +15,17 @@ interface TextProps<R extends TypeRole = TypeRole> {
   numberOfLines?: number
   /** Announce changes to screen readers — used by Toast. */
   accessibilityLiveRegion?: 'none' | 'polite' | 'assertive'
+  testID?: string
   children: React.ReactNode
 }
 
 function make<R extends TypeRole>(displayName: string, defaultRole: R, defaultTone: Tone) {
-  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, accessibilityLiveRegion, children }: TextProps<R>) {
+  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, accessibilityLiveRegion, testID, children }: TextProps<R>) {
     return (
       <Text
         numberOfLines={numberOfLines}
         accessibilityLiveRegion={accessibilityLiveRegion}
+        testID={testID}
         style={[typeScale[role], { color: palette[tone] }, style]}
       >
         {children}

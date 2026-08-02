@@ -9,6 +9,7 @@ export default function AppLayout() {
         <Stack.Screen name="create-event" options={{ presentation: 'modal' }} />
         <Stack.Screen name="filters" options={{ presentation: 'modal' }} />
         <Stack.Screen name="borough-picker" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="category-picker" options={{ presentation: 'modal' }} />
         <Stack.Screen name="message-requests" options={{ presentation: 'modal' }} />
         <Stack.Screen name="edit-profile" />
       </Stack>
