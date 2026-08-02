@@ -96,10 +96,23 @@ export default function CreateEvent() {
         <FormInput label="Description" value={description} onChangeText={setDescription} error={errors.description} placeholder="What to expect, what to bring" />
 
         <Meta role="eyebrow" style={styles.label}>Category</Meta>
-        <View style={styles.chipRow}>
+        {/* Stacked rows rather than chips: the blurb is the point. Touch Grass and
+            Slow Down are not self-describing, and miscategorisation happens here. */}
+        <View style={styles.categoryList}>
           {EVENT_CATEGORIES.map((c) => (
-            <TouchableOpacity key={c} onPress={() => setCategory(c)} style={[styles.chip, category === c && styles.chipActive]}>
-              <Meta role="eyebrow" tone={category === c ? 'clay' : 'inkSoft'}>{c}</Meta>
+            <TouchableOpacity
+              key={c.id}
+              onPress={() => setCategory(c.id)}
+              style={[styles.categoryRow, category === c.id && styles.chipActive]}
+              activeOpacity={0.7}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: category === c.id }}
+            >
+              <Meta style={styles.categoryEmoji}>{c.emoji}</Meta>
+              <View style={styles.categoryText}>
+                <Display>{c.label}</Display>
+                <Body role="bodySm">{c.blurb}</Body>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -158,6 +171,19 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
   },
   chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  categoryList: { marginBottom: space.lg },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    borderWidth: 1,
+    borderColor: palette.rule,
+    borderRadius: radius.ticket,
+    padding: space.md,
+    marginBottom: space.sm,
+  },
+  categoryEmoji: { fontSize: 20, lineHeight: 24 },
+  categoryText: { flex: 1, gap: space.xs },
   dateRow: { flexDirection: 'row', gap: space.md, marginBottom: space.lg },
   dateButton: {
     flex: 1,

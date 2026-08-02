@@ -14,20 +14,11 @@ import { useUserLocation, resolveLocation } from '../../../hooks/useUserLocation
 import { filterByBorough } from '../../../utils/locationFilter'
 import { applyEventFilters, hasActiveFilters } from '../../../utils/eventFilters'
 import { avatarColor, initials } from '../../../utils/avatar'
+import { categoryLabel, categoryMeta } from '../../../constants/categories'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Meta } from '../../../components/ui/Text'
 import { CityChip } from '../../../components/ui/CityChip'
 import { palette, radius, space, type as typeScale, NAV_CLEARANCE } from '../../../constants/design'
-
-const CATEGORY_CHIPS: { label: string; value: EventCategory | 'All' }[] = [
-  { label: 'All', value: 'All' },
-  { label: 'Creative', value: 'Creative Arts' },
-  { label: 'Nightlife', value: 'Nightlife' },
-  { label: 'Wellness', value: 'Wellness' },
-  { label: 'Music', value: 'Music' },
-  { label: 'Food', value: 'Food & Drink' },
-  { label: 'Social', value: 'Social' },
-]
 
 export default function Discover() {
   const router = useRouter()
@@ -52,10 +43,8 @@ export default function Discover() {
   // EventFilters, so "Clear filters" never silently resets the user's location.
   const { events: visible, widened } = useMemo(() => filterByBorough(filtered, borough), [filtered, borough])
 
-  const activeCategory: EventCategory | 'All' =
-    filters.categories.length === 1 ? filters.categories[0] : 'All'
-  const selectCategory = (value: EventCategory | 'All') =>
-    setFilters({ ...filters, categories: value === 'All' ? [] : [value] })
+  const activeCategory: EventCategory | null =
+    filters.categories.length === 1 ? filters.categories[0] : null
 
   return (
     <Screen tone="deep">
@@ -103,20 +92,18 @@ export default function Discover() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          {CATEGORY_CHIPS.map((chip) => {
-            const active = activeCategory === chip.value
-            return (
-              <TouchableOpacity
-                key={chip.label}
-                onPress={() => selectCategory(chip.value)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Meta role="eyebrow" tone={active ? 'clay' : 'inkSoft'}>{chip.label}</Meta>
-              </TouchableOpacity>
-            )
-          })}
-        </ScrollView>
+        <TouchableOpacity
+          style={styles.categoryTrigger}
+          onPress={() => router.push({ pathname: '/(app)/category-picker' })}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+        >
+          <Meta role="eyebrow" tone="inkSoft">Browse by</Meta>
+          <Display style={styles.categoryTriggerLabel}>
+            {activeCategory ? categoryLabel(activeCategory) : 'All events'}
+          </Display>
+          <Meta tone="ink">▾</Meta>
+        </TouchableOpacity>
 
         {widened ? (
           <Meta role="eyebrow" tone="clay" style={styles.widenedNotice}>
@@ -131,6 +118,16 @@ export default function Discover() {
         ) : visible.length === 0 ? (
           events.length === 0 ? (
             <EmptyState emoji="🗓️" title="Nothing coming up yet" body="New events will appear here as venues post them." />
+          ) : activeCategory ? (
+            <EmptyState
+              emoji={categoryMeta(activeCategory)?.emoji ?? '🔍'}
+              title={categoryLabel(activeCategory)}
+              body={`No ${categoryLabel(activeCategory)} events yet. New ones land here as hosts post them.`}
+              actionLabel="Browse all events"
+              // Clears the category only — the user keeps their search, date and
+              // neighborhood filters and lands back in the feed they came from.
+              onAction={() => setFilters({ ...filters, categories: [] })}
+            />
           ) : (
             <EmptyState
               emoji="🔍"
@@ -191,14 +188,20 @@ const styles = StyleSheet.create({
   },
   filterIcon: { fontSize: 18 },
   filterDot: { position: 'absolute', top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: palette.clay },
-  chipRow: { gap: space.sm, paddingBottom: space.xs, marginBottom: space.lg },
-  chip: {
-    borderRadius: radius.chip,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.sm,
+  // Full-width trigger rather than a chip row: the category names are long
+  // enough that a horizontal scroll hid most of them behind the screen edge.
+  categoryTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    backgroundColor: palette.orangeLight,
     borderWidth: 1,
     borderColor: palette.rule,
+    borderRadius: radius.chip,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    marginBottom: space.lg,
   },
-  chipActive: { backgroundColor: palette.orangeLight, borderColor: palette.clay },
+  categoryTriggerLabel: { flex: 1 },
   widenedNotice: { marginBottom: space.md },
 })
