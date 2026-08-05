@@ -4,10 +4,13 @@ import { Timestamp } from 'firebase/firestore'
  * Stored as stable slugs, never display strings. Labels live in
  * constants/categories.ts and can be reworded freely without orphaning events.
  * See docs/superpowers/specs/2026-08-02-event-categories-design.md
+ *
+ * The slugs read nothing like the labels they now carry ('creative-outlet' is Make,
+ * 'level-up' is Networking) and that is the design working, not drift. Renaming a slug
+ * to match its new label would orphan every event already filed under it — which is the
+ * exact failure the slug indirection exists to prevent. Leave them alone.
  */
 export type EventCategory =
-  | 'day-drinks-nightlife'
-  | 'lets-get-active'
   | 'creative-outlet'
   | 'curious-minds'
   | 'stage-time'
@@ -16,6 +19,14 @@ export type EventCategory =
   | 'game-time'
   | 'slow-down'
   | 'level-up'
+
+/**
+ * Slugs no host can pick any more, but that existing Firestore documents still carry.
+ * Not part of `EventCategory` — nothing new may be filed under them — but
+ * `categoryLabel()` still resolves them so an old event renders a name instead of a raw
+ * slug. Retiring a category is a copy decision; it is not licence to corrupt history.
+ */
+export type RetiredEventCategory = 'day-drinks-nightlife' | 'lets-get-active'
 
 export type AgeRequirement = '18+' | '21+'
 

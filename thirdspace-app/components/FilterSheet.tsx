@@ -5,6 +5,7 @@ import { EVENT_CATEGORIES } from '../constants/categories'
 import { DateFilter, EventFilters, EMPTY_FILTERS } from '../constants/filters'
 import { palette, radius, space } from '../constants/design'
 import { Display, Body, Meta } from './ui/Text'
+import { CategorySuggestion } from './CategorySuggestion'
 
 // Re-exported so existing importers (filters screen) keep resolving these from here.
 export { EMPTY_FILTERS }
@@ -85,9 +86,9 @@ export function FilterSheet({ filters, onChange, counts }: FilterSheetProps) {
         />
       </Section>
 
-      {/* Categories get full rows rather than chips: the names are long and the
-          blurbs are what distinguish Touch Grass from Let's Get Active. This is
-          the app's only category filter — there is deliberately no second one. */}
+      {/* Categories get full rows rather than chips: the labels are short enough now
+          that the blurb is what actually distinguishes Make from Stage. This is the
+          app's only category filter — there is deliberately no second one. */}
       <Section title="Category">
         <View style={styles.categoryList}>
           {EVENT_CATEGORIES.map((c, index) => {
@@ -115,6 +116,7 @@ export function FilterSheet({ filters, onChange, counts }: FilterSheetProps) {
             )
           })}
         </View>
+        <CategorySuggestion />
       </Section>
     </ScrollView>
   )
