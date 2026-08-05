@@ -20,6 +20,7 @@ import { LoadingView } from '../../../components/LoadingView'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { RegistrationConfirmation } from '../../../components/RegistrationConfirmation'
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
+import { AmbientBackdrop } from '../../../components/AmbientBackdrop'
 import { subscribeAnnouncements } from '../../../services/announcements'
 import { CommunityEvent, Registration, Announcement } from '../../../types/models'
 import { categoryLabel } from '../../../constants/categories'
@@ -136,6 +137,9 @@ export default function EventDetail() {
 
   return (
     <View style={styles.container}>
+      {/* This screen is full-bleed — the ink hero runs under the status bar — so it does
+          not go through `Screen` and has to carry the ambient field itself. */}
+      <AmbientBackdrop />
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Hero — the ink stub of one big ticket, torn off above the detail body. */}
@@ -273,7 +277,7 @@ export default function EventDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.orangeDeep },
+  container: { flex: 1 },
   scroll: { paddingBottom: 120 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
 
@@ -284,8 +288,12 @@ const styles = StyleSheet.create({
   heroFooter: { padding: space.xl - 4 },
   categoryChip: { alignSelf: 'flex-start', backgroundColor: palette.orangeLight, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },
 
-  // The tear notches that make the hero read as a ticket stub, painted in the
-  // screen tone so they punch through the ink band.
+  // The tear notches that make the hero read as a ticket stub, painted in the field's
+  // top tone so they punch through the ink band. They no longer match the background
+  // exactly — the field is a gradient now and these scroll through it — but each is a
+  // 7x14px half-disc at the hero seam, where the field is still within a few percent
+  // of orangeDeep. Clipping a live copy of the gradient into 14px would cost more than
+  // it buys.
   notch: {
     position: 'absolute',
     width: NOTCH,

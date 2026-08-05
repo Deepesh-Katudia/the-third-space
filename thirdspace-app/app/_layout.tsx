@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
-import { View, ActivityIndicator } from 'react-native'
 import { useFonts } from 'expo-font'
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue'
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { IBMPlexMono_500Medium, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono'
 import { useAuth } from '../hooks/useAuth'
 import { resolveAuthRoute } from '../utils/authRoute'
-import { palette } from '../constants/design'
+import { LoadingView } from '../components/LoadingView'
+import { navigatorBackground } from '../constants/design'
 
 interface AuthRedirectProps {
   user: import('firebase/auth').User | null
@@ -43,18 +43,14 @@ export default function RootLayout() {
   })
   const { user, role, hasProfile, loading } = useAuth()
 
-  if (!fontsLoaded || loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.orangeDeep }}>
-        <ActivityIndicator color={palette.clay} size="large" />
-      </View>
-    )
-  }
+  // The very first frame of the app. LoadingView carries the ambient field, so the field
+  // is already there before fonts resolve rather than fading in after them.
+  if (!fontsLoaded || loading) return <LoadingView />
 
   return (
     <>
       <AuthRedirect user={user} role={role} hasProfile={hasProfile} loading={loading} />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: navigatorBackground }} />
     </>
   )
 }

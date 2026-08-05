@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { setOnboardingPrefs } from '../../services/preferences'
 import { Display, Body, Meta } from '../../components/ui/Text'
-import { WelcomeBackdrop } from '../../components/WelcomeBackdrop'
+import { AmbientBackdrop } from '../../components/AmbientBackdrop'
 import { useWelcomeReveal } from '../../hooks/useWelcomeReveal'
 import { palette, radius, space } from '../../constants/design'
 
@@ -73,9 +73,10 @@ export default function Onboarding() {
   return (
     <Pressable style={styles.field} onPress={reveal.skip} accessible={false}>
       <StatusBar style="dark" />
-      {/* !== false (not === true) so the probe's null in-flight state fails safe to
-          "no motion" rather than briefly starting drift loops that then get torn down. */}
-      <WelcomeBackdrop reduceMotion={reveal.reduceMotion !== false} />
+      {/* The same field every other screen carries — this is the comp's splash placement.
+          It runs its own reduced-motion probe, so nothing is threaded through from the
+          reveal timeline. */}
+      <AmbientBackdrop />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
         <View style={styles.logoWrap}>
@@ -93,7 +94,8 @@ export default function Onboarding() {
           </Animated.View>
 
           <Animated.View style={rise(reveal.tagline, 10)}>
-            {/* ink, not inkSoft: inkSoft is 3.78:1 on welcomeSkyTop, under AA. */}
+            {/* ink rather than inkSoft: the tagline sits over the top of the field, the
+                darkest part of the gradient, and this is the app's one hero line. */}
             <Meta role="eyebrow" tone="ink" style={styles.tagline}>Your Third Space awaits you...</Meta>
           </Animated.View>
         </View>

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
 import { useVenue } from '../../../hooks/useVenue'
 import { LoadingView } from '../../../components/LoadingView'
-import { tabBar, type as typeScale } from '../../../constants/design'
+import { tabBar, navigatorBackground, type as typeScale } from '../../../constants/design'
 
 export default function HosterLayout() {
   const { user, role, loading } = useAuth()
@@ -20,6 +20,7 @@ export default function HosterLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        sceneStyle: navigatorBackground,
         tabBarActiveTintColor: tabBar.activeTintColor,
         tabBarInactiveTintColor: tabBar.inactiveTintColor,
         tabBarStyle: {

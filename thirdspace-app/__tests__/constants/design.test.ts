@@ -111,23 +111,46 @@ describe('layout tokens', () => {
   })
 })
 
-describe('welcome field tokens', () => {
-  it('gives the welcome field two distinct stops, dark to light', () => {
-    expect(palette.welcomeSkyTop).not.toBe(palette.welcomeSkyBottom)
-    expect(luminance(palette.welcomeSkyTop)).toBeLessThan(luminance(palette.welcomeSkyBottom))
+describe('ambient field tokens', () => {
+  const GLOWS = [
+    palette.ambientGlowGold,
+    palette.ambientGlowPeach,
+    palette.ambientGlowCream,
+    palette.ambientGlowEmber,
+    palette.ambientGlowSand,
+  ]
+
+  it('builds the field out of the two tones already in the palette', () => {
+    // The app-wide background is the one gradient in the system, and it runs between
+    // colours the rest of the app already uses — not a third and fourth orange.
+    expect(luminance(palette.orangeDeep)).toBeLessThan(luminance(palette.orangeLight))
   })
 
-  it('reads ink at AA across the whole gradient', () => {
-    // The wordmark and tagline sit over a range, not a single fill, so ink has to
-    // clear AA at BOTH ends or it fails somewhere in the middle.
-    expect(contrast(palette.ink, palette.welcomeSkyTop)).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(palette.ink, palette.welcomeSkyBottom)).toBeGreaterThanOrEqual(4.5)
+  it('reads ink at AA across the whole field', () => {
+    // Text sits over a range, not a single fill, so ink has to clear AA at BOTH ends
+    // or it fails somewhere in the middle.
+    expect(contrast(palette.ink, palette.orangeDeep)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(palette.ink, palette.orangeLight)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('pins why the tagline cannot use inkSoft', () => {
-    // 3.78:1 — under AA. This test exists so that "soften the tagline" is a
-    // deliberate decision with a failing test attached, not a quiet regression.
-    expect(contrast(palette.inkSoft, palette.welcomeSkyTop)).toBeLessThan(4.5)
+  it('keeps every glow low-alpha, because the rings stack', () => {
+    // Five concentric rings of one colour fake the radial falloff. Past ~0.15 the
+    // outermost ring stops being invisible and the blob reads as a hard-edged disc.
+    for (const glow of GLOWS) {
+      const alpha = Number(glow.slice(glow.lastIndexOf(',') + 1, -1))
+      expect(alpha).toBeGreaterThan(0)
+      expect(alpha).toBeLessThanOrEqual(0.15)
+    }
+  })
+
+  it('gives the glows distinct colours, so the field is not one flat wash', () => {
+    expect(new Set(GLOWS).size).toBe(GLOWS.length)
+  })
+
+  it('leaves the cream veil short of opaque, so the field still moves under forms', () => {
+    const alpha = Number(palette.creamVeil.slice(palette.creamVeil.lastIndexOf(',') + 1, -1))
+    expect(alpha).toBeGreaterThan(0.7)
+    expect(alpha).toBeLessThan(1)
   })
 })
 
