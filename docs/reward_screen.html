@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Majestic Template — Applied Across Characters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF3E9; --ink:#2B2015; --ink-soft:#6E5B44; --clay:#8A3A17;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--cream); font-family:'Inter', sans-serif; color:var(--ink); padding:48px 24px 90px; }
+  .intro{ max-width:920px; margin:0 auto 36px; }
+  .intro .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--clay); font-weight:600; margin-bottom:10px;
+  }
+  .intro h1{ font-family:'Bebas Neue', sans-serif; font-weight:400; font-size:34px; line-height:1.1; margin-bottom:10px; letter-spacing:0.01em; }
+  .intro p{ font-size:15px; color:var(--ink-soft); max-width:640px; line-height:1.5; }
+
+  .stage{ display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
+  .col{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .col-label{ text-align:center; }
+  .col-label .tag{
+    display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--cream); background:var(--ink); padding:3px 9px; border-radius:3px;
+  }
+
+  .phone{
+    width:290px; height:620px; border-radius:38px; background:#111; padding:10px;
+    box-shadow: 0 28px 55px -16px rgba(43,32,21,0.4), 0 4px 10px rgba(43,32,21,0.15);
+    position:relative;
+  }
+  .phone::before{
+    content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    width:88px; height:18px; background:#111; border-radius:0 0 14px 14px; z-index:5;
+  }
+  .screen{ width:100%; height:100%; border-radius:29px; overflow:hidden; position:relative; background:#161213; }
+  .backdrop{ padding:22px 16px; opacity:0.25; }
+  .backdrop .row{ height:58px; background:#3a2f28; border-radius:13px; margin-bottom:12px; }
+
+  .veil{ position:absolute; inset:0; background:rgba(10,6,4,0.72); display:flex; align-items:center; justify-content:center; }
+
+  .modal-e{
+    width:250px; padding:32px 20px 24px; border-radius:26px; position:relative; overflow:visible;
+    background:
+      radial-gradient(55% 38% at 26% 14%, rgba(255,110,190,0.28), rgba(255,110,190,0) 62%),
+      radial-gradient(48% 36% at 78% 10%, rgba(110,210,255,0.2), rgba(110,210,255,0) 65%),
+      radial-gradient(60% 42% at 68% 55%, rgba(180,110,255,0.22), rgba(180,110,255,0) 68%),
+      radial-gradient(130% 100% at 50% 6%, #5C2FA8 0%, #3A1C80 24%, #221056 46%, #140B38 66%, #08051A 100%);
+    box-shadow: 0 0 0 1px rgba(200,170,255,0.2), 0 30px 80px rgba(0,0,0,0.7);
+    text-align:center;
+  }
+  .e-star{ position:absolute; width:2px; height:2px; border-radius:50%; background:#E8D9FF; opacity:0.8; z-index:1; }
+  .e-burst{ position:absolute; top:-36px; left:50%; transform:translateX(-50%); width:320px; height:320px; z-index:1; animation: burstPulse 4.6s ease-in-out infinite; transform-origin:center; }
+  @keyframes burstPulse{ 0%,100%{ transform:translateX(-50%) scale(1);} 50%{ transform:translateX(-50%) scale(1.16);} }
+  .e-ray{
+    position:absolute; top:50%; left:50%; width:3px; height:180px;
+    background:linear-gradient(180deg, rgba(255,232,180,0.85), rgba(255,232,180,0));
+    transform-origin:top center; filter:blur(0.3px);
+  }
+  .e-glow{
+    position:absolute; top:34px; left:50%; transform:translate(-50%,-50%);
+    width:196px; height:196px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,236,190,0.7) 0%, rgba(255,210,140,0.3) 35%, rgba(160,110,255,0.18) 60%, rgba(160,110,255,0) 78%);
+    filter:blur(1px);
+    animation: glowBreathe 3.2s ease-in-out infinite;
+  }
+  @keyframes glowBreathe{
+    0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:0.9; }
+    50%{ transform:translate(-50%,-50%) scale(1.12); opacity:1; }
+  }
+  .e-oring{ position:absolute; top:28px; left:50%; border-radius:50%; z-index:2; }
+  .e-oring.eo1{ width:140px; height:140px; border:1px solid rgba(255,220,160,0.55); animation: ringSpinA 16s linear infinite; }
+  .e-oring.eo2{ width:176px; height:176px; border:1px dashed rgba(210,180,255,0.5); animation: ringSpinB 24s linear infinite; }
+  @keyframes ringSpinA{ from{ transform:translate(-50%,-50%) rotate(0deg);} to{ transform:translate(-50%,-50%) rotate(360deg);} }
+  @keyframes ringSpinB{ from{ transform:translate(-50%,-50%) rotate(360deg);} to{ transform:translate(-50%,-50%) rotate(0deg);} }
+  .e-rise{ position:absolute; bottom:-10px; border-radius:50%; background:#FFEFD0; z-index:3; animation: riseUp2 var(--dur,4s) ease-in infinite; animation-delay:var(--del,0s); }
+  @keyframes riseUp2{
+    0%{ transform:translateY(0) scale(1); opacity:0; }
+    12%{ opacity:1; } 75%{ opacity:0.9; }
+    100%{ transform:translateY(-280px) scale(0.4); opacity:0; }
+  }
+
+  .modal-eyebrow{ position:relative; z-index:4; font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:0.18em; text-transform:uppercase; color:#FFD98A; opacity:0.9; }
+  .flourish{ position:relative; z-index:4; display:flex; align-items:center; justify-content:center; gap:10px; margin:2px 0; }
+  .flourish .line{ width:24px; height:1px; background:linear-gradient(90deg, rgba(255,214,140,0), rgba(255,214,140,0.8)); }
+  .flourish .line.right{ background:linear-gradient(90deg, rgba(255,214,140,0.8), rgba(255,214,140,0)); }
+  .flourish .dot{ width:4px; height:4px; border-radius:50%; background:#FFD98A; }
+  .modal-title{ position:relative; z-index:4; font-family:'Bebas Neue', sans-serif; font-size:27px; letter-spacing:0.02em; color:#FFF3E0; margin:4px 0 4px; text-shadow:0 2px 12px rgba(255,180,90,0.35); }
+  .modal-sub{ position:relative; z-index:4; font-family:'IBM Plex Mono', monospace; font-size:10px; color:#E8C9A0; opacity:0.85; line-height:1.5; margin-bottom:18px; }
+  .modal-points{
+    position:relative; z-index:4; display:inline-block; font-family:'Bebas Neue', sans-serif; font-size:14px; letter-spacing:0.06em;
+    color:#1A0906; background:linear-gradient(180deg,#FFE9B8,#F0B45C); padding:6px 16px; border-radius:20px; margin-bottom:18px;
+  }
+  .modal-cta{
+    position:relative; z-index:4; width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,214,140,0.5);
+    background:rgba(255,214,140,0.08); font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#FFE9C2;
+  }
+  .mascot-wrap{ position:relative; z-index:4; }
+
+  @media (max-width: 700px){ .phone{ transform:scale(0.94); margin: -16px 0; } }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Variant E — Applied Across the Roster</div>
+  <h1>Same majestic frame, four different mascots</h1>
+  <p>The purple void, gold rays, and rising particles stay constant — that's the "brand" of the moment. Only the mascot, title, and copy change per reward, so every unlock feels consistent even though the characters are wildly different colors.</p>
+</div>
+
+<div class="stage">
+
+  <!-- WILD CARD -->
+  <div class="col">
+    <div class="col-label"><span class="tag">Wild Card</span></div>
+    <div class="phone"><div class="screen">
+      <div class="backdrop"><div class="row"></div><div class="row"></div><div class="row"></div></div>
+      <div class="veil">
+        <div class="modal-e">
+          <div class="e-star" style="top:16px; left:22px;"></div><div class="e-star" style="top:34px; left:206px;"></div>
+          <div class="e-star" style="top:70px; left:12px;"></div><div class="e-star" style="top:52px; left:228px;"></div>
+          <div class="e-rise" style="left:14%; width:3px; height:3px; --dur:3.2s; --del:0s;"></div>
+          <div class="e-rise" style="left:26%; width:2px; height:2px; --dur:4.1s; --del:.5s;"></div>
+          <div class="e-rise" style="left:40%; width:4px; height:4px; --dur:3.6s; --del:1s;"></div>
+          <div class="e-rise" style="left:58%; width:2px; height:2px; --dur:4.4s; --del:1.5s;"></div>
+          <div class="e-rise" style="left:72%; width:3px; height:3px; --dur:3.5s; --del:.3s;"></div>
+          <div class="e-rise" style="left:86%; width:2px; height:2px; --dur:4s; --del:2s;"></div>
+          <div class="e-burst">
+            <div class="e-glow"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(0deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(30deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(60deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(90deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(120deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(150deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(180deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(210deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(240deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(270deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(300deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(330deg);"></div>
+          </div>
+          <div class="e-oring eo1"></div><div class="e-oring eo2"></div>
+          <div class="mascot-wrap">
+            <svg width="76" height="76" viewBox="0 0 170 170">
+              <defs><radialGradient id="w1" cx="30%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFC79A"/><stop offset="45%" stop-color="#FF5A1F"/><stop offset="100%" stop-color="#B4300A"/></radialGradient></defs>
+              <path d="M85 32 C112 40 126 66 116 92 C132 100 128 124 106 128 C108 148 84 158 70 144 C50 152 32 134 42 116 C24 110 24 84 44 76 C40 52 62 26 85 32Z" fill="url(#w1)"/>
+              <path d="M64 90 L67 96 L74 97 L68 101 L70 108 L64 104 L58 108 L60 101 L54 97 L61 96Z" fill="#161213"/>
+              <path d="M100 90 L103 96 L110 97 L104 101 L106 108 L100 104 L94 108 L96 101 L90 97 L97 96Z" fill="#161213"/>
+              <path d="M64 118 Q83 130 102 116" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="modal-eyebrow">A milestone, reached</div>
+          <div class="flourish"><div class="line"></div><div class="dot"></div><div class="line right"></div></div>
+          <div class="modal-title">WILD CARD</div>
+          <div class="modal-sub">You RSVP'd completely outside<br>your usual categories.</div>
+          <div class="modal-points">+75 PTS</div>
+          <div class="modal-cta">CONTINUE</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- TOUCH GRASS -->
+  <div class="col">
+    <div class="col-label"><span class="tag">Touch Grass</span></div>
+    <div class="phone"><div class="screen">
+      <div class="backdrop"><div class="row"></div><div class="row"></div><div class="row"></div></div>
+      <div class="veil">
+        <div class="modal-e">
+          <div class="e-star" style="top:16px; left:22px;"></div><div class="e-star" style="top:34px; left:206px;"></div>
+          <div class="e-star" style="top:70px; left:12px;"></div><div class="e-star" style="top:52px; left:228px;"></div>
+          <div class="e-rise" style="left:16%; width:3px; height:3px; --dur:3.4s; --del:0s;"></div>
+          <div class="e-rise" style="left:28%; width:2px; height:2px; --dur:4.3s; --del:.6s;"></div>
+          <div class="e-rise" style="left:42%; width:4px; height:4px; --dur:3.8s; --del:1.1s;"></div>
+          <div class="e-rise" style="left:60%; width:2px; height:2px; --dur:4.5s; --del:1.6s;"></div>
+          <div class="e-rise" style="left:74%; width:3px; height:3px; --dur:3.6s; --del:.4s;"></div>
+          <div class="e-rise" style="left:88%; width:2px; height:2px; --dur:4.1s; --del:2.1s;"></div>
+          <div class="e-burst">
+            <div class="e-glow"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(0deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(30deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(60deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(90deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(120deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(150deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(180deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(210deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(240deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(270deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(300deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(330deg);"></div>
+          </div>
+          <div class="e-oring eo1"></div><div class="e-oring eo2"></div>
+          <div class="mascot-wrap">
+            <svg width="76" height="76" viewBox="0 0 170 170">
+              <defs><radialGradient id="w2" cx="30%" cy="22%" r="88%"><stop offset="0%" stop-color="#D4F5A8"/><stop offset="45%" stop-color="#5FAE2E"/><stop offset="100%" stop-color="#2E6A12"/></radialGradient></defs>
+              <path d="M88 30 C114 34 130 58 124 86 C138 92 134 116 114 120 C114 140 90 150 78 138 C58 146 40 128 50 110 C32 104 32 78 52 72 C50 48 66 28 88 30Z" fill="url(#w2)"/>
+              <path d="M60 88 Q64 82 68 88" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <circle cx="98" cy="86" r="8" fill="#161213"/>
+              <path d="M98 80 L100 84 L104 85 L101 88 L102 92 L98 90 L94 92 L95 88 L92 85 L96 84Z" fill="#FFD166"/>
+              <path d="M60 106 Q82 118 102 104" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <path d="M108 138 Q112 122 118 138" fill="none" stroke="#8FD65A" stroke-width="3.4" stroke-linecap="round"/>
+              <path d="M118 140 Q124 120 130 140" fill="none" stroke="#6FBE3E" stroke-width="3.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="modal-eyebrow">A milestone, reached</div>
+          <div class="flourish"><div class="line"></div><div class="dot"></div><div class="line right"></div></div>
+          <div class="modal-title">TOUCH GRASS</div>
+          <div class="modal-sub">Attended your first<br>Touch Grass event.</div>
+          <div class="modal-points">+50 PTS</div>
+          <div class="modal-cta">CONTINUE</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- THE WELCOMER -->
+  <div class="col">
+    <div class="col-label"><span class="tag">The Welcomer</span></div>
+    <div class="phone"><div class="screen">
+      <div class="backdrop"><div class="row"></div><div class="row"></div><div class="row"></div></div>
+      <div class="veil">
+        <div class="modal-e">
+          <div class="e-star" style="top:16px; left:22px;"></div><div class="e-star" style="top:34px; left:206px;"></div>
+          <div class="e-star" style="top:70px; left:12px;"></div><div class="e-star" style="top:52px; left:228px;"></div>
+          <div class="e-rise" style="left:15%; width:3px; height:3px; --dur:3.3s; --del:0s;"></div>
+          <div class="e-rise" style="left:27%; width:2px; height:2px; --dur:4.2s; --del:.5s;"></div>
+          <div class="e-rise" style="left:41%; width:4px; height:4px; --dur:3.7s; --del:1s;"></div>
+          <div class="e-rise" style="left:59%; width:2px; height:2px; --dur:4.4s; --del:1.4s;"></div>
+          <div class="e-rise" style="left:73%; width:3px; height:3px; --dur:3.5s; --del:.3s;"></div>
+          <div class="e-rise" style="left:87%; width:2px; height:2px; --dur:4s; --del:1.9s;"></div>
+          <div class="e-burst">
+            <div class="e-glow"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(0deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(30deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(60deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(90deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(120deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(150deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(180deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(210deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(240deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(270deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(300deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(330deg);"></div>
+          </div>
+          <div class="e-oring eo1"></div><div class="e-oring eo2"></div>
+          <div class="mascot-wrap">
+            <svg width="76" height="76" viewBox="0 0 170 170">
+              <defs><radialGradient id="w3" cx="34%" cy="20%" r="85%"><stop offset="0%" stop-color="#FFE9A8"/><stop offset="45%" stop-color="#F0A829"/><stop offset="100%" stop-color="#B4700F"/></radialGradient></defs>
+              <path d="M85 26 C112 26 128 50 128 82 C128 122 112 148 85 148 C58 148 42 122 42 82 C42 50 58 26 85 26Z" fill="url(#w3)"/>
+              <path d="M56 90 Q66 78 76 90" stroke="#161213" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+              <circle cx="106" cy="88" r="10" fill="#161213"/><circle cx="110" cy="83" r="3" fill="#fff"/>
+              <circle cx="60" cy="100" r="6" fill="#E8804A" opacity="0.4"/><circle cx="112" cy="100" r="6" fill="#E8804A" opacity="0.4"/>
+              <path d="M62 112 Q85 128 108 110" stroke="#161213" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="modal-eyebrow">A milestone, reached</div>
+          <div class="flourish"><div class="line"></div><div class="dot"></div><div class="line right"></div></div>
+          <div class="modal-title">THE WELCOMER</div>
+          <div class="modal-sub">Hosted your first event.<br>Someone had to go first.</div>
+          <div class="modal-points">+100 PTS</div>
+          <div class="modal-cta">CONTINUE</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- WAVE RIDER -->
+  <div class="col">
+    <div class="col-label"><span class="tag">Wave Rider</span></div>
+    <div class="phone"><div class="screen">
+      <div class="backdrop"><div class="row"></div><div class="row"></div><div class="row"></div></div>
+      <div class="veil">
+        <div class="modal-e">
+          <div class="e-star" style="top:16px; left:22px;"></div><div class="e-star" style="top:34px; left:206px;"></div>
+          <div class="e-star" style="top:70px; left:12px;"></div><div class="e-star" style="top:52px; left:228px;"></div>
+          <div class="e-rise" style="left:13%; width:3px; height:3px; --dur:3.5s; --del:0s;"></div>
+          <div class="e-rise" style="left:25%; width:2px; height:2px; --dur:4.4s; --del:.7s;"></div>
+          <div class="e-rise" style="left:39%; width:4px; height:4px; --dur:3.9s; --del:1.2s;"></div>
+          <div class="e-rise" style="left:57%; width:2px; height:2px; --dur:4.6s; --del:1.7s;"></div>
+          <div class="e-rise" style="left:71%; width:3px; height:3px; --dur:3.7s; --del:.5s;"></div>
+          <div class="e-rise" style="left:85%; width:2px; height:2px; --dur:4.2s; --del:2.2s;"></div>
+          <div class="e-burst">
+            <div class="e-glow"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(0deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(30deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(60deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(90deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(120deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(150deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(180deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(210deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(240deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(270deg);"></div>
+            <div class="e-ray" style="transform:translate(-50%,-100%) rotate(300deg);"></div><div class="e-ray" style="transform:translate(-50%,-100%) rotate(330deg);"></div>
+          </div>
+          <div class="e-oring eo1"></div><div class="e-oring eo2"></div>
+          <div class="mascot-wrap">
+            <svg width="76" height="76" viewBox="0 0 170 170">
+              <defs><radialGradient id="w4" cx="32%" cy="22%" r="85%"><stop offset="0%" stop-color="#9AE8FF"/><stop offset="45%" stop-color="#1FA8D9"/><stop offset="100%" stop-color="#0A5C8A"/></radialGradient></defs>
+              <path d="M85 30 Q100 24 104 40 Q120 34 122 52 Q138 52 134 70 Q148 78 136 92 Q144 106 126 110 Q126 128 106 126 Q98 142 80 134 Q64 146 54 130 Q36 132 40 114 Q24 108 34 92 Q22 78 38 68 Q34 50 52 50 Q54 32 72 36 Q76 24 85 30Z" fill="url(#w4)"/>
+              <path d="M56 88 Q64 82 70 90" stroke="#161213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              <path d="M96 90 Q102 82 110 88" stroke="#161213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              <path d="M66 106 Q85 118 104 106" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="modal-eyebrow">A milestone, reached</div>
+          <div class="flourish"><div class="line"></div><div class="dot"></div><div class="line right"></div></div>
+          <div class="modal-title">WAVE RIDER</div>
+          <div class="modal-sub">Rolled with 3 last-minute<br>changes without missing a beat.</div>
+          <div class="modal-points">+60 PTS</div>
+          <div class="modal-cta">CONTINUE</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+</body>
+</html>

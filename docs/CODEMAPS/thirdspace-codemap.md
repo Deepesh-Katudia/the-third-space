@@ -15,16 +15,17 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 | Fonts | Bebas Neue 400 display, Inter 400/500/600 body, IBM Plex Mono 500/600 meta (expo-google-fonts) |
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
-| Tests | Jest (jest-expo) — 51 suites / 338 tests; `@firebase/rules-unit-testing` for rules (31/31) |
+| Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
+| Tests | Jest (jest-expo) — 57 suites / 413 tests; `@firebase/rules-unit-testing` for rules (31/31) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
 ---
 
-## Build Status (2026-07-29)
+## Build Status (2026-08-05)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **338/338 pass**, 51 suites
+- `npx jest` — **413/413 pass**, 57 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
@@ -41,7 +42,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 thirdspace-app/
 ├── firebase/config.ts        # Firebase init; exports auth, db, storage
 ├── types/models.ts           # All shared TypeScript types
-├── hooks/                    # 15 hooks
+├── hooks/                    # 16 hooks
 │   ├── useAuth.ts              # Auth state + live role/profile subscriptions
 │   ├── useGoogleAuth.ts        # Google OAuth (placeholder client id if unset)
 │   ├── useProfile.ts           # profiles/{uid} subscription
@@ -56,7 +57,8 @@ thirdspace-app/
 │   ├── useAttendanceStats.ts   # Points/tier/events attended
 │   ├── usePushRegistration.ts  # Expo push token register + deep-link on tap
 │   ├── useUserLocation.ts      # Module store (useSyncExternalStore) for location resolution
-│   └── useSocials.ts           # Instagram/TikTok/X handles for mutual-follow gated profiles
+│   ├── useSocials.ts           # Instagram/TikTok/X handles for mutual-follow gated profiles
+│   └── useReduceMotion.ts      # OS reduce-motion flag; defaults to true while probing
 ├── services/                 # 11 services
 │   ├── auth.ts                 # changePassword (reauth then update)
 │   ├── preferences.ts          # onboarding opt-ins (AsyncStorage)
@@ -69,8 +71,16 @@ thirdspace-app/
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
 │   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
 │   └── location.ts             # detectBorough() (5s timeout, never throws)
-├── components/               # 20 components + 7 under components/ui/ design primitives
-├── constants/                # design.ts (DESIGN TOKENS — the only file with colors), categories, filters, rewards
+├── components/               # 23 components + 7 under components/ui/ design primitives
+│   ├── AmbientBackdrop.tsx     # App-wide animated field; mounted by Screen
+│   ├── Mascot.tsx              # Generic renderer for the 25 reward figures (react-native-svg)
+│   ├── RewardUnlock.tsx        # The unlock ceremony — purple void, rays, halos, motes
+│   ├── RewardWatcher.tsx       # Fires the ceremony app-wide; mounted in the attender tabs
+│   └── RewardGrid.tsx          # Roster grid, earned + locked
+├── constants/                # design.ts (DESIGN TOKENS — nearly the only file with colors),
+│                             #   categories, filters, rewards (redeemables),
+│                             #   achievements.ts (roster meta + prompts),
+│                             #   mascotFigures.ts (the 25 figures as data)
 ├── utils/                    # 19 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
@@ -115,8 +125,8 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `orangeDeep` | `#F3B27A` | Browse/list screen background |
-| `orangeLight` | `#FCE3C0` | Ticket / card fill, tab bar, inputs |
+| `orangeDeep` | `#F3B27A` | Top stop of the app-wide ambient field |
+| `orangeLight` | `#FCE3C0` | Bottom stop of the field; ticket / card fill, tab bar, inputs |
 | `cream` | `#FBF3E9` | Forms, chat threads, all `(auth)` routes |
 | `ink` | `#2B2015` | Headings; also the one high-contrast surface (CTAs, heroes) with cream text |
 | `inkSoft` | `#584C3C` | Secondary text. Comp's `#5C4F3F` was 4.33:1 on deep — under AA |
@@ -130,7 +140,12 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 - **White never appears on orange** (1.83:1). Ink-on-orange, cream-on-ink.
 - **No red/green in the palette.** Error → `clay`, success → `sage`; both are AA on all
   three surfaces. The password meter conveys its four levels by filled-segment count.
-- **No gradients.** Depth comes from tone (ink vs orangeLight vs cream), not blending.
+- **The ambient field is the app's background, and it is the only gradient.** Source comp:
+  `docs/ambient-background-splash-and-home.html`. `components/AmbientBackdrop.tsx` renders
+  orangeDeep → orangeLight with five warm glows drifting through it and five twinkling
+  sparks. Every *surface above it* — tickets, sheets, the tab bar, the cream veil — is
+  still flat tone, so "depth comes from tone, not blending" still holds everywhere except
+  the background itself.
 - **Ticket notches are for event surfaces only** — `EventCard`, `CompactEventRow`, and the
   `event/[id]` hero. `ChatRow` deliberately has none.
 - **Avatar tints are the one deliberate palette exemption** (`utils/avatar.ts`) — they
@@ -152,7 +167,7 @@ Source comp: `docs/events-redesign-mockup.html`. Spec + plan:
 
 ### `components/ui/` primitives
 
-`Screen` (tone: deep|cream), `Display`/`Body`/`Meta` (one type face each, role unions
+`Screen` (tone: deep|cream — deep shows the field bare, cream veils it), `Display`/`Body`/`Meta` (one type face each, role unions
 narrowed per face), `TicketCard` (tear line + tone-matched notches), `ChipRow`, `CityChip`,
 `IconButton`, `BackButton`.
 
@@ -215,6 +230,83 @@ when signed in with setup incomplete.
 
 ## Key Invariants & Gotchas
 
+- **The ambient field is mounted by `Screen`, not by individual routes** — that is what
+  makes it app-wide, and it is why no screen may replace its background with an opaque
+  fill. There are exactly three other mount points, each because the surface does not go
+  through `Screen`: `app/(auth)/onboarding.tsx` (full-bleed splash), `LoadingView` (so a
+  gate that resolves in 200ms does not flash a flat rectangle between two moving ones),
+  and `event/[id]` (full-bleed — its ink hero runs under the status bar). A new
+  full-bleed screen is the only reason to add a fifth.
+- **`Screen tone="cream"` veils the field, it does not cover it** — `palette.creamVeil` is
+  0.88 alpha on purpose. Taking it to 1.0 kills the ambient on every form and chat thread,
+  which is half the app.
+- **The backdrop sits OUTSIDE the SafeAreaView** — absolutely-positioned children lay out
+  against the padding edge, so a backdrop nested inside one stops at the notch and leaves
+  the status-bar strip unpainted. `Screen`'s SafeAreaView is transparent for this reason.
+- **There is ONE backdrop implementation** — `WelcomeBackdrop` was a near-identical second
+  copy scoped to the welcome screen (its own gradient stops, its own glow tokens) and was
+  folded into `AmbientBackdrop`. Two backdrops that are meant to look the same eventually
+  do not.
+- **Glow alphas must stay under ~0.15** — there is no radial gradient in React Native
+  (expo-linear-gradient is linear-only and expo-blur is absent; react-native-svg is now
+  installed but a full SVG layer per screen is far heavier than this), so the falloff is
+  faked with five stacked concentric rings of one colour. Past ~0.15 the outer ring stops being invisible and the blob reads as a
+  hard-edged disc. `__tests__/constants/design.test.ts` guards the ceiling.
+- **Reduced motion means NO loops, and the in-flight probe counts as reduced** —
+  `useReduceMotion` starts at `true`. Starting loops optimistically and stopping them once
+  the probe answers animates at exactly the users who asked not to be.
+- **The navigators are filled with `navigatorBackground`, never transparent** — that fill
+  is only visible mid-transition, but transparent would let modal routes show the screen
+  underneath through the gap. React Navigation's own default there is white, which flashes
+  hard against the field.
+- **Every screen runs its own drift loops** — react-navigation keeps stacked screens
+  mounted, so a 3-deep stack has 3 fields looping. They are all native-driver, so this
+  costs UI-thread compositing rather than JS, but focus-gating is the lever to reach for
+  if a low-end device ever struggles.
+- **`event/[id]`'s tear notches no longer match the background exactly** — they are painted
+  `orangeDeep` while the field is now a gradient they scroll through. Each is a 7x14px
+  half-disc at the hero seam, where the field is within a few percent of orangeDeep, so
+  the mismatch is sub-perceptual. Clipping a live copy of the gradient into 14px would
+  cost more than it buys.
+- **The reward roster is ONE system, not badges plus rewards** — `utils/rewards.ts`
+  `computeRewards()` replaced `computeBadges()`, and `RewardGrid` replaced `BadgeGrid`, both
+  deleted. `constants/achievements.ts` is the roster (what each reward MEANS, its prompt
+  copy and points); `constants/mascotFigures.ts` is what each one LOOKS like.
+- **`trackable: false` means there is deliberately no rule** — most of the roster describes
+  behaviour the app does not record: message-partner counts, RSVP timing, plan changes,
+  introductions. Those ship visible-but-locked rather than earning themselves on adjacent
+  data. `__tests__/utils/rewards.test.ts` asserts the rule table and the flags agree in BOTH
+  directions, so a `trackable: true` with no rule (unearnable) and a rule on an untrackable
+  id (dishonest) both fail. Flip the flag and add the rule together when tracking lands.
+- **Three roster blurbs were reworded away from the comp, on purpose** — Consistent One,
+  The Connector and Community Legend. The comp's originals ("never missed an RSVP'd event
+  for 3 months", "introduced two members who clicked", "messaged 100+ different members")
+  claim things the app cannot know. Each carries a comment saying what it used to say.
+- **The comp ships two characters for one milestone** — THE WELCOMER and HOST are both
+  "hosted your first event". Rather than drop a figure, `host` became the repeat-host
+  milestone. Neither is trackable yet: hosted-event counts are not among the inputs.
+- **Mascot figures are DATA, in constants/** — 25 characters built from hot pink, cyan and
+  lavender, none of which is in the palette. Keeping them in `constants/mascotFigures.ts`
+  leaves `components/Mascot.tsx` free of literals so `tokens.test.ts` stays absolute with an
+  empty allowlist. Same reasoning as the avatar tints in `utils/avatar.ts`.
+- **The unlock frame never varies per reward** — `constants/design.ts` `reward.*` is the one
+  dark surface in the app, and only the mascot, title, prompt and points change inside it.
+  Per-reward theming would break the "one of these" recognition the ceremony depends on.
+- **The ceremony fires from `RewardWatcher`, NOT from the rewards screen** — it is mounted
+  beside the navigator in `(app)/(attender)/_layout.tsx`, which stays mounted underneath
+  pushed routes; since `RewardUnlock` is a React Native `Modal`, the unlock lands over
+  `event/[id]`, a chat thread, or wherever the user actually was. Firing it from
+  `badges.tsx` instead would only ever congratulate people for something they went looking
+  for. The rewards screen keeps a separate single-slot `replaying` state for tapping an
+  earned mascot to watch it again — that path deliberately does NOT touch seen-state.
+- **Hosters do not mount the watcher** — every trackable reward keys off attendance,
+  connections or tier, so the extra subscriptions would buy a hoster nothing.
+- **Seen-unlocks are LOCAL, in AsyncStorage** — `services/rewardsSeen.ts`, keyed per uid.
+  The roster itself is derived from real data and correct on every device; this only decides
+  whether the ceremony plays. Worst case on a new phone is one replay, which is a pleasant
+  surprise — whereas a Firestore write would mean new rules and an unlock lost to a dropped
+  connection. Ids are marked seen when the modal is QUEUED, not when dismissed, so a
+  force-quit mid-celebration does not replay it forever.
 - **Location resolves through a chain, never blocks** — `hooks/useUserLocation.ts` is a module
   store (like `useDiscoverFilters`, because the picker is a separate route from Discover) that
   resolves `manual > gps > profile > default`. `services/location.ts` never throws: opt-out,
@@ -229,11 +321,32 @@ when signed in with setup incomplete.
 - **Event categories are stored as slugs, never display strings** — `constants/categories.ts`
   holds the id/label/blurb/emoji table and `categoryLabel()` resolves it. Rendering
   `event.category` raw is a bug. The point is that copy can be reworded without orphaning
-  events, which is exactly what renaming a stored display string would do. There are ten
+  events, which is exactly what renaming a stored display string would do. There are eight
   categories and no catch-all; `Social` was deliberately dropped.
-- **`utils/badges.ts` hardcodes the `creative-outlet` slug** — the Creative Soul badge filters
-  on it. A rename that misses that line makes the badge silently unearnable, so
-  `__tests__/utils/badges.test.ts` asserts the slug is a real category to catch it.
+- **The slugs deliberately no longer resemble their labels** — every category was relabelled
+  on 2026-08-05 (`creative-outlet` → Make, `curious-minds` → Learn, `stage-time` → Stage,
+  `lets-eat` → Eat, `game-time` → Game Night, `level-up` → Networking) and not one slug
+  moved, so not one event moved either. Renaming a slug to match its new label is the
+  precise failure the indirection exists to prevent. `__tests__/constants/categories.test.ts`
+  pins each pairing.
+- **Retired categories keep their labels, out of the picker** — `day-drinks-nightlife` and
+  `lets-get-active` were dropped from `EVENT_CATEGORIES` in the same change. They live on in
+  a `RETIRED_CATEGORIES` lookup that only `categoryLabel()` reads, so an event filed under
+  one before the cut still renders "Day Drinks & Nightlife" instead of a raw slug, while
+  `categoryMeta()` returns undefined and no picker, filter or form can offer it again.
+  Retiring a category is a copy decision, not licence to corrupt history — and this is why
+  no Firestore backfill was needed. The `RetiredEventCategory` type in `types/models.ts`
+  is deliberately separate from `EventCategory`.
+- **`utils/rewards.ts` matches on category SLUGS** — the Stage/Eat/Touch Grass rewards
+  filter on `stage-time` / `lets-eat` / `touch-grass`, which do not resemble their labels.
+  `__tests__/utils/rewards.test.ts` pins each one so a rename fails loudly instead of
+  quietly making a reward unearnable. Experimenter of Variety iterates `EVENT_CATEGORIES`
+  rather than a hardcoded list, so retiring a category cannot strand it.
+- **The category list has a suggestion outlet, because it has no catch-all** —
+  `components/CategorySuggestion.tsx` sits at the foot of the filter sheet's Category
+  section. The address is rendered as visible text rather than hidden behind a link label,
+  so it survives `Linking.openURL` rejecting on a device with no mail client. Only the
+  filter sheet carries it; `create-event`'s category list does not.
 - **There is exactly ONE category filter — the filter sheet** — `components/FilterSheet.tsx`
   is the only reader of `EVENT_CATEGORIES` and the only place a category is chosen. A
   standalone Discover dropdown was built and removed the same day: two entry points for
@@ -279,6 +392,11 @@ when signed in with setup incomplete.
 - **Storage is not provisioned** — free Spark plan. `services/photos.ts` failures are caught; `photoURL`
   falls back to `null` and `utils/avatar.ts` renders deterministic colored initials.
 - **No `expo-blur`** — blur effects faked with semi-transparent overlays to avoid a native rebuild.
+- **`react-native-svg` IS installed, as of 2026-08-05** — the earlier "would mean a native
+  rebuild" note was over-cautious: it ships inside Expo Go, so dev needs no rebuild and EAS
+  picks it up on its next cloud build. It exists for the reward mascots, which are organic
+  vector paths with radial gradients that Views cannot approximate. Do NOT reach for it for
+  ordinary chrome — everything else in the app is still Views and tokens.
 - **Dynamic routes use object form** — `router.push({ pathname: '/(app)/x/[id]', params })`. The typedRoutes
   generator races the dev server and transiently drops the string-template form for new routes.
 - **Typed routes go stale when route files are added** — run `npx expo start` ~25s, kill it, then `tsc`.

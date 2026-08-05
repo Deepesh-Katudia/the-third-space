@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { BadgeGrid } from '../../components/BadgeGrid'
+import { RewardGrid } from '../../components/RewardGrid'
+import { RewardUnlock } from '../../components/RewardUnlock'
 import { LoadingView } from '../../components/LoadingView'
 import { Banner } from '../../components/Banner'
 import { EmptyState } from '../../components/EmptyState'
@@ -10,7 +11,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { useAttendanceStats } from '../../hooks/useAttendanceStats'
 import { useConnections } from '../../hooks/useConnections'
 import { tierProgress } from '../../utils/points'
-import { computeBadges } from '../../utils/badges'
+import { computeRewards, type EarnedReward } from '../../utils/rewards'
 import { redeemReward } from '../../services/profiles'
 import { REWARDS } from '../../constants/rewards'
 import { Screen } from '../../components/ui/Screen'
@@ -25,8 +26,25 @@ export default function Badges() {
   const { connectionUids, loading: connectionsLoading } = useConnections(user?.uid)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
   const [banner, setBanner] = useState('')
+  /**
+   * Only ever holds a reward the user TAPPED to see again. First-time unlocks are fired
+   * by `RewardWatcher` in the tab layout, so they land wherever the user was standing
+   * when they earned it — queueing them here too would show the ceremony twice.
+   */
+  const [replaying, setReplaying] = useState<EarnedReward | null>(null)
 
-  if (profileLoading || attendanceLoading || connectionsLoading) return <LoadingView />
+  const ready = !profileLoading && !attendanceLoading && !connectionsLoading
+  const rewards =
+    ready && profile
+      ? computeRewards({
+          attendedEvents,
+          tier: profile.tier,
+          connectionsCount: connectionUids.length,
+          joinedAt: profile.joinedAt,
+        })
+      : []
+
+  if (!ready) return <LoadingView />
 
   if (profileHasError || !profile) {
     return (
@@ -34,7 +52,7 @@ export default function Badges() {
         <StatusBar style="dark" />
         <View style={styles.header}>
           <BackButton />
-          <Display role="screenTitle">Points & badges</Display>
+          <Display role="screenTitle">Points & rewards</Display>
         </View>
         <EmptyState emoji="🫥" title="Couldn't load your points" body="Check your connection and try again." />
       </Screen>
@@ -42,7 +60,7 @@ export default function Badges() {
   }
 
   const progress = tierProgress(profile.points)
-  const badges = computeBadges(attendedEvents, profile.tier, connectionUids.length)
+  const earnedCount = rewards.filter((r) => r.earned).length
 
   const handleRedeem = async (rewardId: string, cost: number) => {
     if (!user || profile.points < cost) return
@@ -64,7 +82,7 @@ export default function Badges() {
       <StatusBar style="dark" />
       <View style={styles.header}>
         <BackButton />
-        <Display role="screenTitle">Points & badges</Display>
+        <Display role="screenTitle">Points & rewards</Display>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -84,10 +102,12 @@ export default function Badges() {
           </Meta>
         </View>
 
-        {banner ? <Banner message={banner} /> : attendanceHasError ? <Banner message="Couldn't load your attendance history — badges may be out of date." /> : null}
+        {banner ? <Banner message={banner} /> : attendanceHasError ? <Banner message="Couldn't load your attendance history — rewards may be out of date." /> : null}
 
-        <Meta role="eyebrow" style={styles.sectionLabel}>Badges</Meta>
-        <BadgeGrid badges={badges} />
+        <Meta role="eyebrow" style={styles.sectionLabel}>
+          Rewards · {earnedCount} of {rewards.length}
+        </Meta>
+        <RewardGrid rewards={rewards} onSelect={setReplaying} />
 
         <Meta role="eyebrow" style={styles.sectionLabel}>Redeem</Meta>
         {REWARDS.map((r) => {
@@ -109,6 +129,8 @@ export default function Badges() {
           )
         })}
       </ScrollView>
+
+      <RewardUnlock achievement={replaying} onDismiss={() => setReplaying(null)} ctaLabel="Close" />
     </Screen>
   )
 }

@@ -94,7 +94,7 @@ export default function Profile() {
               onPress={() => (router.push as (href: string) => void)('/(app)/verify-identity?from=profile')}
             />
           ) : null}
-          <Row label="Points & badges" onPress={() => router.push('/(app)/badges')} />
+          <Row label="Points & rewards" onPress={() => router.push('/(app)/badges')} />
           <Row label="Interests & preferences" onPress={() => router.push('/(app)/edit-profile')} />
           <Row label="Neighborhoods" onPress={() => router.push('/(app)/edit-profile')} />
           <Row label="Become a host" badge="New" onPress={() => router.push('/(app)/become-host')} last />

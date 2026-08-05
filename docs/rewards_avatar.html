@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewards Mascots — Curated Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF3E9;
+    --ink:#2B2015;
+    --ink-soft:#6E5B44;
+    --clay:#8A3A17;
+    --rule: rgba(43,32,21,0.16);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--cream); font-family:'Inter', sans-serif; color:var(--ink); padding:48px 24px 90px; }
+  .intro{ max-width:940px; margin:0 auto 34px; }
+  .intro .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--clay); font-weight:600; margin-bottom:10px;
+  }
+  .intro h1{ font-family:'Bebas Neue', sans-serif; font-weight:400; font-size:34px; line-height:1.1; margin-bottom:10px; letter-spacing:0.01em; }
+  .intro p{ font-size:15px; color:var(--ink-soft); max-width:660px; line-height:1.5; }
+
+  .roster{ max-width:1020px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:24px; }
+  .char-card{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
+  .char-stage{
+    width:160px; height:160px; border-radius:26px; background:#161213;
+    display:flex; align-items:center; justify-content:center; position:relative; overflow:visible;
+  }
+  .char-name{ font-family:'Bebas Neue', sans-serif; font-size:17px; letter-spacing:0.02em; }
+  .char-desc{ font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:var(--ink-soft); letter-spacing:0.02em; max-width:160px; line-height:1.4; }
+
+  .m-bob{ animation: mbob 2.6s ease-in-out infinite; transform-origin:center bottom; }
+  @keyframes mbob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-8px) rotate(3deg);} }
+  .m-wiggle{ animation: mwiggle 1.4s ease-in-out infinite; transform-origin:center bottom; }
+  @keyframes mwiggle{ 0%,100%{ transform:rotate(-6deg);} 50%{ transform:rotate(6deg);} }
+  .m-pulse{ animation: mpulse 1.8s ease-in-out infinite; transform-origin:center; }
+  @keyframes mpulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.1);} }
+  .m-swing{ animation: mswing 2.2s ease-in-out infinite; transform-origin:50% 20%; }
+  @keyframes mswing{ 0%,100%{ transform:rotate(-9deg);} 50%{ transform:rotate(9deg);} }
+  .m-drift{ animation: mdrift 4s ease-in-out infinite; }
+  @keyframes mdrift{ 0%,100%{ transform:translate(0,0);} 25%{ transform:translate(4px,-6px);} 50%{ transform:translate(-3px,-3px);} 75%{ transform:translate(-5px,2px);} }
+  .m-blink{ animation: mblinklid 3.6s ease-in-out infinite; transform-origin:center; }
+  @keyframes mblinklid{ 0%,92%,100%{ transform:scaleY(1);} 96%{ transform:scaleY(0.1);} }
+  .m-jump{ animation: mjump 1.3s cubic-bezier(.36,.07,.19,.97) infinite; transform-origin:center bottom; }
+  @keyframes mjump{ 0%,100%{ transform:translateY(0) scaleY(1);} 20%{ transform:translateY(0) scaleY(0.85);} 45%{ transform:translateY(-14px) scaleY(1.06);} 70%{ transform:translateY(0) scaleY(0.92);} 85%{ transform:translateY(0) scaleY(1);} }
+  .ring{ animation: ringspin 14s linear infinite; transform-origin:85px 90px; }
+  @keyframes ringspin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Rewards Mascots — Curated Roster</div>
+  <h1>The keepers, all with the ring treatment now</h1>
+  <p>Just the ones you actually liked from here on — dropped everything else. The dashed orbit ring + floating dots from Community Creator is now on all of them, tinted to match each character's own palette. Consistent One and Spiral Thinker got a deeper rework, not just a tweak, since the eyes weren't the only issue.</p>
+</div>
+
+<div class="roster">
+
+  <!-- COMMUNITY CREATOR -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-pulse" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="q1" cx="36%" cy="24%" r="82%"><stop offset="0%" stop-color="#D9B8FF"/><stop offset="45%" stop-color="#8B3FE0"/><stop offset="100%" stop-color="#4A1780"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#B98BFF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="24" cy="60" r="4" fill="#F4D9FF"/><circle cx="146" cy="70" r="3.4" fill="#F4D9FF"/>
+        <circle cx="130" cy="140" r="4" fill="#F4D9FF"/><circle cx="36" cy="132" r="3" fill="#F4D9FF"/>
+        <path d="M85 34 C104 44 100 60 118 66 C136 72 132 92 112 96 C126 106 118 128 98 128 C110 140 92 150 85 150 C78 150 60 140 72 128 C52 128 44 106 58 96 C38 92 34 72 52 66 C70 60 66 44 85 34Z" fill="url(#q1)"/>
+        <ellipse cx="66" cy="94" rx="9" ry="11" fill="#161213"/><ellipse cx="104" cy="94" rx="9" ry="11" fill="#161213"/>
+        <path d="M66 88 L67.5 91.5 L71 93 L67.5 94.5 L66 98 L64.5 94.5 L61 93 L64.5 91.5Z" fill="#fff"/>
+        <path d="M104 88 L105.5 91.5 L109 93 L105.5 94.5 L104 98 L102.5 94.5 L99 93 L102.5 91.5Z" fill="#fff"/>
+        <path d="M66 114 Q85 126 104 114" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">COMMUNITY CREATOR</div>
+    <div class="char-desc">Messaged 50+ different members</div>
+  </div>
+
+  <!-- THE INITIATOR -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="q2" cx="30%" cy="22%" r="82%"><stop offset="0%" stop-color="#FFC79A"/><stop offset="45%" stop-color="#FF6A1F"/><stop offset="100%" stop-color="#C4360A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#FFD9B3" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="50" r="4" fill="#FFEFD9"/><circle cx="148" cy="66" r="3.4" fill="#FFEFD9"/>
+        <circle cx="134" cy="138" r="4" fill="#FFEFD9"/><circle cx="30" cy="128" r="3" fill="#FFEFD9"/>
+        <path d="M85 30 C118 34 142 58 138 92 C135 120 112 140 85 148 C64 142 46 122 44 96 C42 66 58 34 85 30Z" fill="url(#q2)" transform="rotate(-8 85 90)"/>
+        <path d="M118 78 L121 84 L127 85 L122 89 L124 95 L118 91 L112 95 L114 89 L109 85 L115 84Z" fill="#FFD166"/>
+        <path d="M58 90 Q63 84 68 90" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="98" cy="90" rx="8" ry="10" fill="#161213"/><circle cx="101" cy="86" r="2.4" fill="#fff"/>
+        <path d="M62 108 Q80 120 100 106" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">THE INITIATOR</div>
+    <div class="char-desc">First to break the ice in 10+ new group chats</div>
+  </div>
+
+  <!-- THE WELCOMER -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="q3" cx="34%" cy="20%" r="85%"><stop offset="0%" stop-color="#FFE9A8"/><stop offset="45%" stop-color="#F0A829"/><stop offset="100%" stop-color="#B4700F"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#FFD98A" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="28" cy="56" r="4" fill="#FFF3D0"/><circle cx="144" cy="60" r="3.4" fill="#FFF3D0"/>
+        <circle cx="132" cy="136" r="4" fill="#FFF3D0"/><circle cx="32" cy="130" r="3" fill="#FFF3D0"/>
+        <path d="M85 26 C112 26 128 50 128 82 C128 122 112 148 85 148 C58 148 42 122 42 82 C42 50 58 26 85 26Z" fill="url(#q3)"/>
+        <path d="M56 90 Q66 78 76 90" stroke="#161213" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+        <circle cx="106" cy="88" r="10" fill="#161213"/><circle cx="110" cy="83" r="3" fill="#fff"/>
+        <circle cx="60" cy="100" r="6" fill="#E8804A" opacity="0.4"/><circle cx="112" cy="100" r="6" fill="#E8804A" opacity="0.4"/>
+        <path d="M62 112 Q85 128 108 110" stroke="#161213" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+        <path d="M70 138 L70 148 L100 148 L100 138" fill="none" stroke="#161213" stroke-width="2" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="char-name">THE WELCOMER</div>
+    <div class="char-desc">Hosted your first event</div>
+  </div>
+
+  <!-- EXPERIMENTER OF VARIETY -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="q4" cx="30%" cy="24%" r="85%"><stop offset="0%" stop-color="#D8B8FF"/><stop offset="45%" stop-color="#7B4FE0"/><stop offset="100%" stop-color="#2E9BB0"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#C9A8FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="54" r="4" fill="#E8D9FF"/><circle cx="146" cy="64" r="3.4" fill="#E8D9FF"/>
+        <circle cx="136" cy="136" r="4" fill="#E8D9FF"/><circle cx="28" cy="126" r="3" fill="#E8D9FF"/>
+        <path d="M90 30 C118 28 138 50 134 76 C150 82 148 108 128 116 C134 134 114 150 92 144 C80 156 56 150 54 130 C34 130 26 106 42 92 C30 78 42 54 64 56 C66 38 78 30 90 30Z" fill="url(#q4)"/>
+        <circle cx="68" cy="92" r="10" fill="#161213"/><circle cx="72" cy="88" r="2.6" fill="#fff"/>
+        <path d="M104 82 L107 89 L114 90 L108 94 L110 101 L104 97 L98 101 L100 94 L94 90 L101 89Z" fill="#161213"/>
+        <path d="M64 114 Q85 124 108 110" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">EXPERIMENTER OF VARIETY</div>
+    <div class="char-desc">Attended an event from every category</div>
+  </div>
+
+  <!-- STAGE -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="r5" cx="32%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFAECD"/><stop offset="45%" stop-color="#E01F73"/><stop offset="100%" stop-color="#8A0F47"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="86" r="72" fill="none" stroke="#FF9AC4" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="50" r="4" fill="#FFD9E8"/><circle cx="146" cy="56" r="3.4" fill="#FFD9E8"/>
+        <!-- spotlight cones -->
+        <path d="M50 10 L30 76 L60 76Z" fill="#FFE9A8" opacity="0.35"/>
+        <path d="M120 10 L140 76 L110 76Z" fill="#FFE9A8" opacity="0.35"/>
+        <!-- stage platform riser -->
+        <path d="M22 150 L38 130 L132 130 L148 150Z" fill="#5C1F3A" stroke="#161213" stroke-width="1.6"/>
+        <rect x="22" y="150" width="126" height="10" fill="#3E1327"/>
+        <circle cx="42" cy="150" r="3" fill="#FFD166"/><circle cx="85" cy="152" r="3" fill="#FFD166"/><circle cx="128" cy="150" r="3" fill="#FFD166"/>
+        <!-- body, standing on the riser -->
+        <path d="M85 20 C110 20 128 44 126 74 C124 108 106 128 85 128 C64 128 46 108 44 74 C42 44 60 20 85 20Z" fill="url(#r5)"/>
+        <path d="M60 78 Q64 72 68 78" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="102" cy="76" r="8" fill="#161213"/>
+        <path d="M102 70 L104 74 L108 75 L105 78 L106 82 L102 80 L98 82 L99 78 L96 75 L100 74Z" fill="#FFD166"/>
+        <path d="M62 96 Q85 110 106 94" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- big mic held up to the mouth -->
+        <g transform="rotate(-24 108 92)">
+          <ellipse cx="108" cy="80" rx="14" ry="19" fill="#161213"/>
+          <line x1="102" y1="66" x2="114" y2="66" stroke="#666" stroke-width="1.8"/>
+          <line x1="101" y1="72" x2="115" y2="72" stroke="#666" stroke-width="1.8"/>
+          <line x1="101" y1="78" x2="115" y2="78" stroke="#666" stroke-width="1.8"/>
+          <line x1="102" y1="84" x2="114" y2="84" stroke="#666" stroke-width="1.8"/>
+          <rect x="105" y="98" width="6" height="34" rx="3" fill="#161213"/>
+        </g>
+      </svg>
+    </div>
+    <div class="char-name">STAGE</div>
+    <div class="char-desc">Attended your first Stage event</div>
+  </div>
+
+  <!-- EAT -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="r6" cx="32%" cy="22%" r="85%"><stop offset="0%" stop-color="#FFD19A"/><stop offset="45%" stop-color="#F2793C"/><stop offset="100%" stop-color="#A83E14"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#FFB380" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="56" r="4" fill="#FFE0C2"/><circle cx="146" cy="62" r="3.4" fill="#FFE0C2"/>
+        <circle cx="132" cy="136" r="4" fill="#FFE0C2"/><circle cx="30" cy="128" r="3" fill="#FFE0C2"/>
+        <path d="M85 30 C114 28 132 54 128 84 C142 90 138 114 118 118 C120 138 98 150 82 140 C62 150 42 134 50 116 C32 112 30 86 50 78 C46 52 64 32 85 30Z" fill="url(#r6)"/>
+        <path d="M60 90 Q64 84 68 90" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="100" cy="88" r="8" fill="#161213"/>
+        <path d="M100 82 L102 86 L106 87 L103 90 L104 94 L100 92 L96 94 L97 90 L94 87 L98 86Z" fill="#FFD166"/>
+        <path d="M62 108 Q85 122 104 106" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="126" cy="122" rx="18" ry="7" fill="#fff" opacity="0.9"/>
+        <circle cx="121" cy="119" r="5" fill="#D6432A"/><circle cx="130" cy="120" r="4" fill="#F5DD8B"/>
+        <g transform="rotate(-10 108 108)">
+          <line x1="108" y1="96" x2="108" y2="118" stroke="#161213" stroke-width="2"/>
+          <line x1="105" y1="96" x2="105" y2="102" stroke="#161213" stroke-width="1.4"/>
+          <line x1="111" y1="96" x2="111" y2="102" stroke="#161213" stroke-width="1.4"/>
+        </g>
+        <path d="M120 60 Q124 52 120 46 M128 60 Q132 52 128 46" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="char-name">EAT</div>
+    <div class="char-desc">Attended your first Eat event</div>
+  </div>
+
+  <!-- TOUCH GRASS -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="r7" cx="30%" cy="22%" r="88%"><stop offset="0%" stop-color="#D4F5A8"/><stop offset="45%" stop-color="#5FAE2E"/><stop offset="100%" stop-color="#2E6A12"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#A8E080" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="56" r="4" fill="#D9F5C2"/><circle cx="146" cy="62" r="3.4" fill="#D9F5C2"/>
+        <circle cx="132" cy="136" r="4" fill="#D9F5C2"/><circle cx="30" cy="128" r="3" fill="#D9F5C2"/>
+        <path d="M88 30 C114 34 130 58 124 86 C138 92 134 116 114 120 C114 140 90 150 78 138 C58 146 40 128 50 110 C32 104 32 78 52 72 C50 48 66 28 88 30Z" fill="url(#r7)"/>
+        <path d="M60 88 Q64 82 68 88" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="98" cy="86" r="8" fill="#161213"/>
+        <path d="M98 80 L100 84 L104 85 L101 88 L102 92 L98 90 L94 92 L95 88 L92 85 L96 84Z" fill="#FFD166"/>
+        <path d="M60 106 Q82 118 102 104" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M108 138 Q112 122 118 138" fill="none" stroke="#8FD65A" stroke-width="3.4" stroke-linecap="round"/>
+        <path d="M118 140 Q124 120 130 140" fill="none" stroke="#6FBE3E" stroke-width="3.4" stroke-linecap="round"/>
+        <path d="M128 138 Q133 124 138 138" fill="none" stroke="#8FD65A" stroke-width="3.4" stroke-linecap="round"/>
+        <path d="M40 138 Q45 122 50 138" fill="none" stroke="#6FBE3E" stroke-width="3" stroke-linecap="round"/>
+        <path d="M48 140 Q53 126 58 140" fill="none" stroke="#8FD65A" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">TOUCH GRASS</div>
+    <div class="char-desc">Attended your first Touch Grass event</div>
+  </div>
+
+  <!-- HOST -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="r11" cx="34%" cy="22%" r="85%"><stop offset="0%" stop-color="#FFE9A8"/><stop offset="45%" stop-color="#F0A829"/><stop offset="100%" stop-color="#B4700F"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="76" fill="none" stroke="#FFCF80" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.45"/>
+        <g>
+          <rect x="20" y="112" width="20" height="30" rx="10" fill="#7FB8A8"/>
+          <circle cx="30" cy="104" r="12" fill="#7FB8A8"/>
+          <path d="M25 102 Q30 96 35 102" stroke="#161213" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </g>
+        <g>
+          <rect x="130" y="108" width="20" height="30" rx="10" fill="#E88FA8"/>
+          <circle cx="140" cy="100" r="12" fill="#E88FA8"/>
+          <path d="M135 98 Q140 92 145 98" stroke="#161213" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </g>
+        <g>
+          <rect x="74" y="138" width="20" height="28" rx="10" fill="#C9AEFF"/>
+          <circle cx="84" cy="130" r="12" fill="#C9AEFF"/>
+          <path d="M79 128 Q84 122 89 128" stroke="#161213" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </g>
+        <path d="M85 32 C110 32 126 54 124 82 C122 114 104 142 85 142 C66 142 48 114 46 82 C44 54 60 32 85 32Z" fill="url(#r11)"/>
+        <path d="M58 88 Q66 78 74 88" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M96 88 Q104 78 112 88" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <circle cx="60" cy="98" r="6" fill="#E8804A" opacity="0.4"/><circle cx="110" cy="98" r="6" fill="#E8804A" opacity="0.4"/>
+        <path d="M64 104 Q85 118 106 104" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+        <path d="M46 90 Q30 100 32 112" stroke="#F0A829" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <path d="M124 90 Q140 100 138 108" stroke="#F0A829" stroke-width="9" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">HOST</div>
+    <div class="char-desc">Hosted your first event</div>
+  </div>
+
+  <!-- SPARK STARTER -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-pulse" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s1" cx="34%" cy="24%" r="82%"><stop offset="0%" stop-color="#FFE28A"/><stop offset="45%" stop-color="#FF9036"/><stop offset="100%" stop-color="#C4530F"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="76" fill="none" stroke="#FFD98A" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.45"/>
+        <circle cx="24" cy="60" r="4" fill="#FFEFC2"/><circle cx="146" cy="70" r="3.4" fill="#FFEFC2"/>
+        <path d="M85 20 L94 46 L118 32 L106 56 L134 60 L108 72 L128 92 L100 84 L104 112 L85 90 L66 112 L70 84 L42 92 L62 72 L36 60 L64 56 L52 32 L76 46Z" fill="url(#s1)"/>
+        <circle cx="72" cy="78" r="8.5" fill="#161213"/><circle cx="75" cy="74" r="2.6" fill="#fff"/>
+        <circle cx="100" cy="78" r="8.5" fill="#161213"/><circle cx="103" cy="74" r="2.6" fill="#fff"/>
+        <path d="M70 96 Q85 106 102 96" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">SPARK STARTER</div>
+    <div class="char-desc">Kicked off a spontaneous plan that got 5+ RSVPs</div>
+  </div>
+
+  <!-- WAVE RIDER -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-wiggle" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s2" cx="32%" cy="22%" r="85%"><stop offset="0%" stop-color="#9AE8FF"/><stop offset="45%" stop-color="#1FA8D9"/><stop offset="100%" stop-color="#0A5C8A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="76" fill="none" stroke="#9AE0FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.4"/>
+        <path d="M6 128 Q22 116 38 128 Q54 140 70 128 Q86 116 102 128 Q118 140 134 128 Q150 116 164 128" fill="none" stroke="#7FD4F5" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+        <path d="M2 144 Q18 134 34 144 Q50 154 66 144 Q82 134 98 144 Q114 154 130 144 Q146 134 162 144" fill="none" stroke="#4FC0E8" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+        <path d="M85 30 Q100 24 104 40 Q120 34 122 52 Q138 52 134 70 Q148 78 136 92 Q144 106 126 110 Q126 128 106 126 Q98 142 80 134 Q64 146 54 130 Q36 132 40 114 Q24 108 34 92 Q22 78 38 68 Q34 50 52 50 Q54 32 72 36 Q76 24 85 30Z" fill="url(#s2)"/>
+        <path d="M56 88 Q64 82 70 90" stroke="#161213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path d="M96 90 Q102 82 110 88" stroke="#161213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path d="M66 106 Q85 118 104 106" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">WAVE RIDER</div>
+    <div class="char-desc">Rolled with 3 last-minute plan changes without missing the event</div>
+  </div>
+
+  <!-- CLOVER LUCK -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-drift" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s3" cx="32%" cy="24%" r="85%"><stop offset="0%" stop-color="#C6F5A9"/><stop offset="45%" stop-color="#5FAE2E"/><stop offset="100%" stop-color="#2E6A12"/></radialGradient></defs>
+        <circle class="ring" cx="87" cy="105" r="80" fill="none" stroke="#C6F5A9" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.4"/>
+        <path d="M85 100 C85 70 60 50 60 50 C40 50 28 70 40 88 C20 92 14 116 34 128 C30 148 52 160 68 148 C74 164 100 164 106 148 C124 160 146 146 140 126 C158 116 154 92 134 88 C144 70 128 50 108 52 C108 52 85 70 85 100Z" fill="url(#s3)"/>
+        <circle cx="68" cy="98" r="9" fill="#E01F73"/><circle cx="104" cy="98" r="9" fill="#1F9ED9"/>
+        <path d="M66 116 Q85 128 104 116" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">CLOVER LUCK</div>
+    <div class="char-desc">Randomly matched into a group that became regulars</div>
+  </div>
+
+  <!-- SWEET TALKER -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-swing" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s4" cx="32%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFB3DD"/><stop offset="45%" stop-color="#FF2E9E"/><stop offset="100%" stop-color="#A80F5E"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="85" r="78" fill="none" stroke="#FF9AD9" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.4"/>
+        <path d="M85 42 C70 20 34 26 30 54 C26 78 50 92 85 122 C120 92 144 78 140 54 C136 26 100 20 85 42Z" fill="url(#s4)"/>
+        <path d="M60 78 Q64 72 68 78" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+        <path d="M96 76 c-1.5-2.5 -6-2 -5.5 2 c0.5 3 5.5 6 5.5 6 c0 0 5-3 5.5-6 c0.5-4 -4-4.5 -5.5-2Z" fill="#161213"/>
+        <path d="M64 92 Q85 102 104 88" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">SWEET TALKER</div>
+    <div class="char-desc">Got 5 people to say yes to an event in one day</div>
+  </div>
+
+  <!-- CONSISTENT ONE — fully reworked: rounder, warmer coral, real relieved-face detail -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-bob" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s5" cx="34%" cy="24%" r="82%"><stop offset="0%" stop-color="#FFD9B8"/><stop offset="45%" stop-color="#F2905C"/><stop offset="100%" stop-color="#C4551F"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="74" fill="none" stroke="#FFCBA0" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.45"/>
+        <circle cx="26" cy="56" r="4" fill="#FFE9D4"/><circle cx="144" cy="64" r="3.4" fill="#FFE9D4"/>
+        <ellipse cx="85" cy="92" rx="58" ry="52" fill="url(#s5)"/>
+        <path d="M54 86 Q64 78 74 86" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M96 86 Q106 78 116 86" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <circle cx="58" cy="98" r="6" fill="#D6432A" opacity="0.35"/><circle cx="112" cy="98" r="6" fill="#D6432A" opacity="0.35"/>
+        <path d="M66 108 Q85 120 104 108" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+        <path d="M120 84 Q128 80 126 72" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.75"/>
+      </svg>
+    </div>
+    <div class="char-name">CONSISTENT ONE</div>
+    <div class="char-desc">Never missed an RSVP'd event for 3 months straight</div>
+  </div>
+
+  <!-- SPIRAL THINKER — reworked: rounder friendlier shape, lighter lavender, smaller centered spiral eyes, open smile -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s6" cx="32%" cy="24%" r="85%"><stop offset="0%" stop-color="#E8D4FF"/><stop offset="45%" stop-color="#A87FE8"/><stop offset="100%" stop-color="#6B4BB8"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="74" fill="none" stroke="#D8C2FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.45"/>
+        <g class="m-drift">
+          <circle cx="132" cy="46" r="3.4" fill="#F0E4FF"/>
+          <circle cx="146" cy="60" r="2.4" fill="#F0E4FF"/>
+          <circle cx="120" cy="34" r="2" fill="#F0E4FF"/>
+        </g>
+        <path d="M85 32 C114 30 132 54 128 82 C138 90 136 112 116 118 C118 138 96 150 82 140 C62 148 44 130 52 112 C34 108 32 82 52 76 C50 50 66 34 85 32Z" fill="url(#s6)"/>
+        <path d="M62 90 m0,0 a9,9 0 1,1 7,8 a5.5,5.5 0 1,1 -4.5,-5 a2.8,2.8 0 1,1 2.2,2.7" fill="none" stroke="#161213" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M104 90 m0,0 a9,9 0 1,1 7,8 a5.5,5.5 0 1,1 -4.5,-5 a2.8,2.8 0 1,1 2.2,2.7" fill="none" stroke="#161213" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="60" cy="104" r="5.5" fill="#B85FE0" opacity="0.3"/><circle cx="108" cy="104" r="5.5" fill="#B85FE0" opacity="0.3"/>
+        <ellipse cx="85" cy="114" rx="9" ry="7" fill="#161213"/>
+      </svg>
+    </div>
+    <div class="char-name">SPIRAL THINKER</div>
+    <div class="char-desc">Went down a rabbit hole in a Learn event Q&amp;A</div>
+  </div>
+
+  <!-- FAST RSVP -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s7" cx="34%" cy="20%" r="88%"><stop offset="0%" stop-color="#B8FFE0"/><stop offset="45%" stop-color="#1FC49E"/><stop offset="100%" stop-color="#0A7A60"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="78" fill="none" stroke="#7FF0D0" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.4"/>
+        <path d="M85 26 L128 82 L104 148 L66 148 L42 82Z" fill="url(#s7)"/>
+        <g class="m-blink">
+          <ellipse cx="68" cy="88" rx="9" ry="11" fill="#161213"/><circle cx="71" cy="84" r="2.6" fill="#fff"/>
+        </g>
+        <g class="m-blink" style="animation-delay:.15s;">
+          <ellipse cx="104" cy="88" rx="9" ry="11" fill="#161213"/><circle cx="107" cy="84" r="2.6" fill="#fff"/>
+        </g>
+        <path d="M66 112 Q85 124 104 112" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">FAST RSVP</div>
+    <div class="char-desc">Snagged a spot on an event that filled in under 5 minutes</div>
+  </div>
+
+  <!-- WILD CARD -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="s8" cx="30%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFC79A"/><stop offset="45%" stop-color="#FF5A1F"/><stop offset="100%" stop-color="#B4300A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="80" fill="none" stroke="#FFB380" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.4"/>
+        <g class="m-jump">
+          <path d="M85 32 C112 40 126 66 116 92 C132 100 128 124 106 128 C108 148 84 158 70 144 C50 152 32 134 42 116 C24 110 24 84 44 76 C40 52 62 26 85 32Z" fill="url(#s8)"/>
+          <path d="M64 90 L67 96 L74 97 L68 101 L70 108 L64 104 L58 108 L60 101 L54 97 L61 96Z" fill="#161213"/>
+          <path d="M100 90 L103 96 L110 97 L104 101 L106 108 L100 104 L94 108 L96 101 L90 97 L97 96Z" fill="#161213"/>
+          <path d="M64 118 Q83 130 102 116" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <div class="char-name">WILD CARD</div>
+    <div class="char-desc">RSVP'd to an event completely outside your usual categories</div>
+  </div>
+
+</div>
+
+<div class="intro" style="margin-top:56px;">
+  <div class="eyebrow">Round 2 — every "first," plus the tier ladder</div>
+  <h1>The full onboarding set</h1>
+  <p>One for each first-time action, a 5 → 10 → 50 → 100 progression for messaging (50+ is Community Creator from above), and a veteran badge for time-in-app rather than actions.</p>
+</div>
+
+<div class="roster">
+
+  <!-- FIRST CHAT — joined your first group chat -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-bob" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t1" cx="34%" cy="24%" r="82%"><stop offset="0%" stop-color="#A8F0E8"/><stop offset="45%" stop-color="#1FB8A8"/><stop offset="100%" stop-color="#0A6E62"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#A8F0E8" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="56" r="4" fill="#D9FFF7"/><circle cx="146" cy="62" r="3.4" fill="#D9FFF7"/>
+        <!-- small stack of chat bubbles, joining an existing convo -->
+        <rect x="108" y="34" width="34" height="22" rx="8" fill="#fff" opacity="0.55"/>
+        <rect x="118" y="52" width="30" height="20" rx="8" fill="#fff" opacity="0.8"/>
+        <path d="M85 30 C110 30 128 52 126 80 C124 112 106 142 85 142 C64 142 46 112 44 80 C42 52 60 30 85 30Z" fill="url(#t1)"/>
+        <circle cx="65" cy="86" r="9" fill="#161213"/><circle cx="68" cy="82" r="2.6" fill="#fff"/>
+        <circle cx="103" cy="86" r="9" fill="#161213"/><circle cx="106" cy="82" r="2.6" fill="#fff"/>
+        <path d="M64 104 Q85 116 104 104" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">FIRST CHAT</div>
+    <div class="char-desc">Joined your first group chat</div>
+  </div>
+
+  <!-- NEW FRIEND — added your first friend -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-swing" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t2" cx="32%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFC2D6"/><stop offset="45%" stop-color="#FF6FA0"/><stop offset="100%" stop-color="#C4275C"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="88" r="76" fill="none" stroke="#FFC2D6" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="50" r="4" fill="#FFE9F0"/><circle cx="146" cy="58" r="3.4" fill="#FFE9F0"/>
+        <path d="M85 28 C112 28 130 52 128 82 C126 116 108 148 85 148 C62 148 44 116 42 82 C40 52 58 28 85 28Z" fill="url(#t2)"/>
+        <!-- friendship bracelet -->
+        <rect x="52" y="118" width="66" height="10" rx="5" fill="#FFD166"/>
+        <circle cx="60" cy="123" r="3" fill="#1FA8D9"/><circle cx="74" cy="123" r="3" fill="#5FAE2E"/><circle cx="88" cy="123" r="3" fill="#FF6FA0"/><circle cx="102" cy="123" r="3" fill="#7B4FE0"/>
+        <path d="M62 84 Q66 78 70 84" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M96 82 c-2-3 -8-2 -7 3 c0.8 4 7 7 7 7 c0 0 6.2-3 7-7 c1-5 -5-6 -7-3Z" fill="#161213"/>
+        <path d="M66 100 Q85 110 104 96" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">NEW FRIEND</div>
+    <div class="char-desc">Added your first friend</div>
+  </div>
+
+  <!-- FIRST MESSAGE — messaged a new person for the first time -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-pulse" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t3" cx="36%" cy="24%" r="82%"><stop offset="0%" stop-color="#AED4FF"/><stop offset="45%" stop-color="#3E8FE0"/><stop offset="100%" stop-color="#1A4E8A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#AED4FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="56" r="4" fill="#E0EFFF"/><circle cx="146" cy="62" r="3.4" fill="#E0EFFF"/>
+        <!-- big "hi" speech bubble -->
+        <path d="M96 24 Q126 24 126 46 Q126 62 104 64 L106 78 L88 64 Q72 62 72 46 Q72 24 96 24Z" fill="#fff" stroke="#161213" stroke-width="2"/>
+        <text x="86" y="50" font-family="Bebas Neue" font-size="16" fill="#1A4E8A">HI!</text>
+        <path d="M85 40 C108 40 124 60 122 86 C120 116 104 142 85 142 C66 142 50 116 48 86 C46 60 62 40 85 40Z" fill="url(#t3)"/>
+        <path d="M60 92 Q64 86 68 92" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M100 92 Q104 86 108 92" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="62" cy="104" r="5" fill="#1A4E8A" opacity="0.35"/><circle cx="106" cy="104" r="5" fill="#1A4E8A" opacity="0.35"/>
+        <path d="M66 112 Q85 122 104 112" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">FIRST MESSAGE</div>
+    <div class="char-desc">Messaged a new person for the first time</div>
+  </div>
+
+  <!-- THE CONNECTOR — introduced two people who clicked -->
+  <div class="char-card">
+    <div class="char-stage" style="background:#161213;">
+      <svg class="m-pulse" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t4" cx="34%" cy="24%" r="76%"><stop offset="0%" stop-color="#B8F2FF"/><stop offset="50%" stop-color="#00B4E0"/><stop offset="100%" stop-color="#0079A8"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="98" r="72" fill="none" stroke="#B8F2FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <path d="M35 46 c-3-5 -13-3 -11 4 c1.4 6 11 12 11 12 c0 0 9.6-6 11-12 c2-7 -8-9 -11-4Z" fill="#FF6FA0"/>
+        <path d="M135 46 c-3-5 -13-3 -11 4 c1.4 6 11 12 11 12 c0 0 9.6-6 11-12 c2-7 -8-9 -11-4Z" fill="#FF6FA0"/>
+        <path d="M85 62 L74 90 L84 90 L77 118 L98 84 L88 84Z" fill="#FFD166"/>
+        <ellipse cx="85" cy="98" rx="47" ry="45" fill="url(#t4)"/>
+        <path d="M75 94 Q79 89 83 94" stroke="#161213" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M89 94 Q93 89 97 94" stroke="#161213" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M74 116 Q85 126 97 116" stroke="#161213" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">THE CONNECTOR</div>
+    <div class="char-desc">Introduced two members who clicked</div>
+  </div>
+
+  <!-- FIRST EVENT — attended your first event ever -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-jump" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t5" cx="30%" cy="20%" r="88%"><stop offset="0%" stop-color="#FFD9A0"/><stop offset="45%" stop-color="#F2953C"/><stop offset="100%" stop-color="#B4520A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="76" fill="none" stroke="#FFD9A0" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="20" cy="30" r="4" fill="#F3B8C4"/><circle cx="146" cy="40" r="3.4" fill="#A9C4A0"/><circle cx="150" cy="120" r="3.4" fill="#8FB6D9"/>
+        <path d="M85 26 C114 24 132 50 128 80 C142 88 138 112 118 118 C120 138 96 150 82 140 C62 148 42 130 50 112 C32 108 30 82 50 76 C46 50 64 28 85 26Z" fill="url(#t5)"/>
+        <path d="M60 86 Q64 80 68 86" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="100" cy="84" r="8" fill="#161213"/><circle cx="103" cy="80" r="2.4" fill="#fff"/>
+        <path d="M62 104 Q85 118 104 102" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- proud raised ticket -->
+        <g transform="rotate(-14 116 100)">
+          <rect x="100" y="86" width="34" height="22" rx="4" fill="#fff" stroke="#161213" stroke-width="1.8"/>
+          <line x1="117" y1="86" x2="117" y2="108" stroke="#161213" stroke-width="1" stroke-dasharray="2 2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="char-name">FIRST EVENT</div>
+    <div class="char-desc">Attended your first event on Your Third Space</div>
+  </div>
+
+  <!-- 5+ TIER — Getting Social -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-wiggle" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t6" cx="32%" cy="22%" r="85%"><stop offset="0%" stop-color="#D4F5A8"/><stop offset="45%" stop-color="#7FC24A"/><stop offset="100%" stop-color="#3D7A1A"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="72" fill="none" stroke="#D4F5A8" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="30" cy="46" r="3.4" fill="#EAFFCB"/><circle cx="52" cy="34" r="3" fill="#EAFFCB"/><circle cx="120" cy="36" r="3" fill="#EAFFCB"/><circle cx="142" cy="50" r="3.4" fill="#EAFFCB"/><circle cx="85" cy="24" r="3" fill="#EAFFCB"/>
+        <path d="M85 30 C110 30 128 52 126 82 C124 114 106 144 85 144 C64 144 46 114 44 82 C42 52 60 30 85 30Z" fill="url(#t6)"/>
+        <path d="M62 88 Q66 82 70 88" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="100" cy="86" r="8" fill="#161213"/><circle cx="103" cy="82" r="2.4" fill="#fff"/>
+        <path d="M62 106 Q85 118 104 104" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">GETTING SOCIAL</div>
+    <div class="char-desc">Messaged 5+ different members</div>
+  </div>
+
+  <!-- 10+ TIER — In The Mix -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-drift" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t7" cx="32%" cy="22%" r="85%"><stop offset="0%" stop-color="#B3C8FF"/><stop offset="45%" stop-color="#3F5FE0"/><stop offset="100%" stop-color="#1A2C80"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="76" fill="none" stroke="#B3C8FF" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <g class="m-drift">
+          <circle cx="24" cy="40" r="3"fill="#E4EBFF"/><circle cx="40" cy="26" r="2.6" fill="#E4EBFF"/><circle cx="130" cy="28" r="2.6" fill="#E4EBFF"/>
+          <circle cx="148" cy="44" r="3" fill="#E4EBFF"/><circle cx="150" cy="120" r="2.6" fill="#E4EBFF"/><circle cx="20" cy="118" r="2.6" fill="#E4EBFF"/>
+        </g>
+        <path d="M85 28 C112 28 130 52 128 82 C126 116 106 148 85 148 C64 148 44 116 42 82 C40 52 58 28 85 28Z" fill="url(#t7)"/>
+        <path d="M60 88 Q64 82 68 88" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="102" cy="86" r="8" fill="#161213"/><circle cx="105" cy="82" r="2.4" fill="#fff"/>
+        <path d="M62 108 Q85 122 106 106" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">IN THE MIX</div>
+    <div class="char-desc">Messaged 10+ different members</div>
+  </div>
+
+  <!-- 100+ TIER — Community Legend, most premium treatment -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-pulse" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t8" cx="36%" cy="22%" r="85%"><stop offset="0%" stop-color="#FFE9A8"/><stop offset="35%" stop-color="#E8A8FF"/><stop offset="70%" stop-color="#8B3FE0"/><stop offset="100%" stop-color="#3A1780"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="78" fill="none" stroke="#FFE9A8" stroke-width="1.8" stroke-dasharray="2 4" opacity="0.6"/>
+        <circle class="ring" cx="85" cy="90" r="68" fill="none" stroke="#E8A8FF" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.4" style="animation-direction:reverse; animation-duration:20s;"/>
+        <circle cx="22" cy="50" r="4" fill="#FFF3D0"/><circle cx="148" cy="56" r="3.6" fill="#FFF3D0"/>
+        <circle cx="136" cy="132" r="4" fill="#FFF3D0"/><circle cx="24" cy="126" r="3.4" fill="#FFF3D0"/>
+        <circle cx="85" cy="16" r="3" fill="#FFF3D0"/>
+        <path d="M85 32 C112 30 132 54 128 84 C138 90 136 114 116 120 C118 140 96 152 82 142 C62 150 44 132 52 114 C34 108 32 82 52 76 C50 50 66 30 85 32Z" fill="url(#t8)"/>
+        <!-- tiny crown, this is the top tier -->
+        <path d="M68 44 L74 32 L85 42 L96 32 L102 44 L100 50 L70 50Z" fill="#FFE9A8" stroke="#161213" stroke-width="1.4"/>
+        <ellipse cx="66" cy="94" rx="9" ry="11" fill="#161213"/><ellipse cx="104" cy="94" rx="9" ry="11" fill="#161213"/>
+        <path d="M66 88 L67.5 91.5 L71 93 L67.5 94.5 L66 98 L64.5 94.5 L61 93 L64.5 91.5Z" fill="#fff"/>
+        <path d="M104 88 L105.5 91.5 L109 93 L105.5 94.5 L104 98 L102.5 94.5 L99 93 L102.5 91.5Z" fill="#fff"/>
+        <path d="M66 112 Q85 126 104 112" stroke="#161213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">COMMUNITY LEGEND</div>
+    <div class="char-desc">Messaged 100+ different members</div>
+  </div>
+
+  <!-- VETERAN / OG — time-based, not action-based -->
+  <div class="char-card">
+    <div class="char-stage">
+      <svg class="m-bob" width="150" height="150" viewBox="0 0 170 170">
+        <defs><radialGradient id="t9" cx="34%" cy="24%" r="82%"><stop offset="0%" stop-color="#E8D4A8"/><stop offset="45%" stop-color="#B4863E"/><stop offset="100%" stop-color="#6E4E1F"/></radialGradient></defs>
+        <circle class="ring" cx="85" cy="90" r="74" fill="none" stroke="#D9C29A" stroke-width="1.6" stroke-dasharray="3 5" opacity="0.5"/>
+        <circle cx="26" cy="56" r="4" fill="#F0E4C8"/><circle cx="144" cy="64" r="3.4" fill="#F0E4C8"/>
+        <path d="M85 30 C110 30 126 52 124 82 C122 114 104 142 85 142 C66 142 48 114 46 82 C44 52 60 30 85 30Z" fill="url(#t9)"/>
+        <!-- little OG patch -->
+        <g transform="rotate(-8 118 116)">
+          <rect x="102" y="106" width="32" height="20" rx="3" fill="#F0E4C8" stroke="#161213" stroke-width="1.6"/>
+          <text x="108" y="121" font-family="Bebas Neue" font-size="13" fill="#6E4E1F">OG</text>
+        </g>
+        <!-- warm eyes with a little laugh-line, distinguished not tired -->
+        <path d="M58 86 Q66 78 74 86" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M96 86 Q104 78 112 86" stroke="#161213" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M52 90 Q56 92 54 96" stroke="#6E4E1F" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.5"/>
+        <path d="M118 90 Q122 92 120 96" stroke="#6E4E1F" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.5"/>
+        <path d="M64 100 Q85 112 106 100" stroke="#161213" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="char-name">THIRD SPACE VETERAN</div>
+    <div class="char-desc">Been with us for a full year</div>
+  </div>
+
+</div>
+
+</body>
+</html>
