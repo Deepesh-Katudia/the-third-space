@@ -227,9 +227,15 @@ export const cloudMotion = {
   bobDelay: 1900,
   bobCycle: 5000,
 
-  /** The halo fades up during the landing, then breathes. */
+  /**
+   * The halo fades up during the landing, then breathes. `glowPulseDelay` is deliberately
+   * NOT the same as `glowIn` — the comp's `glowSoft` loop starts at 1.7s, a beat after the
+   * `glowIn` fade (0.3s delay + 1.35s duration = 1.65s) has already finished, so the two
+   * never fight over the same frames.
+   */
   glowInDelay: 300,
   glowIn: 1350,
+  glowPulseDelay: 1700,
   glowCycle: 4000,
 
   /** Puffs, blooming individually so the cloud reads as still forming. */
@@ -249,8 +255,13 @@ export const cloudMotion = {
   ctaDelay: 1250,
   trailDelay: 1400,
 
-  /** The two ✦, long after everything else. */
+  /**
+   * The two ✦, long after everything else. `twinkleStagger` is the comp's own offset
+   * between the pair (2.6s - 2.2s), not half of `twinkleCycle` — the two are unrelated
+   * numbers that happened to be conflated in an earlier draft.
+   */
   twinkleDelay: 2200,
+  twinkleStagger: 400,
   twinkleCycle: 3000,
 
   /** Reduced motion: one fade for the whole thing, and no loops at all. */

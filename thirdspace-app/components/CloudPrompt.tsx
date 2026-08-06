@@ -75,12 +75,22 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
   const visible = prompt !== null
 
   useEffect(() => {
+    const allDrivers = [enter, bob, glow, glowPulse, shimmer, ...comets, ...puffs, ...texts, ...twinkles]
+
     if (!visible) {
-      ;[enter, bob, glow, glowPulse, shimmer, ...comets, ...puffs, ...texts, ...twinkles].forEach((v) =>
-        v.setValue(0),
-      )
+      allDrivers.forEach((v) => v.setValue(0))
       return
     }
+
+    // Reset every driver to 0 before branching on `reduceMotion`. `useReduceMotion`
+    // starts `true` on the first render of every instance while its native probe is in
+    // flight, so this effect runs the reduced branch below FIRST on the majority of
+    // mounts (motion allowed, probe just hasn't answered yet). Without this reset, that
+    // reduced branch would snap puffs/texts/glow to 1, and the real entrance that fires a
+    // tick later — once the probe resolves `false` and this effect re-runs — would then
+    // animate values that are already at their end state. Puff bloom, text cascade and
+    // glow fade-in would be silently dead on the majority path.
+    allDrivers.forEach((v) => v.setValue(0))
 
     // Reduced motion: one fade for the whole cloud, nothing staggered, no loop at all.
     // Something must still mark the arrival or it blinks into existence — the same rule
@@ -88,13 +98,16 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
     if (reduceMotion) {
       ;[...puffs, ...texts].forEach((v) => v.setValue(1))
       glow.setValue(1)
-      Animated.timing(enter, {
+      const fade = Animated.timing(enter, {
         toValue: 1,
         duration: cloudMotion.reducedIn,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
-      }).start()
-      return
+      })
+      fade.start()
+      // Unmounting (or the prompt clearing) mid-fade must not leave this ticking on a
+      // detached node — the same leak class RewardUnlock and AmbientBackdrop both guard.
+      return () => fade.stop()
     }
 
     const timing = (value: Animated.Value, duration: number, delay: number, easing: (t: number) => number) =>
@@ -129,10 +142,15 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
 
     // The delay sits OUTSIDE the loop, so it is paid once rather than every cycle.
     const bobLoop = Animated.sequence([Animated.delay(cloudMotion.bobDelay), breathe(bob, cloudMotion.bobCycle)])
-    const glowLoop = Animated.sequence([Animated.delay(cloudMotion.glowIn), breathe(glowPulse, cloudMotion.glowCycle)])
+    // Starts at `glowPulseDelay` (1700ms), a beat after the glow's own fade-in has
+    // finished (300 + 1350 = 1650ms) — see the token comment in constants/design.ts.
+    const glowLoop = Animated.sequence([
+      Animated.delay(cloudMotion.glowPulseDelay),
+      breathe(glowPulse, cloudMotion.glowCycle),
+    ])
     const twinkleLoops = twinkles.map((v, i) =>
       Animated.sequence([
-        Animated.delay(cloudMotion.twinkleDelay + i * (cloudMotion.twinkleCycle / 2)),
+        Animated.delay(cloudMotion.twinkleDelay + i * cloudMotion.twinkleStagger),
         breathe(v, cloudMotion.twinkleCycle),
       ]),
     )
@@ -161,6 +179,87 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
     }
   }, [enter, bob, reduceMotion])
 
+  // Everything below is memoised the way RewardUnlock memoises its motes — without it,
+  // every parent re-render (Task 6's watcher subscribes to four live hooks) would build
+  // fresh AnimatedInterpolation nodes for every comet, twinkle, puff and the shimmer,
+  // detaching and reattaching the native props node mid-entrance.
+  const cometStyles = useMemo(
+    () =>
+      COMETS.map((c, i) => {
+        const driver = comets[i]
+        return {
+          key: c.key,
+          size: c.size,
+          // The comp positions the DOT itself at `top`/`left`. The halo is a size*2.6 box
+          // centred on the dot, so its own top/left sit `size * 1.3` (half the extra
+          // width the halo adds on each side) above and left of the dot's position.
+          top: c.topPct * windowHeight - c.size * 1.3,
+          left: c.leftPct * windowWidth - c.size * 1.3,
+          opacity: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] }),
+          scale: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0.3, 1.1, 0.5] }),
+        }
+      }),
+    [windowWidth, windowHeight, comets],
+  )
+
+  const twinkleStyles = useMemo(
+    () =>
+      twinkles.map((driver) => ({
+        opacity: driver.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }),
+        scale: driver.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
+      })),
+    [twinkles],
+  )
+
+  const puffStyles = useMemo(
+    () =>
+      PUFFS.map((p, i) => {
+        const driver = puffs[i]
+        return {
+          key: p.key,
+          size: p.size,
+          top: p.top,
+          left: p.left,
+          color: p.color,
+          opacity: driver,
+          scale: driver.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }),
+        }
+      }),
+    [puffs],
+  )
+
+  const shimmerStyle = useMemo(
+    () => ({
+      opacity: shimmer.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.9, 0] }),
+      translateX: shimmer.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-0.6 * CLOUD_WIDTH, 1.3 * CLOUD_WIDTH],
+      }),
+    }),
+    [shimmer],
+  )
+
+  // The comp's `glowSoft` loop replaces (not multiplies against) the fade-in once it
+  // takes over, swinging opacity 0.7-1.0 directly. `glow` now fades in to a full 1 rather
+  // than 0.85, and `glowPulse` supplies the 0.7 floor — so once the loop starts (a beat
+  // after the fade-in finishes, per `glowPulseDelay`) the product is exactly the comp's
+  // 0.7-1.0 swing, with no discontinuity at the handoff since both sides meet at 0.7.
+  const glowOpacity = useMemo(
+    () => Animated.multiply(glow, glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] })),
+    [glow, glowPulse],
+  )
+
+  // The comp's `textIn` keyframe animates BOTH opacity and a 6px translateY rise —
+  // opacity alone was only half of it.
+  const textStyles = useMemo(
+    () =>
+      texts.map((driver) => ({
+        opacity: driver,
+        transform: [{ translateY: driver.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+      })),
+    [texts],
+  )
+
   if (!prompt) return null
 
   return (
@@ -175,20 +274,20 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
         />
 
         {!reduceMotion &&
-          COMETS.map((c, i) => (
+          cometStyles.map((c) => (
             <Animated.View
               key={c.key}
               pointerEvents="none"
               style={[
                 styles.cometHalo,
                 {
-                  top: c.topPct * windowHeight,
-                  left: c.leftPct * windowWidth,
+                  top: c.top,
+                  left: c.left,
                   width: c.size * 2.6,
                   height: c.size * 2.6,
                   borderRadius: c.size * 1.3,
-                  opacity: comets[i].interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] }),
-                  transform: [{ scale: comets[i].interpolate({ inputRange: [0, 0.35, 1], outputRange: [0.3, 1.1, 0.5] }) }],
+                  opacity: c.opacity,
+                  transform: [{ scale: c.scale }],
                 },
               ]}
             >
@@ -199,18 +298,7 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
         <View style={styles.center} pointerEvents="box-none">
           <Animated.View style={[styles.wrap, wrapStyle]}>
             {/* Radial falloff needs real SVG — the same reason RewardUnlock uses it. */}
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.glow,
-                {
-                  opacity: Animated.multiply(
-                    glow.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }),
-                    glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1] }),
-                  ),
-                },
-              ]}
-            >
+            <Animated.View pointerEvents="none" style={[styles.glow, { opacity: glowOpacity }]}>
               <Svg width={GLOW_W} height={GLOW_H}>
                 <Defs>
                   <RadialGradient id="cloud-glow" cx="50%" cy="50%" rx="50%" ry="50%">
@@ -223,94 +311,94 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
             </Animated.View>
 
             {/* Outside the body's clip, so they actually render. In the comp they sit
-                inside it and are therefore invisible. */}
+                inside it and are therefore invisible. Decorative only — hidden from
+                screen readers so they are never announced. */}
             {!reduceMotion &&
-              twinkles.map((t, i) => (
+              twinkleStyles.map((t, i) => (
                 <Animated.View
                   key={i}
                   pointerEvents="none"
+                  importantForAccessibility="no-hide-descendants"
+                  accessibilityElementsHidden
                   style={[
                     i === 0 ? styles.twinkleLeft : styles.twinkleRight,
-                    {
-                      opacity: t.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }),
-                      transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
-                    },
+                    { opacity: t.opacity, transform: [{ scale: t.scale }] },
                   ]}
                 >
                   <Meta style={styles.twinkleGlyph}>✦</Meta>
                 </Animated.View>
               ))}
 
-            <LinearGradient colors={[cloud.bodyTop, cloud.bodyBottom]} style={styles.body}>
-              {PUFFS.map((p, i) => (
-                <Animated.View
-                  key={p.key}
-                  pointerEvents="none"
-                  style={[
-                    styles.puff,
-                    {
-                      width: p.size,
-                      height: p.size,
-                      borderRadius: p.size / 2,
-                      top: p.top,
-                      left: p.left,
-                      backgroundColor: p.color,
-                      opacity: puffs[i],
-                      transform: [{ scale: puffs[i].interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }],
-                    },
-                  ]}
-                />
-              ))}
-
-              {!reduceMotion && (
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.shimmer,
-                    {
-                      opacity: shimmer.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.9, 0] }),
-                      transform: [
-                        { skewX: '-18deg' },
-                        {
-                          translateX: shimmer.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [-0.6 * CLOUD_WIDTH, 1.3 * CLOUD_WIDTH],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  <LinearGradient
-                    colors={[cloud.shimmerEdge, cloud.shimmerCore, cloud.shimmerEdge]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={StyleSheet.absoluteFill}
+            {/* The iOS shadow lives on this wrapper, not on the clipped body below —
+                see the styles.bodyShadow comment. */}
+            <View style={styles.bodyShadow}>
+              <LinearGradient colors={[cloud.bodyTop, cloud.bodyBottom]} style={styles.body}>
+                {puffStyles.map((p) => (
+                  <Animated.View
+                    key={p.key}
+                    pointerEvents="none"
+                    style={[
+                      styles.puff,
+                      {
+                        width: p.size,
+                        height: p.size,
+                        borderRadius: p.size / 2,
+                        top: p.top,
+                        left: p.left,
+                        backgroundColor: p.color,
+                        opacity: p.opacity,
+                        transform: [{ scale: p.scale }],
+                      },
+                    ]}
                   />
-                </Animated.View>
-              )}
+                ))}
 
-              <Animated.View style={{ opacity: texts[0] }}>
-                <Meta role="eyebrow" style={styles.eyebrow}>{prompt.eyebrow}</Meta>
-              </Animated.View>
-              <Animated.View style={{ opacity: texts[1] }}>
-                <Display role="cardTitle" style={styles.title}>{prompt.title}</Display>
-              </Animated.View>
-              <Animated.View style={{ opacity: texts[2] }}>
-                <Meta style={styles.bodyText}>{prompt.body}</Meta>
-              </Animated.View>
-              <Animated.View style={{ opacity: texts[3] }}>
-                <TouchableOpacity
-                  style={styles.cta}
-                  onPress={() => onAct(prompt)}
-                  testID="cloud-prompt-cta"
-                  accessibilityRole="button"
-                  activeOpacity={0.8}
-                >
-                  <Meta role="eyebrow" style={styles.ctaLabel}>{prompt.cta}</Meta>
-                </TouchableOpacity>
-              </Animated.View>
-            </LinearGradient>
+                <Animated.View style={textStyles[0]}>
+                  <Meta role="eyebrow" style={styles.eyebrow}>{prompt.eyebrow}</Meta>
+                </Animated.View>
+                <Animated.View style={textStyles[1]}>
+                  <Display role="cardTitle" style={styles.title}>{prompt.title}</Display>
+                </Animated.View>
+                <Animated.View style={textStyles[2]}>
+                  <Meta style={styles.bodyText}>{prompt.body}</Meta>
+                </Animated.View>
+                <Animated.View style={textStyles[3]}>
+                  <TouchableOpacity
+                    style={styles.cta}
+                    onPress={() => onAct(prompt)}
+                    testID="cloud-prompt-cta"
+                    accessibilityRole="button"
+                    activeOpacity={0.8}
+                  >
+                    <Meta role="eyebrow" style={styles.ctaLabel}>{prompt.cta}</Meta>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* Painted last, over the text — the comp's shimmer sits above the copy
+                    (z-index 3 vs 2) and its timing (1150-2250ms) is meant to glaze over
+                    words that have already arrived (950-1400ms). RN paints in declaration
+                    order, so this has to come after the text blocks, not before them. */}
+                {!reduceMotion && (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.shimmer,
+                      {
+                        opacity: shimmerStyle.opacity,
+                        transform: [{ skewX: '-18deg' }, { translateX: shimmerStyle.translateX }],
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[cloud.shimmerEdge, cloud.shimmerCore, cloud.shimmerEdge]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                )}
+              </LinearGradient>
+            </View>
 
             <Animated.View style={[styles.trail, { opacity: texts[4] }]} pointerEvents="none">
               {TRAIL.map((size) => (
@@ -341,6 +429,20 @@ const styles = StyleSheet.create({
   twinkleRight: { position: 'absolute', top: -46, right: 20 },
   twinkleGlyph: { color: cloud.twinkle, fontSize: 9, lineHeight: 12 },
 
+  /**
+   * The drop shadow, split off the clipped body below. `overflow: 'hidden'` on iOS sets
+   * `masksToBounds`, which clips a layer's own shadow away along with its children — so a
+   * shadow declared on the same style as the puffs' clip would never actually render. This
+   * wrapper carries no fill and no clip of its own, just the shadow, sitting behind the
+   * body it wraps.
+   */
+  bodyShadow: {
+    borderRadius: 38,
+    shadowColor: cloud.bodyShadow,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 1,
+    shadowRadius: 22,
+  },
   body: {
     borderRadius: 38,
     paddingTop: space.xxl + 2,
@@ -350,10 +452,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: cloud.bodyRim,
-    shadowColor: cloud.bodyShadow,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 1,
-    shadowRadius: 22,
+    // Android's elevation shadow is not clipped by overflow:hidden the way iOS's
+    // shadow* props are, so it can stay here rather than move to the wrapper.
     elevation: 12,
   },
   puff: { position: 'absolute' },

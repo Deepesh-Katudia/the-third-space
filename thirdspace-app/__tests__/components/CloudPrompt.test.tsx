@@ -1,6 +1,6 @@
 import React from 'react'
-import { AccessibilityInfo, StyleSheet } from 'react-native'
-import { render, fireEvent } from '@testing-library/react-native'
+import { AccessibilityInfo, Animated, StyleSheet } from 'react-native'
+import { act, render, fireEvent, waitFor } from '@testing-library/react-native'
 import { CloudPrompt } from '../../components/CloudPrompt'
 import type { CloudPrompt as Prompt } from '../../constants/cloudPrompts'
 
@@ -71,5 +71,104 @@ describe('CloudPrompt', () => {
     await findByTestId('cloud-prompt')
     expect(getByTestId('cloud-prompt')).toBeTruthy()
     expect(loop).not.toHaveBeenCalled()
+  })
+
+  // The six tests above all stub reduced motion ON, so none of them ever exercise the
+  // entrance parallel, the comet/puff/shimmer/twinkle interpolations, the bob/glow/
+  // twinkle loops, or the Animated.add/multiply composition in wrapStyle/glowOpacity —
+  // roughly 60% of the file. These tests cover the non-reduced path directly.
+
+  it('starts the ambient loops when reduced motion is off', async () => {
+    stubReduceMotion(false)
+    const loop = jest.spyOn(Animated, 'loop')
+    render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
+    // Proves the real entrance path — not just the reduced fallback — actually runs.
+    await waitFor(() => expect(loop).toHaveBeenCalled())
+  })
+
+  it('drives every timing animation on the native thread', async () => {
+    // Confirms useNativeDriver is not silently dropped anywhere in the entrance parallel
+    // or the breathing loops, which would move the cloud's motion onto the JS thread.
+    stubReduceMotion(false)
+    const timing = jest.spyOn(Animated, 'timing')
+    render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
+    await waitFor(() => expect(timing.mock.calls.length).toBeGreaterThan(0))
+    timing.mock.calls.forEach(([, config]) => {
+      expect(config?.useNativeDriver).toBe(true)
+    })
+  })
+
+  it('resets entrance values to 0 before branching on reduced motion (regression: I1)', async () => {
+    // The probe starts unresolved, so `useReduceMotion` reports `true` on this component's
+    // very first render — exactly like every real mount, motion-allowed or not. If the
+    // effect skipped resetting before checking `reduceMotion`, the reduced branch below
+    // would snap puffs/texts/glow to 1 on that first render, and the real entrance that
+    // starts once the probe resolves `false` a tick later would animate values already at
+    // their end state — killing the puff bloom, text cascade and glow fade-in on the
+    // majority (motion-allowed) path.
+    let resolveProbe: (enabled: boolean) => void = () => {}
+    jest
+      .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+      .mockReturnValue(new Promise((resolve) => { resolveProbe = resolve }))
+    jest
+      .spyOn(AccessibilityInfo, 'addEventListener')
+      .mockReturnValue({ remove: jest.fn() } as unknown as ReturnType<typeof AccessibilityInfo.addEventListener>)
+
+    const setValue = jest.spyOn(Animated.Value.prototype, 'setValue')
+    render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
+
+    // Mount runs with the probe still in flight (defaults to reduced): entrance-only
+    // drivers snap to 1.
+    expect(setValue).toHaveBeenCalledWith(1)
+    setValue.mockClear()
+
+    await act(async () => {
+      resolveProbe(false)
+      await Promise.resolve()
+    })
+
+    // The real entrance path must reset those drivers back to 0 before animating them —
+    // not pick up the stale 1s the reduced branch left behind.
+    expect(setValue).toHaveBeenCalledWith(0)
+  })
+
+  it('stops its loops and resets every animated value when the prompt clears', async () => {
+    stubReduceMotion(false)
+    const stop = jest.fn()
+    jest
+      .spyOn(Animated, 'loop')
+      .mockReturnValue({ start: jest.fn(), stop, reset: jest.fn() } as unknown as Animated.CompositeAnimation)
+    // The bob/glow/twinkle loops each sit behind an `Animated.delay` before the loop
+    // itself starts (so the delay is paid once rather than every cycle — see the token
+    // comment in the component). Making the delay resolve instantly moves the enclosing
+    // sequence's active animation onto the (mocked) loop synchronously, so calling
+    // `.stop()` on the outer sequence during cleanup reaches the loop's `stop` rather
+    // than the still-pending delay's.
+    jest.spyOn(Animated, 'delay').mockImplementation(
+      () =>
+        ({
+          start: (cb?: (result: { finished: boolean }) => void) => cb?.({ finished: true }),
+          stop: jest.fn(),
+          reset: jest.fn(),
+        }) as unknown as Animated.CompositeAnimation,
+    )
+    const setValue = jest.spyOn(Animated.Value.prototype, 'setValue')
+
+    const { rerender } = render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
+    await waitFor(() => expect(Animated.loop).toHaveBeenCalled())
+
+    setValue.mockClear()
+    await act(async () => {
+      rerender(<CloudPrompt prompt={null} onDismiss={jest.fn()} onAct={jest.fn()} />)
+      // The AnimatedProps subscription this rerender triggers flushes via the
+      // scheduler's own macrotask, one tick outside plain microtask draining.
+      await new Promise((resolve) => setImmediate(resolve))
+    })
+
+    // The previous effect's cleanup stops the running loops...
+    expect(stop).toHaveBeenCalled()
+    // ...and the new effect run (visible === false) resets every driver back to 0, so a
+    // prompt reappearing later starts clean rather than mid-animation.
+    expect(setValue).toHaveBeenCalledWith(0)
   })
 })
