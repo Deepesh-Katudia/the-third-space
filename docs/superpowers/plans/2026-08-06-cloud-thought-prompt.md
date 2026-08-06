@@ -1021,7 +1021,7 @@ Create `__tests__/components/CloudPrompt.test.tsx`:
 
 ```tsx
 import React from 'react'
-import { AccessibilityInfo } from 'react-native'
+import { AccessibilityInfo, StyleSheet } from 'react-native'
 import { render, fireEvent } from '@testing-library/react-native'
 import { CloudPrompt } from '../../components/CloudPrompt'
 import type { CloudPrompt as Prompt } from '../../constants/cloudPrompts'
@@ -1061,11 +1061,15 @@ describe('CloudPrompt', () => {
     expect(getByText("I'm in")).toBeTruthy()
   })
 
-  it('keeps the copy uncased in the accessibility tree', () => {
-    // The uppercase is a display-only token. A screen reader must still receive the
-    // sentence the catalogue actually holds.
+  it('uppercases the title by token rather than by transforming the string', () => {
+    // The casing is display-only: the style carries textTransform, and the node's own
+    // text stays exactly as the catalogue wrote it, so a screen reader still receives
+    // the sentence rather than shouting. Asserting getByText alone would prove nothing
+    // beyond the test above — this checks BOTH halves of that arrangement.
     const { getByText } = render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
-    expect(getByText("Don't just scroll. Show up.")).toBeTruthy()
+    const title = getByText("Don't just scroll. Show up.")
+    expect(title.props.children).toBe("Don't just scroll. Show up.")
+    expect(StyleSheet.flatten(title.props.style).textTransform).toBe('uppercase')
   })
 
   it('calls onAct with the prompt when the CTA is pressed', () => {
