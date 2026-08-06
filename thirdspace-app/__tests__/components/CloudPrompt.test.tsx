@@ -89,10 +89,22 @@ describe('CloudPrompt', () => {
   it('drives every timing animation on the native thread', async () => {
     // Confirms useNativeDriver is not silently dropped anywhere in the entrance parallel
     // or the breathing loops, which would move the cloud's motion onto the JS thread.
+    //
+    // Waiting on `timing.mock.calls.length > 0` alone is a trap: it is already satisfied
+    // at mount by the reduced-motion fade (reduceMotion starts `true` for one tick on
+    // every instance, regardless of this stub), which is itself a single `Animated.timing`
+    // call with `duration: cloudMotion.reducedIn`. That branch is already covered by six
+    // other tests, so asserting on it here proves nothing about the entrance parallel or
+    // the bob/glow/twinkle loops — the test's entire stated purpose — and a dropped
+    // `useNativeDriver` on any of THOSE would still ship green. Waiting on the same
+    // `Animated.loop` signal test 1 waits on guarantees the assertion runs only after the
+    // real (non-reduced) entrance has actually started.
     stubReduceMotion(false)
     const timing = jest.spyOn(Animated, 'timing')
+    const loop = jest.spyOn(Animated, 'loop')
     render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
-    await waitFor(() => expect(timing.mock.calls.length).toBeGreaterThan(0))
+    await waitFor(() => expect(loop).toHaveBeenCalled())
+    expect(timing.mock.calls.length).toBeGreaterThan(1)
     timing.mock.calls.forEach(([, config]) => {
       expect(config?.useNativeDriver).toBe(true)
     })

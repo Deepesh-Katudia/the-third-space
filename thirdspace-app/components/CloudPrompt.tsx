@@ -400,7 +400,7 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
               </LinearGradient>
             </View>
 
-            <Animated.View style={[styles.trail, { opacity: texts[4] }]} pointerEvents="none">
+            <Animated.View style={[styles.trail, textStyles[4]]} pointerEvents="none">
               {TRAIL.map((size) => (
                 <View key={size} style={[styles.trailDot, { width: size, height: size, borderRadius: size / 2 }]} />
               ))}
@@ -433,11 +433,14 @@ const styles = StyleSheet.create({
    * The drop shadow, split off the clipped body below. `overflow: 'hidden'` on iOS sets
    * `masksToBounds`, which clips a layer's own shadow away along with its children — so a
    * shadow declared on the same style as the puffs' clip would never actually render. This
-   * wrapper carries no fill and no clip of its own, just the shadow, sitting behind the
-   * body it wraps.
+   * wrapper sits behind the body it wraps, fully covered by it — but still needs an OPAQUE
+   * fill: without one, iOS can't derive a cheap shadowPath from the border shape and falls
+   * back to alpha compositing (plus a dev-mode warning). `bodyBottom` is one of the two
+   * gradient stops the body itself paints over this wrapper, so the fill is invisible.
    */
   bodyShadow: {
     borderRadius: 38,
+    backgroundColor: cloud.bodyBottom,
     shadowColor: cloud.bodyShadow,
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 1,
