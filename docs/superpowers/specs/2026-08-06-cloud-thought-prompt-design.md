@@ -93,6 +93,24 @@ The comp's palette — `#FFF3D2`, `#FFE9B0`, `#5C4108`, `#A87A0F`, `#8A6B17` —
 `constants/design.ts`, exactly as `reward` did, so `__tests__/constants/tokens.test.ts`
 keeps its empty allowlist and no literal hex enters `app/` or `components/`.
 
+### Two of the comp's golds fail AA and get darkened
+
+Run through the same contrast function `__tests__/constants/design.test.ts` already applies
+to the palette, against the cloud body's two stops:
+
+| Comp value | Role | On `#FFE9B0` | Verdict |
+|---|---|---|---|
+| `#A87A0F` | eyebrow, 9px | **3.49:1** | fails AA |
+| `#8A6B17` | body, 9.5px | **4.18:1** | fails AA |
+| `#5C4108` | title, 21px | 7.91:1 | keeps comp value |
+| `#FFF3D2` on `#5C4108` | CTA label | 8.58:1 | keeps comp value |
+
+The two failures become `#856010` (4.77:1) and `#7A5A14` (5.31:1) — the smallest darkening
+that clears 4.5:1 on **both** gradient stops, so neither needs a variant chosen by position.
+This is precisely what the palette already did to the comp's `#5C4F3F`, `#C4501F` and
+`#6E7A5E`, and for the same reason: the comp was never contrast-checked, and 9px gold on
+gold is the worst case in the whole design.
+
 ### Two deliberate departures from the comp
 
 1. **Title and body render uppercase.** The comp sets them sentence case ("Don't just
