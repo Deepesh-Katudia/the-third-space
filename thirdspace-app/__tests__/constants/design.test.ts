@@ -1,4 +1,4 @@
-import { palette, type as typeScale, radius, space, tabBar, motion } from '../../constants/design'
+import { palette, type as typeScale, radius, space, tabBar, motion, cloud, cloudMotion } from '../../constants/design'
 
 /** WCAG 2.1 relative luminance. */
 function luminance(hex: string): number {
@@ -170,5 +170,40 @@ describe('welcome motion tokens', () => {
     for (const value of Object.values(motion)) {
       expect(value).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('cloud prompt tokens', () => {
+  const BODY_STOPS = [cloud.bodyTop, cloud.bodyBottom]
+
+  it('reads every type colour at AA on BOTH gradient stops of the cloud body', () => {
+    // The body is a 180deg gradient, so one value has to work at the top and the
+    // bottom alike — a component must never pick a variant based on its position.
+    // The comp's own #A87A0F (3.49:1) and #8A6B17 (4.18:1) both failed this and
+    // were darkened. See the spec's contrast table.
+    for (const stop of BODY_STOPS) {
+      expect(contrast(cloud.eyebrow, stop)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(cloud.title, stop)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(cloud.body, stop)).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('reads the CTA label at AA on the CTA fill', () => {
+    expect(contrast(cloud.ctaLabel, cloud.ctaFill)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('orders the entrance so text lands only after the body has', () => {
+    // The whole point of the comp is layering. If text beat the puffs in, it would
+    // read as a slide-in with a caption rather than something forming.
+    expect(cloudMotion.puffFirstDelay).toBeLessThan(cloudMotion.eyebrowDelay)
+    expect(cloudMotion.eyebrowDelay).toBeLessThan(cloudMotion.titleDelay)
+    expect(cloudMotion.titleDelay).toBeLessThan(cloudMotion.bodyDelay)
+    expect(cloudMotion.bodyDelay).toBeLessThan(cloudMotion.ctaDelay)
+    expect(cloudMotion.ctaDelay).toBeLessThan(cloudMotion.trailDelay)
+  })
+
+  it('starts the bob only after the entrance has finished', () => {
+    // Overlapping them would fight the landing's overshoot.
+    expect(cloudMotion.bobDelay).toBeGreaterThanOrEqual(cloudMotion.enterIn)
   })
 })

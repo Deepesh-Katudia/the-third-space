@@ -140,6 +140,123 @@ export const rewardMotion = {
   enterIn: 420,
 } as const
 
+/**
+ * The cloud thought prompt. Source comp: docs/cloud-thought-prompt.html. Spec:
+ * docs/superpowers/specs/2026-08-06-cloud-thought-prompt-design.md
+ *
+ * Buttery gold, and deliberately NOT in `palette` — same arrangement as `reward` above.
+ * The cloud is the app speaking up rather than a surface the app is made of, so it gets
+ * its own closed set of values that nothing else may reach for.
+ *
+ * Two of the comp's golds were darkened because they failed AA on the cloud's own body:
+ * the eyebrow was #A87A0F (3.49:1) and the body text #8A6B17 (4.18:1), both at 9px,
+ * which is the worst case in the design. Exactly what the palette already did to the
+ * comp's #5C4F3F, #C4501F and #6E7A5E. The title and CTA keep their comp values.
+ */
+export const cloud = {
+  /**
+   * Washes the screen underneath toward the field's own tone. The comp fades its
+   * backdrop to 0.4 opacity, which a Modal cannot do to the screen beneath it, so the
+   * same result is reached from the other side with a translucent wash in orangeDeep.
+   */
+  scrim: 'rgba(243,178,122,0.62)',
+
+  /** The body's 180deg gradient, top and bottom stop. */
+  bodyTop: '#FFF3D2',
+  bodyBottom: '#FFE9B0',
+  /** Inset hairline and drop shadow that lift the body off the scrim. */
+  bodyRim: 'rgba(255,255,255,0.5)',
+  bodyShadow: 'rgba(138,58,23,0.22)',
+
+  /**
+   * Three puffs across the top. They are CLIPPED by the body's own rounded corners —
+   * that is the comp's behaviour, not an oversight, and it is what turns them from
+   * cartoon bumps into a faint bloom of texture inside the top edge.
+   */
+  puffLight: '#FFF3D2',
+  puffMid: '#FFEEC0',
+
+  /** Radial halo behind the whole cloud. Needs real SVG, like the reward glow. */
+  glowCore: 'rgba(255,214,140,0.55)',
+  glowEdge: 'rgba(255,214,140,0)',
+
+  /**
+   * Comet dot and the ring faking its glow — there is no box-shadow in React Native,
+   * so falloff is a concentric ring, the same trick AmbientBackdrop uses.
+   *
+   * Very nearly white, which the palette forbids over orange for TEXT (1.83:1). These
+   * carry no information, so contrast does not apply. Do not "fix" this by darkening it.
+   */
+  comet: '#FFF8E8',
+  cometHalo: 'rgba(255,238,190,0.35)',
+  /** The two ✦ above the cloud. Decorative, same exemption. */
+  twinkle: '#FFF8E8',
+
+  /** Shimmer band, swept across the body exactly once after it lands. */
+  shimmerEdge: 'rgba(255,255,255,0)',
+  shimmerCore: 'rgba(255,255,255,0.75)',
+
+  /** Type inside the cloud. Eyebrow and body darkened from the comp for AA. */
+  eyebrow: '#856010',
+  title: '#5C4108',
+  body: '#7A5A14',
+
+  /** The CTA inverts: dark gold fill, pale gold label. */
+  ctaFill: '#5C4108',
+  ctaLabel: '#FFF3D2',
+
+  /** Three shrinking dots below the cloud — the thought-bubble tail. */
+  trail: '#FFE9B0',
+} as const
+
+/**
+ * Cloud motion, in milliseconds, lifted from the comp's keyframes. Held in one block
+ * so the ordering of the five beats is readable at a glance and assertable in tests.
+ *
+ * The beats: comets trace the path, the cloud lands with an overshoot, the puffs bloom
+ * in one by one, a shimmer sweeps across once, and the text arrives last. Collapse any
+ * of that ordering and it stops being a moment and becomes a slide-in.
+ */
+export const cloudMotion = {
+  /** Six sparks along the path, each a single flash. */
+  cometFlash: 700,
+  cometStagger: 90,
+
+  /** The landing, and the idle bob that takes over once it has settled. */
+  enterIn: 1350,
+  bobDelay: 1900,
+  bobCycle: 5000,
+
+  /** The halo fades up during the landing, then breathes. */
+  glowInDelay: 300,
+  glowIn: 1350,
+  glowCycle: 4000,
+
+  /** Puffs, blooming individually so the cloud reads as still forming. */
+  puffBloom: 600,
+  puffFirstDelay: 620,
+  puffStagger: 100,
+
+  /** One sweep, once, after it has settled. */
+  shimmerDelay: 1150,
+  shimmerSweep: 1100,
+
+  /** Text cascade, last. */
+  textIn: 550,
+  eyebrowDelay: 950,
+  titleDelay: 1050,
+  bodyDelay: 1150,
+  ctaDelay: 1250,
+  trailDelay: 1400,
+
+  /** The two ✦, long after everything else. */
+  twinkleDelay: 2200,
+  twinkleCycle: 3000,
+
+  /** Reduced motion: one fade for the whole thing, and no loops at all. */
+  reducedIn: 200,
+} as const
+
 export const font = {
   /**
    * Bebas Neue ships ONE weight (400) and has no lowercase. There is deliberately a
