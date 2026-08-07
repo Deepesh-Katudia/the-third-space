@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'expo-router'
 import { CloudPrompt } from './CloudPrompt'
 import { useAuth } from '../hooks/useAuth'
@@ -32,35 +32,53 @@ export function CloudPromptWatcher({ role }: { role: PromptRole }) {
   const { user } = useAuth()
   const uid = user?.uid
 
-  const { profile } = useProfile(uid)
-  const { threads } = useChatList(uid)
-  const { attendedEvents } = useAttendanceStats(uid)
-  const { connectionUids } = useConnections(uid)
+  // Only attenders have nudges — every hoster entry is coaching, with no condition, so
+  // none of the state below is ever read for one. Handing these hooks `undefined` for a
+  // hoster keeps four live subscriptions and a fetch from opening to feed a decision
+  // nobody makes. Same reasoning that keeps RewardWatcher off the hoster layout.
+  const stateUid = role === 'attender' ? uid : undefined
+
+  const { profile, loading: profileLoading } = useProfile(stateUid)
+  const { threads, loading: threadsLoading } = useChatList(stateUid)
+  const { attendedEvents, loading: attendanceLoading } = useAttendanceStats(stateUid)
+  const { connectionUids, loading: connectionsLoading } = useConnections(stateUid)
 
   const [registrations, setRegistrations] = useState<CommunityEvent[]>([])
+  const [registrationsLoaded, setRegistrationsLoaded] = useState(false)
   const [prompt, setPrompt] = useState<Prompt | null>(null)
+  /** The `uid:pathname` visit a cloud was last raised for. See the raise effect. */
+  const raisedFor = useRef<string | null>(null)
 
   // One-shot rather than a subscription: `getMyRegisteredEvents` is what my-events
   // already uses, and a nudge does not need live updates to decide whether to appear.
   useEffect(() => {
-    if (!uid) {
+    if (!stateUid) {
       setRegistrations([])
+      setRegistrationsLoaded(true)
       return
     }
     let cancelled = false
-    getMyRegisteredEvents(uid)
+    setRegistrationsLoaded(false)
+    getMyRegisteredEvents(stateUid)
       .then((events) => {
-        if (!cancelled) setRegistrations(events)
+        if (!cancelled) {
+          setRegistrations(events)
+          setRegistrationsLoaded(true)
+        }
       })
       // A failed load simply means the events-based nudges stay quiet. It must never
-      // take the screen down.
+      // take the screen down — and it must still count as settled, or a Firestore
+      // outage would hold every nudge back forever.
       .catch(() => {
-        if (!cancelled) setRegistrations([])
+        if (!cancelled) {
+          setRegistrations([])
+          setRegistrationsLoaded(true)
+        }
       })
     return () => {
       cancelled = true
     }
-  }, [uid])
+  }, [stateUid])
 
   const state: PromptState = useMemo(
     () => ({
@@ -74,15 +92,39 @@ export function CloudPromptWatcher({ role }: { role: PromptRole }) {
     [profile?.photoURL, attendedEvents.length, registrations, threads, connectionUids.length],
   )
 
+  /**
+   * Whether `state` describes the account or merely describes nothing having loaded yet.
+   *
+   * Every one of these sources starts empty and settles later, while AsyncStorage answers
+   * in a tick — so judging a nudge at mount asks the catalogue about a member with no
+   * photo, no events and no connections, which is exactly the shape `no-photo`,
+   * `no-rsvp-yet` and `no-connections` all test for. A veteran would be told they had
+   * never been to anything, and the firing would burn the 3-day cooldown that was
+   * supposed to protect the REAL nudge.
+   *
+   * Coaching does not read state at all, but it is gated alongside: it is a first-visit
+   * hint, and a few hundred milliseconds later is still the first visit.
+   */
+  const ready =
+    !profileLoading && !threadsLoading && !attendanceLoading && !connectionsLoading && registrationsLoaded
+
   // Keyed on the ROUTE, so a re-render at the same pathname cannot re-raise a cloud.
   useEffect(() => {
-    if (!uid) return
+    if (!uid || !ready) return
     let cancelled = false
+
+    // At most one raise per visit to a route. `ready` is part of the key below, and a
+    // token refresh can retrigger the profile subscription's loading flag, so the effect
+    // can legitimately re-run at an unchanged pathname — without this, that would put
+    // back a cloud the user had just dismissed.
+    const visit = `${uid}:${pathname}`
+    if (raisedFor.current === visit) return
 
     getSeenPrompts(uid).then((seen) => {
       if (cancelled) return
       const next = pickPrompt({ route: pathname, role, state, seen, now: new Date() })
       if (!next) return
+      raisedFor.current = visit
       setPrompt(next)
       // Marked on QUEUE, not on dismiss: a force-quit mid-animation should not mean the
       // same cloud every launch.
@@ -95,13 +137,16 @@ export function CloudPromptWatcher({ role }: { role: PromptRole }) {
     }
     // `state` is deliberately excluded: it changes as subscriptions settle, and
     // including it would re-run this mid-visit and raise a second cloud on one screen.
+    // `ready` stands in for it — one flip, from "nothing has loaded" to "this is the
+    // account", which is the only change of state a prompt decision should react to.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, pathname, role])
+  }, [uid, pathname, role, ready])
 
   // Clear on account change, so a sign-out mid-cloud does not hand the next user
-  // someone else's prompt.
+  // someone else's prompt — nor the next user's first visit the last one's visit record.
   useEffect(() => {
     setPrompt(null)
+    raisedFor.current = null
   }, [uid])
 
   return (
