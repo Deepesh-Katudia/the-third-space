@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../../hooks/useAuth'
 import { useVenue } from '../../../hooks/useVenue'
 import { LoadingView } from '../../../components/LoadingView'
+import { CloudPromptWatcher } from '../../../components/CloudPromptWatcher'
 import { tabBar, navigatorBackground, type as typeScale } from '../../../constants/design'
 
 export default function HosterLayout() {
@@ -17,37 +18,42 @@ export default function HosterLayout() {
   if (!venue && !venueHasError) return <Redirect href="/(app)/venue-setup" />
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: navigatorBackground,
-        tabBarActiveTintColor: tabBar.activeTintColor,
-        tabBarInactiveTintColor: tabBar.inactiveTintColor,
-        tabBarStyle: {
-          backgroundColor: tabBar.backgroundColor,
-          borderTopColor: tabBar.borderTopColor,
-          borderTopWidth: tabBar.borderTopWidth,
-          height: tabBar.height,
-          elevation: 0,
-        },
-        tabBarLabelStyle: typeScale.tabLabel,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{ title: 'Overview', tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} /> }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{ title: 'Events', tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} /> }}
-      />
-      <Tabs.Screen
-        name="venue"
-        options={{ title: 'Venue', tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" size={size} color={color} /> }}
-      />
-      {/* Detail route reached from Events — hidden from the tab bar. */}
-      <Tabs.Screen name="announcement/[id]" options={{ href: null }} />
-    </Tabs>
-
+    <>
+      {/* Beside the navigator, not inside it — the cloud is a Modal and has to land
+          over whatever screen is on top. Unlike RewardWatcher, hosters get this one:
+          navigation coaching is for everybody. */}
+      <CloudPromptWatcher role="hoster" />
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          sceneStyle: navigatorBackground,
+          tabBarActiveTintColor: tabBar.activeTintColor,
+          tabBarInactiveTintColor: tabBar.inactiveTintColor,
+          tabBarStyle: {
+            backgroundColor: tabBar.backgroundColor,
+            borderTopColor: tabBar.borderTopColor,
+            borderTopWidth: tabBar.borderTopWidth,
+            height: tabBar.height,
+            elevation: 0,
+          },
+          tabBarLabelStyle: typeScale.tabLabel,
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{ title: 'Overview', tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} /> }}
+        />
+        <Tabs.Screen
+          name="events"
+          options={{ title: 'Events', tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} /> }}
+        />
+        <Tabs.Screen
+          name="venue"
+          options={{ title: 'Venue', tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" size={size} color={color} /> }}
+        />
+        {/* Detail route reached from Events — hidden from the tab bar. */}
+        <Tabs.Screen name="announcement/[id]" options={{ href: null }} />
+      </Tabs>
+    </>
   )
 }

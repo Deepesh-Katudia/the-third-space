@@ -6,6 +6,7 @@ import { useChatList } from '../../../hooks/useChatList'
 import { chatUnreadBadge } from '../../../utils/chat'
 import { LoadingView } from '../../../components/LoadingView'
 import { RewardWatcher } from '../../../components/RewardWatcher'
+import { CloudPromptWatcher } from '../../../components/CloudPromptWatcher'
 import { palette, tabBar, navigatorBackground, type as typeScale } from '../../../constants/design'
 
 export default function AttenderLayout() {
@@ -21,6 +22,7 @@ export default function AttenderLayout() {
       {/* Sits beside the navigator, not inside it: the unlock is a Modal and has to be
           able to land over whatever screen is on top. */}
       <RewardWatcher />
+      <CloudPromptWatcher role="attender" />
       <Tabs
         screenOptions={{
           headerShown: false,
