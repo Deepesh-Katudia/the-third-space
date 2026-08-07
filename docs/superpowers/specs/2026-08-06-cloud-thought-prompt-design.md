@@ -219,14 +219,32 @@ cloud every launch, which is the lesson already encoded in `RewardWatcher`.
 
 ### `components/CloudPrompt.tsx`
 
-Presentational and fully driven by props: `prompt`, `onDismiss`, `onAct`. Renders in a
-`Modal` with `statusBarTranslucent` so it covers the tab bar — a cloud that left
-navigation chrome visible would be a toast, not a moment.
+Presentational and fully driven by props: `prompt`, `anchor`, `onDismiss`, `onAct`.
+Renders in a `Modal` with `statusBarTranslucent` so it can sit *over* the tab bar rather
+than beside it.
+
+**It anchors to a tab.** _(Revised after the first build, which centred it.)_ The body
+sits just above the tab bar, horizontally over the tab the prompt is about, and a tail of
+three shrinking dots descends from it to point at that tab's icon. `anchor` comes from
+`tabAnchor()` — the tab the CTA leads to when that is a tab, otherwise the tab the prompt
+is speaking on. A bubble parked mid-screen is a dialog; it reads as the app interrupting.
+A bubble with a tail is a thought, and it is obvious whose. Two consequences follow:
+
+- **The body is clamped to the screen but the tail is not.** A first or last tab would
+  push the 230pt body off-screen, so the body slides back and the tail stays on the icon —
+  the cloud leans toward its tab, which is the correct read.
+- **The scrim stops at the top of the tab bar.** Painting over the one element the cloud
+  is pointing at would undo the pointing. The press target stays full-screen so the
+  undimmed strip dismisses rather than looking live while the `Modal` swallows the touch.
 
 Structure, outside-in: scrim (`cloud.scrim`, a translucent wash in the field's own tone,
 standing in for the comp's `opacity: 0.4` backdrop, which a `Modal` cannot apply to the
-screen beneath) → six comet dots → cloud wrap → SVG glow → gradient body with clipped
-puffs and shimmer → text cascade → trail dots.
+screen beneath) → six comet dots → anchored layer → cloud wrap → SVG glow → gradient body
+with clipped puffs and shimmer → text cascade → tail dots.
+
+The comet path ends at the anchor rather than at fixed window fractions: the sparks trace
+the path the cloud then travels, so an endpoint pinned to the middle of the screen would
+stream toward one place while the cloud landed in another.
 
 Motion, beat by beat:
 

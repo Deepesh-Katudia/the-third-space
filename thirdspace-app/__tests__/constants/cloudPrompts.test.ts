@@ -1,4 +1,4 @@
-import { CLOUD_PROMPTS, CLOUD_ROUTES, startsToday } from '../../constants/cloudPrompts'
+import { CLOUD_PROMPTS, CLOUD_ROUTES, TAB_ORDER, startsToday, tabAnchor } from '../../constants/cloudPrompts'
 import type { CommunityEvent } from '../../types/models'
 import { Timestamp } from 'firebase/firestore'
 
@@ -85,5 +85,52 @@ describe('startsToday', () => {
     // "Tonight's the night" must not fire at 11pm about a brunch that already happened.
     const now = new Date(2026, 7, 6, 23, 0, 0)
     expect(startsToday(eventAt(new Date(2026, 7, 6, 10, 0, 0)), now)).toBe(false)
+  })
+})
+
+describe('tabAnchor', () => {
+  const find = (id: string) => CLOUD_PROMPTS.find((p) => p.id === id)!
+
+  it('lists every role\'s tabs in the order its _layout.tsx declares them', () => {
+    // The cloud turns an index into an x position, so a tab bar reordered without this
+    // table would point the bubble at the wrong icon — silently, and only on device.
+    expect(TAB_ORDER.attender).toEqual(['/', '/my-events', '/chats', '/profile'])
+    expect(TAB_ORDER.hoster).toEqual(['/', '/events', '/venue'])
+  })
+
+  it('points a coaching hint at the tab it is speaking on', () => {
+    expect(tabAnchor(find('coach-my-events'), 'attender')).toEqual({ index: 1, count: 4 })
+    expect(tabAnchor(find('coach-chats'), 'attender')).toEqual({ index: 2, count: 4 })
+    expect(tabAnchor(find('coach-profile'), 'attender')).toEqual({ index: 3, count: 4 })
+  })
+
+  it('counts the hoster bar as three tabs, not the attender four', () => {
+    expect(tabAnchor(find('coach-venue'), 'hoster')).toEqual({ index: 2, count: 3 })
+  })
+
+  it('points a nudge at the tab its CTA sends you to, not the one you are on', () => {
+    // 'They are already talking' is shown on My Events but is ABOUT Chats. Pointing at
+    // the surface being described is the whole reason the bubble has a tail.
+    const prompt = find('rsvp-chat-unopened')
+    expect(prompt.routes[0]).toBe('/my-events')
+    expect(tabAnchor(prompt, 'attender')).toEqual({ index: 2, count: 4 })
+  })
+
+  it('strips group segments from an href before matching a pathname', () => {
+    // hrefs carry '/(app)/(attender)/my-events'; usePathname() reports '/my-events'.
+    expect(tabAnchor(find('event-today'), 'attender')).toEqual({ index: 1, count: 4 })
+  })
+
+  it('falls back to the current tab when the CTA leads somewhere that is not a tab', () => {
+    // no-photo sends you to edit-profile, a pushed route with no icon to point at.
+    expect(tabAnchor(find('no-photo'), 'attender')).toEqual({ index: 3, count: 4 })
+  })
+
+  it('resolves an anchor for every entry in the catalogue', () => {
+    // A prompt with no anchor centres itself, which is the look this change exists to
+    // replace — so nothing shipped should be falling back to it.
+    for (const prompt of CLOUD_PROMPTS) {
+      expect(tabAnchor(prompt, prompt.role)).not.toBeNull()
+    }
   })
 })

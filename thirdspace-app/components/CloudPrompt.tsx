@@ -4,10 +4,11 @@ import {
 } from 'react-native'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Display, Meta } from './ui/Text'
-import { cloud, cloudMotion, radius, space } from '../constants/design'
+import { cloud, cloudMotion, radius, space, tabBar } from '../constants/design'
 import { useReduceMotion } from '../hooks/useReduceMotion'
-import type { CloudPrompt as Prompt } from '../constants/cloudPrompts'
+import type { CloudPrompt as Prompt, TabAnchor } from '../constants/cloudPrompts'
 
 /**
  * The cloud thought prompt. Source comp: docs/cloud-thought-prompt.html.
@@ -16,23 +17,45 @@ import type { CloudPrompt as Prompt } from '../constants/cloudPrompts'
  * its puffs bloom in one by one, a shimmer sweeps across once, and the text arrives last.
  * That layering is the whole design — flatten it and this is a slide-in with a caption.
  *
- * A `Modal`, like RewardUnlock, so it covers the tab bar. A prompt that left navigation
- * chrome visible would read as a toast rather than as the app thinking at you.
+ * A `Modal`, like RewardUnlock, so it can sit over the tab bar rather than beside it.
+ *
+ * It ANCHORS: the body sits just above the tab it is talking about and a tail of
+ * shrinking dots descends to point at that tab. A bubble parked mid-screen is a dialog —
+ * it reads as the app interrupting. A bubble with a tail is a thought, and it is obvious
+ * whose. That is why the scrim stops at the top of the tab bar: the one thing on screen
+ * the cloud is pointing at is the one thing that must not be dimmed.
  */
 
 const CLOUD_WIDTH = 230
 const GLOW_W = 300
 const GLOW_H = 240
 
-/** Fractions of the window, so the trail holds its line on any screen. */
-const COMETS = [
-  { key: 'c1', topPct: 0.14, leftPct: 0.82, size: 6 },
-  { key: 'c2', topPct: 0.2, leftPct: 0.74, size: 8 },
-  { key: 'c3', topPct: 0.27, leftPct: 0.65, size: 7 },
-  { key: 'c4', topPct: 0.33, leftPct: 0.57, size: 9 },
-  { key: 'c5', topPct: 0.39, leftPct: 0.5, size: 6 },
-  { key: 'c6', topPct: 0.44, leftPct: 0.45, size: 8 },
+/** Keeps the body off the screen edge when it anchors to a first or last tab. */
+const EDGE_MARGIN = 14
+
+/**
+ * The tail — the thought-bubble convention, dots shrinking from the body toward the
+ * thinker. `top` is measured from the bottom of the body, `size` is the diameter.
+ */
+const TAIL = [
+  { size: 9, top: 8 },
+  { size: 6, top: 24 },
+  { size: 4, top: 36 },
 ] as const
+const TAIL_HEIGHT = 44
+/** Gap between the last tail dot and the top edge of the tab bar. */
+const TAIL_CLEARANCE = 6
+
+/**
+ * Six sparks along the path the cloud then travels, as fractions ALONG that path rather
+ * than fractions of the window — the path's far end moves with the anchor, so a trail
+ * pinned to window coordinates would stream toward the middle of the screen while the
+ * cloud landed somewhere else entirely.
+ */
+const COMET_SIZES = [6, 8, 7, 9, 6, 8] as const
+const COMET_TS = [0, 0.18, 0.36, 0.54, 0.72, 0.88] as const
+/** Perpendicular bow, so six dots read as an arc and not a ruled line. */
+const COMET_BOW = 44
 
 /** Clipped by the body's top edge — see the token comment. */
 const PUFFS = [
@@ -40,8 +63,6 @@ const PUFFS = [
   { key: 'p2', size: 90, top: -42, left: 60, color: cloud.puffMid },
   { key: 'p3', size: 64, top: -26, left: 140, color: cloud.puffLight },
 ] as const
-
-const TRAIL = [7, 5, 3] as const
 
 const TEXT_DELAYS = [
   cloudMotion.eyebrowDelay,
@@ -54,20 +75,45 @@ const TEXT_DELAYS = [
 export interface CloudPromptProps {
   /** The prompt to show. Null renders nothing. */
   prompt: Prompt | null
+  /**
+   * Which tab the tail points at, from `tabAnchor()`. Null centres the cloud over the
+   * bar — a fallback for a prompt whose subject is not a tab, not the normal case.
+   */
+  anchor?: TabAnchor | null
   onDismiss: () => void
   onAct: (prompt: Prompt) => void
 }
 
-export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
+export function CloudPrompt({ prompt, anchor = null, onDismiss, onAct }: CloudPromptProps) {
   const reduceMotion = useReduceMotion()
   const { width: windowWidth, height: windowHeight } = useWindowDimensions()
+  const insets = useSafeAreaInsets()
+
+  /**
+   * The strip along the bottom the cloud has to clear. React Navigation lays the bar out
+   * at the height we give it and pads the home-indicator inset in underneath, so the two
+   * add rather than the larger winning.
+   */
+  const tabStrip = tabBar.height + insets.bottom
+
+  /** Centre of the anchored tab. Tabs divide the bar evenly, so this is arithmetic. */
+  const anchorX = anchor ? ((anchor.index + 0.5) / anchor.count) * windowWidth : windowWidth / 2
+
+  // Clamped so a first or last tab does not push the body off screen. The tail is placed
+  // against `anchorX` independently below, so clamping the body slides the tail out from
+  // under its centre and the cloud leans toward its tab — which is the correct read.
+  const cloudLeft = Math.min(
+    Math.max(anchorX - CLOUD_WIDTH / 2, EDGE_MARGIN),
+    Math.max(EDGE_MARGIN, windowWidth - CLOUD_WIDTH - EDGE_MARGIN),
+  )
+  const tailX = anchorX - cloudLeft
 
   const enter = useRef(new Animated.Value(0)).current
   const bob = useRef(new Animated.Value(0)).current
   const glow = useRef(new Animated.Value(0)).current
   const glowPulse = useRef(new Animated.Value(0)).current
   const shimmer = useRef(new Animated.Value(0)).current
-  const comets = useRef(COMETS.map(() => new Animated.Value(0))).current
+  const comets = useRef(COMET_TS.map(() => new Animated.Value(0))).current
   const puffs = useRef(PUFFS.map(() => new Animated.Value(0))).current
   const texts = useRef(TEXT_DELAYS.map(() => new Animated.Value(0))).current
   const twinkles = useRef([new Animated.Value(0), new Animated.Value(0)]).current
@@ -183,24 +229,34 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
   // every parent re-render (Task 6's watcher subscribes to four live hooks) would build
   // fresh AnimatedInterpolation nodes for every comet, twinkle, puff and the shimmer,
   // detaching and reattaching the native props node mid-entrance.
-  const cometStyles = useMemo(
-    () =>
-      COMETS.map((c, i) => {
-        const driver = comets[i]
-        return {
-          key: c.key,
-          size: c.size,
-          // The comp positions the DOT itself at `top`/`left`. The halo is a size*2.6 box
-          // centred on the dot, so its own top/left sit `size * 1.3` (half the extra
-          // width the halo adds on each side) above and left of the dot's position.
-          top: c.topPct * windowHeight - c.size * 1.3,
-          left: c.leftPct * windowWidth - c.size * 1.3,
-          opacity: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] }),
-          scale: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0.3, 1.1, 0.5] }),
-        }
-      }),
-    [windowWidth, windowHeight, comets],
-  )
+  const cometStyles = useMemo(() => {
+    // Top-right to the cloud's landing spot. The endpoint tracks the anchor, so the
+    // sparks always arrive where the body is about to appear.
+    const startX = windowWidth * 0.88
+    const startY = windowHeight * 0.1
+    const dx = anchorX - startX
+    const dy = windowHeight - tabStrip - TAIL_HEIGHT - startY
+    const length = Math.hypot(dx, dy) || 1
+    const bowX = (-dy / length) * COMET_BOW
+    const bowY = (dx / length) * COMET_BOW
+
+    return COMET_TS.map((t, i) => {
+      const size = COMET_SIZES[i]
+      const driver = comets[i]
+      const bow = Math.sin(t * Math.PI)
+      return {
+        key: `comet-${i}`,
+        size,
+        // The comp positions the DOT itself. The halo is a size*2.6 box centred on the
+        // dot, so its own top/left sit `size * 1.3` (half the extra width the halo adds
+        // on each side) above and left of the dot's position.
+        left: startX + dx * t + bowX * bow - size * 1.3,
+        top: startY + dy * t + bowY * bow - size * 1.3,
+        opacity: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] }),
+        scale: driver.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0.3, 1.1, 0.5] }),
+      }
+    })
+  }, [windowWidth, windowHeight, anchorX, tabStrip, comets])
 
   const twinkleStyles = useMemo(
     () =>
@@ -266,12 +322,18 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss} statusBarTranslucent>
       <View style={styles.root} testID="cloud-prompt">
         <Pressable
-          style={styles.scrim}
+          style={StyleSheet.absoluteFill}
           onPress={onDismiss}
           testID="cloud-prompt-scrim"
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
-        />
+        >
+          {/* Paint stops at the top of the tab bar. The cloud exists to point AT a tab,
+              and a tab washed to 0.62 is a poor thing to point at. The press target is
+              still the whole screen, so tapping the undimmed strip dismisses rather than
+              looking live while the Modal swallows it. */}
+          <View style={[styles.scrimPaint, { bottom: tabStrip }]} testID="cloud-prompt-scrim-paint" />
+        </Pressable>
 
         {!reduceMotion &&
           cometStyles.map((c) => (
@@ -295,7 +357,11 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
             </Animated.View>
           ))}
 
-        <View style={styles.center} pointerEvents="box-none">
+        <View
+          style={[styles.anchorLayer, { left: cloudLeft, bottom: tabStrip + TAIL_CLEARANCE }]}
+          pointerEvents="box-none"
+          testID="cloud-prompt-anchor"
+        >
           <Animated.View style={[styles.wrap, wrapStyle]}>
             {/* Radial falloff needs real SVG — the same reason RewardUnlock uses it. */}
             <Animated.View pointerEvents="none" style={[styles.glow, { opacity: glowOpacity }]}>
@@ -400,11 +466,28 @@ export function CloudPrompt({ prompt, onDismiss, onAct }: CloudPromptProps) {
               </LinearGradient>
             </View>
 
-            <Animated.View style={[styles.trail, textStyles[4]]} pointerEvents="none">
-              {TRAIL.map((size) => (
-                <View key={size} style={[styles.trailDot, { width: size, height: size, borderRadius: size / 2 }]} />
+            {/* The tail. Each dot is placed against `tailX` — the anchored tab's centre
+                expressed in the body's own coordinates — rather than under the body's
+                middle, so a clamped edge-tab bubble still points at its icon. */}
+            <View style={styles.tail} pointerEvents="none">
+              {TAIL.map((dot) => (
+                <Animated.View
+                  key={dot.size}
+                  testID="cloud-prompt-tail-dot"
+                  style={[
+                    styles.tailDot,
+                    textStyles[4],
+                    {
+                      width: dot.size,
+                      height: dot.size,
+                      borderRadius: dot.size / 2,
+                      top: dot.top,
+                      left: tailX - dot.size / 2,
+                    },
+                  ]}
+                />
               ))}
-            </Animated.View>
+            </View>
           </Animated.View>
         </View>
       </View>
@@ -416,8 +499,9 @@ CloudPrompt.displayName = 'CloudPrompt'
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: cloud.scrim },
-  center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xl - 4 },
+  scrimPaint: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: cloud.scrim },
+  /** `left` and `bottom` are supplied per-anchor; the width is fixed so clamping can work. */
+  anchorLayer: { position: 'absolute', width: CLOUD_WIDTH },
 
   cometHalo: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: cloud.cometHalo },
   cometDot: { backgroundColor: cloud.comet },
@@ -474,6 +558,8 @@ const styles = StyleSheet.create({
   },
   ctaLabel: { color: cloud.ctaLabel, fontSize: 9, letterSpacing: 0.54 },
 
-  trail: { flexDirection: 'row', justifyContent: 'center', gap: space.sm - 2, marginTop: space.sm + 2 },
-  trailDot: { backgroundColor: cloud.trail, opacity: 0.5 },
+  // In normal flow so the wrap's height includes it, which is what lets the layer's
+  // `bottom` place the last dot a fixed distance above the bar.
+  tail: { height: TAIL_HEIGHT },
+  tailDot: { position: 'absolute', backgroundColor: cloud.trail, opacity: 0.55 },
 })

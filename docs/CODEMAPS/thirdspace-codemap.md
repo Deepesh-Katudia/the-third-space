@@ -16,16 +16,16 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
-| Tests | Jest (jest-expo) — 62 suites / 468 tests; `@firebase/rules-unit-testing` for rules (31/31) |
+| Tests | Jest (jest-expo) — 62 suites / 484 tests; `@firebase/rules-unit-testing` for rules (31/31) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
 ---
 
-## Build Status (2026-08-05)
+## Build Status (2026-08-06)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **468/468 pass**, 62 suites
+- `npx jest` — **484/484 pass**, 62 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
@@ -443,6 +443,34 @@ when signed in with setup incomplete.
   coaching with no condition, so no hoster decision reads `PromptState`. The watcher hands
   all four hooks `undefined` when `role !== 'attender'`, which is the same reasoning that
   keeps `RewardWatcher` off the hoster layout entirely.
+- **The cloud ANCHORS to a tab — it is a thought bubble, not a dialog** — the body sits
+  just above the tab bar over the tab the prompt is about, and a tail of three shrinking
+  dots points at that icon. `tabAnchor()` in `constants/cloudPrompts.ts` resolves it: the
+  tab the CTA leads to when that is a tab (so "they are already talking" points at Chats
+  while being shown on My Events), otherwise the tab it is speaking on. `TAB_ORDER` must
+  match the `<Tabs.Screen>` order in each role's `_layout.tsx` — the component turns an
+  index into an x position, so a reordered bar would point at the wrong icon silently, on
+  device only. `__tests__/constants/cloudPrompts.test.ts` pins both lists.
+- **The body is clamped to the screen; the TAIL is not** — a first or last tab would push
+  the 230pt body off-screen, so the body slides back while the tail stays on the icon and
+  the cloud leans toward its tab. Tying the tail to the body's centre is the exact bug
+  this arrangement prevents, and three component tests fail if it is reintroduced.
+- **The cloud's scrim stops at the top of the tab bar** — it is pointing AT a tab, and a
+  tab washed to 0.62 is a poor thing to point at. The press target stays full-screen, so
+  the undimmed strip still dismisses instead of looking live while the Modal swallows the
+  touch. This is why `cloud.scrim` is painted by an inset child rather than by the
+  `Pressable` itself.
+- **The comet path ends at the anchor, not at fixed window fractions** — the sparks trace
+  the path the cloud then travels, so an endpoint pinned to mid-screen would stream toward
+  one place while the cloud landed in another.
+- **`CloudPrompt` is the app's only `useSafeAreaInsets()` caller** — it needs the real
+  home-indicator inset to clear the bar (`tabBar.height + insets.bottom`; React Navigation
+  lays the bar out at the height given and pads the inset in underneath, so they add).
+  This works because expo-router's own `ExpoRoot` wraps the app in a `SafeAreaProvider` —
+  nothing in `app/` does. Tests that render the cloud in isolation must supply one, which
+  is what the `SafeAreaProvider initialMetrics={...}` wrapper in both cloud component
+  test files is for. Everything else in the app uses the native `SafeAreaView`, which
+  needs no provider — that is why this trap had not come up before.
 - **Two of the comp's golds were darkened for AA** — `#A87A0F` was 3.49:1 and `#8A6B17`
   was 4.18:1 on the cloud's own body, both at 9px. They became `#856010` and `#7A5A14`.
   Same treatment the palette already gave the comp's `#5C4F3F`, `#C4501F` and `#6E7A5E`,

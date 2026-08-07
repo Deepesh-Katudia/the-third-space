@@ -69,6 +69,59 @@ export const CLOUD_ROUTES = [
   '/venue',       // hoster
 ] as const
 
+/**
+ * The tab bar, left to right, per role. This is the ONLY place the tab order is written
+ * down for the cloud's benefit; it has to match the `<Tabs.Screen>` order in each role's
+ * `_layout.tsx`, and `__tests__/constants/cloudPrompts.test.ts` pins both lists so a
+ * reordered tab bar fails loudly instead of pointing the cloud at the wrong icon.
+ */
+export const TAB_ORDER: Record<PromptRole, readonly string[]> = {
+  attender: ['/', '/my-events', '/chats', '/profile'],
+  hoster: ['/', '/events', '/venue'],
+}
+
+/** Which tab of how many. The component turns this into an x position. */
+export interface TabAnchor {
+  index: number
+  count: number
+}
+
+/**
+ * expo-router hrefs carry their group segments (`/(app)/(attender)/chats`) while
+ * `usePathname()` has already stripped them (`/chats`). Reduce an href to the second form
+ * so the two can be compared.
+ */
+function stripGroups(href: string): string {
+  const segments = href
+    .split('/')
+    .filter((s) => s.length > 0 && !(s.startsWith('(') && s.endsWith(')')))
+  return '/' + segments.join('/')
+}
+
+/**
+ * Which tab the cloud should point at.
+ *
+ * The cloud is a thought bubble, and a thought bubble belongs to something. It points at
+ * where the prompt is SENDING you when the CTA targets a tab — "they are already talking"
+ * pointing at Chats says more than the same words floating mid-screen — and otherwise at
+ * the tab it is speaking on, which is the coaching case: every hint is about the surface
+ * the user just opened.
+ *
+ * Null when neither resolves to a tab (an href into a pushed route like `edit-profile`
+ * whose own screen is not a tab); the component centres itself over the bar instead.
+ */
+export function tabAnchor(prompt: CloudPrompt, role: PromptRole): TabAnchor | null {
+  const tabs = TAB_ORDER[role]
+  const destination = typeof prompt.href === 'string' ? stripGroups(prompt.href) : null
+
+  for (const candidate of [destination, prompt.routes[0]]) {
+    if (!candidate) continue
+    const index = tabs.indexOf(candidate)
+    if (index >= 0) return { index, count: tabs.length }
+  }
+  return null
+}
+
 /** Same calendar day AND still ahead — an event that already ended is not "tonight". */
 export function startsToday(event: CommunityEvent, now: Date): boolean {
   const start = event.startsAt.toDate()

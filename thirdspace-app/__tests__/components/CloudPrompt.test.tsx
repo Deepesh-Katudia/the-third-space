@@ -1,8 +1,30 @@
 import React from 'react'
-import { AccessibilityInfo, Animated, StyleSheet } from 'react-native'
-import { act, render, fireEvent, waitFor } from '@testing-library/react-native'
+import { AccessibilityInfo, Animated, Dimensions, StyleSheet } from 'react-native'
+import { act, render as rtlRender, fireEvent, waitFor } from '@testing-library/react-native'
+import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context'
 import { CloudPrompt } from '../../components/CloudPrompt'
+import { tabBar } from '../../constants/design'
 import type { CloudPrompt as Prompt } from '../../constants/cloudPrompts'
+
+/**
+ * Fixed device metrics, so the anchor geometry below is arithmetic rather than whatever
+ * the test environment happens to report. expo-router's own ExpoRoot wraps the real app
+ * in a SafeAreaProvider, so this mirrors production rather than propping the component up.
+ */
+const METRICS: Metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+}
+
+const SafeArea = ({ children }: { children: React.ReactNode }) => (
+  <SafeAreaProvider initialMetrics={METRICS}>{children}</SafeAreaProvider>
+)
+
+const render = (ui: React.ReactElement) => rtlRender(ui, { wrapper: SafeArea })
+
+/** The strip along the bottom the cloud must never sit on top of. */
+const TAB_STRIP = tabBar.height + METRICS.insets.bottom
+const flat = (node: { props: { style?: unknown } }) => StyleSheet.flatten(node.props.style) as Record<string, number>
 
 function stubReduceMotion(enabled: boolean) {
   jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(enabled)
@@ -142,6 +164,84 @@ describe('CloudPrompt', () => {
     // The real entrance path must reset those drivers back to 0 before animating them —
     // not pick up the stale 1s the reduced branch left behind.
     expect(setValue).toHaveBeenCalledWith(0)
+  })
+
+  // Anchoring: the cloud is a thought bubble belonging to a tab, not a dialog. These
+  // assert the invariants that make that read, rather than restating the arithmetic.
+
+  it('centres the body over its tab when there is room', () => {
+    const { width } = Dimensions.get('window')
+    const tabCentre = (1.5 / 4) * width // tab index 1 of 4
+
+    const { getByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 1, count: 4 }} onDismiss={jest.fn()} onAct={jest.fn()} />,
+    )
+    const layer = flat(getByTestId('cloud-prompt-anchor'))
+
+    expect(layer.left + layer.width / 2).toBeCloseTo(tabCentre)
+  })
+
+  it('keeps the tail on the icon even when the body is clamped to the screen edge', () => {
+    // The first tab's centre is far left of half a cloud-width, so the body has to be
+    // pushed back on screen. The tail must NOT come with it — the whole point of the tail
+    // is that it identifies which tab is being talked about.
+    const { width } = Dimensions.get('window')
+    const tabCentre = (0.5 / 4) * width
+
+    const { getByTestId, getAllByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 0, count: 4 }} onDismiss={jest.fn()} onAct={jest.fn()} />,
+    )
+    const layer = flat(getByTestId('cloud-prompt-anchor'))
+    const dot = flat(getAllByTestId('cloud-prompt-tail-dot')[0])
+
+    expect(layer.left).toBeGreaterThan(0) // clamped back on screen
+    expect(layer.left + layer.width / 2).not.toBeCloseTo(tabCentre) // body is off its tab...
+    expect(layer.left + dot.left + dot.width / 2).toBeCloseTo(tabCentre) // ...tail is not
+  })
+
+  it('divides the bar by the ROLE\'s tab count, not a fixed four', () => {
+    // A hoster bar has three tabs. Reusing four would drift every hoster cloud left.
+    const { width } = Dimensions.get('window')
+    const { getByTestId, getAllByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 2, count: 3 }} onDismiss={jest.fn()} onAct={jest.fn()} />,
+    )
+    const layer = flat(getByTestId('cloud-prompt-anchor'))
+    const dot = flat(getAllByTestId('cloud-prompt-tail-dot')[0])
+
+    expect(layer.left + dot.left + dot.width / 2).toBeCloseTo((2.5 / 3) * width)
+  })
+
+  it('never overlaps the tab bar or the home-indicator inset', () => {
+    const { getByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 1, count: 4 }} onDismiss={jest.fn()} onAct={jest.fn()} />,
+    )
+    expect(flat(getByTestId('cloud-prompt-anchor')).bottom).toBeGreaterThanOrEqual(TAB_STRIP)
+  })
+
+  it('stops the scrim at the top of the tab bar so the anchored tab stays lit', () => {
+    // Dimming the one thing the cloud is pointing at would undo the pointing.
+    const { getByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 1, count: 4 }} onDismiss={jest.fn()} onAct={jest.fn()} />,
+    )
+    expect(flat(getByTestId('cloud-prompt-scrim-paint')).bottom).toBe(TAB_STRIP)
+  })
+
+  it('still dismisses when the undimmed tab strip is pressed', () => {
+    // The strip looks live but the Modal owns the touch, so it must not be a dead zone.
+    const onDismiss = jest.fn()
+    const { getByTestId } = render(
+      <CloudPrompt prompt={prompt} anchor={{ index: 1, count: 4 }} onDismiss={onDismiss} onAct={jest.fn()} />,
+    )
+    fireEvent.press(getByTestId('cloud-prompt-scrim'))
+    expect(onDismiss).toHaveBeenCalled()
+  })
+
+  it('centres over the bar when a prompt has no tab to point at', () => {
+    const { width } = Dimensions.get('window')
+    const { getByTestId } = render(<CloudPrompt prompt={prompt} onDismiss={jest.fn()} onAct={jest.fn()} />)
+    const layer = flat(getByTestId('cloud-prompt-anchor'))
+
+    expect(layer.left + layer.width / 2).toBeCloseTo(width / 2)
   })
 
   it('stops its loops and resets every animated value when the prompt clears', async () => {

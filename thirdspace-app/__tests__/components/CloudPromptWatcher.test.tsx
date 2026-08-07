@@ -1,6 +1,7 @@
 import React from 'react'
-import { render, waitFor, fireEvent } from '@testing-library/react-native'
-import { AccessibilityInfo } from 'react-native'
+import { render as rtlRender, waitFor, fireEvent } from '@testing-library/react-native'
+import { AccessibilityInfo, Dimensions, StyleSheet } from 'react-native'
+import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context'
 import { CloudPromptWatcher } from '../../components/CloudPromptWatcher'
 import { getSeenPrompts, markCoachingSeen, markNudgeFired } from '../../services/cloudPromptsSeen'
 import { getMyRegisteredEvents } from '../../services/events'
@@ -72,6 +73,17 @@ jest.mock('../../hooks/useConnections', () => ({
   },
 }))
 jest.mock('../../services/events', () => ({ getMyRegisteredEvents: jest.fn() }))
+
+// expo-router's ExpoRoot wraps the real app in this, so the cloud's useSafeAreaInsets()
+// resolves in production; rendering the watcher in isolation has to supply it.
+const METRICS: Metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+}
+const SafeArea = ({ children }: { children: React.ReactNode }) => (
+  <SafeAreaProvider initialMetrics={METRICS}>{children}</SafeAreaProvider>
+)
+const render = (ui: React.ReactElement) => rtlRender(ui, { wrapper: SafeArea })
 
 describe('CloudPromptWatcher', () => {
   beforeEach(() => {
@@ -175,6 +187,31 @@ describe('CloudPromptWatcher', () => {
     expect(mockHookUids.attendance.every((uid) => uid === undefined)).toBe(true)
     expect(mockHookUids.connections.every((uid) => uid === undefined)).toBe(true)
     expect(getMyRegisteredEvents).not.toHaveBeenCalled()
+  })
+
+  it('points the cloud at the tab the raised prompt is about', async () => {
+    // End to end: pathname -> catalogue entry -> tabAnchor -> a real x position. The
+    // My Events hint has to land over the My Events tab, which is the whole ask.
+    mockPathname = '/my-events'
+    const { width } = Dimensions.get('window')
+
+    const { findByTestId, getAllByTestId } = render(<CloudPromptWatcher role="attender" />)
+    const layer = StyleSheet.flatten((await findByTestId('cloud-prompt-anchor')).props.style) as Record<string, number>
+    const dot = StyleSheet.flatten(getAllByTestId('cloud-prompt-tail-dot')[0].props.style) as Record<string, number>
+
+    // Tab index 1 of the attender bar's 4.
+    expect(layer.left + dot.left + dot.width / 2).toBeCloseTo((1.5 / 4) * width)
+  })
+
+  it('divides the hoster bar into three, not four', async () => {
+    mockPathname = '/venue'
+    const { width } = Dimensions.get('window')
+
+    const { findByTestId, getAllByTestId } = render(<CloudPromptWatcher role="hoster" />)
+    const layer = StyleSheet.flatten((await findByTestId('cloud-prompt-anchor')).props.style) as Record<string, number>
+    const dot = StyleSheet.flatten(getAllByTestId('cloud-prompt-tail-dot')[0].props.style) as Record<string, number>
+
+    expect(layer.left + dot.left + dot.width / 2).toBeCloseTo((2.5 / 3) * width)
   })
 
   it('still opens them for an attender', async () => {

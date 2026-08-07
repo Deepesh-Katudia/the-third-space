@@ -9,6 +9,7 @@ import { useConnections } from '../hooks/useConnections'
 import { getMyRegisteredEvents } from '../services/events'
 import { pickPrompt } from '../utils/cloudPrompts'
 import { getSeenPrompts, markCoachingSeen, markNudgeFired } from '../services/cloudPromptsSeen'
+import { tabAnchor } from '../constants/cloudPrompts'
 import type { CloudPrompt as Prompt, PromptRole, PromptState } from '../constants/cloudPrompts'
 import type { CommunityEvent } from '../types/models'
 
@@ -152,6 +153,9 @@ export function CloudPromptWatcher({ role }: { role: PromptRole }) {
   return (
     <CloudPrompt
       prompt={prompt}
+      // Resolved here rather than inside CloudPrompt because the role is what makes it
+      // answerable — the component is handed a position, not asked to work one out.
+      anchor={prompt ? tabAnchor(prompt, role) : null}
       onDismiss={() => setPrompt(null)}
       onAct={(acted) => {
         setPrompt(null)
