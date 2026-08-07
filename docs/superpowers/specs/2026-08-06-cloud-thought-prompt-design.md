@@ -233,12 +233,12 @@ Motion, beat by beat:
 | Beat | Implementation |
 |---|---|
 | comet trail | 6 `Animated` dots + concentric halo rings — no `box-shadow` in RN, same trick `AmbientBackdrop` uses for its glows |
-| `cornerIn` | `Easing.bezier(.2,.75,.15,1.15)`; the >1 control point produces the overshoot for free |
+| `cornerIn` | Keyframe interpolations under `Easing.out(Easing.cubic)`. **Superseded during Task 5:** this table originally prescribed `Easing.bezier(.2,.75,.15,1.15)` for a free overshoot, but the comp already carries one in its `82% { scale: 1.045 }` keyframe — running both doubles the bounce, and the >1 control point also pushes `rotate` and `translate` past zero, which the comp's keyframes never do. Reproducing the literal keyframe stops under a monotonic easing gives each property exactly the overshoot the comp specifies |
 | `cloudBob` | composed onto the entrance translateY with `Animated.add`, so both transforms survive |
 | glow | `react-native-svg` `RadialGradient`, 300×240, as `RewardUnlock` does for its halo |
 | puffs | `Easing.bezier(.3,1.4,.4,1)`, 100ms stagger, **clipped by the body's `overflow:hidden`** exactly as in the comp |
 | shimmer | `LinearGradient` band, `skewX(-18deg)` + animated translateX, once |
-| text | four staggered fades, translateY 6 → 0 |
+| text | five staggered fades, translateY 6 → 0 — the trail dots rise with the other four rather than fading in place, as comp line 135 applies `textIn` to `.trail` too |
 
 Every animation uses the native driver.
 

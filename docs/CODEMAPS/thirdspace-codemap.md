@@ -1,5 +1,5 @@
 # The Third Space — Codemap
-_Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes._
+_Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes._
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
-| Tests | Jest (jest-expo) — 57 suites / 413 tests; `@firebase/rules-unit-testing` for rules (31/31) |
+| Tests | Jest (jest-expo) — 62 suites / 468 tests; `@firebase/rules-unit-testing` for rules (31/31) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -25,7 +25,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-08-05)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **413/413 pass**, 57 suites
+- `npx jest` — **468/468 pass**, 62 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
@@ -42,7 +42,7 @@ _Generated: 2026-07-29. Re-run `/update-codemaps` after major structural changes
 thirdspace-app/
 ├── firebase/config.ts        # Firebase init; exports auth, db, storage
 ├── types/models.ts           # All shared TypeScript types
-├── hooks/                    # 16 hooks
+├── hooks/                    # 17 hooks
 │   ├── useAuth.ts              # Auth state + live role/profile subscriptions
 │   ├── useGoogleAuth.ts        # Google OAuth (placeholder client id if unset)
 │   ├── useProfile.ts           # profiles/{uid} subscription
@@ -59,7 +59,7 @@ thirdspace-app/
 │   ├── useUserLocation.ts      # Module store (useSyncExternalStore) for location resolution
 │   ├── useSocials.ts           # Instagram/TikTok/X handles for mutual-follow gated profiles
 │   └── useReduceMotion.ts      # OS reduce-motion flag; defaults to true while probing
-├── services/                 # 11 services
+├── services/                 # 13 services
 │   ├── auth.ts                 # changePassword (reauth then update)
 │   ├── preferences.ts          # onboarding opt-ins (AsyncStorage)
 │   ├── events.ts               # Event CRUD + registrations + subscriptions
@@ -70,18 +70,22 @@ thirdspace-app/
 │   ├── follows.ts              # Follow edge writes + subscriptions
 │   ├── announcements.ts        # sendAnnouncement (batch), subscribeAnnouncements
 │   ├── pushTokens.ts           # users/{uid}/pushTokens CRUD
-│   └── location.ts             # detectBorough() (5s timeout, never throws)
-├── components/               # 23 components + 7 under components/ui/ design primitives
+│   ├── location.ts             # detectBorough() (5s timeout, never throws)
+│   └── cloudPromptsSeen.ts     # Which cloud prompts a device has shown (AsyncStorage, per uid)
+├── components/               # 26 components + 7 under components/ui/ design primitives
 │   ├── AmbientBackdrop.tsx     # App-wide animated field; mounted by Screen
 │   ├── Mascot.tsx              # Generic renderer for the 25 reward figures (react-native-svg)
 │   ├── RewardUnlock.tsx        # The unlock ceremony — purple void, rays, halos, motes
 │   ├── RewardWatcher.tsx       # Fires the ceremony app-wide; mounted in the attender tabs
-│   └── RewardGrid.tsx          # Roster grid, earned + locked
+│   ├── RewardGrid.tsx          # Roster grid, earned + locked
+│   ├── CloudPrompt.tsx         # The buttery-gold thought cloud — comet trail, overshoot landing
+│   └── CloudPromptWatcher.tsx  # Raises one per route entry; mounted in BOTH tab layouts
 ├── constants/                # design.ts (DESIGN TOKENS — nearly the only file with colors),
 │                             #   categories, filters, rewards (redeemables),
 │                             #   achievements.ts (roster meta + prompts),
-│                             #   mascotFigures.ts (the 25 figures as data)
-├── utils/                    # 19 pure modules (all unit-tested)
+│                             #   mascotFigures.ts (the 25 figures as data),
+│                             #   cloudPrompts.ts (the prompt catalogue — coaching + nudges)
+├── utils/                    # 20 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
 ├── firestore.rules           # TWO changes undeployed: conversations null guard + socials gate
@@ -404,6 +408,60 @@ when signed in with setup incomplete.
   `.env.example` lists the keys.
 - **Google OAuth placeholder** — unset client id would be `undefined` and crash the auth screen, so
   `useGoogleAuth` substitutes `'google-auth-not-configured'`; it is never sent to Google.
+- **The cloud prompt is ONE presenter with TWO sources** — `constants/cloudPrompts.ts` holds
+  both coaching hints (first visit to a surface, then never again) and behavioural nudges
+  (a condition over live data, with a 3-day per-id cooldown). `utils/cloudPrompts.ts`
+  `pickPrompt()` always prefers coaching: somebody who has never seen a screen needs to be
+  told what it IS before what to do on it. `__tests__/constants/cloudPrompts.test.ts`
+  asserts the kind flag and the presence of `condition`/`priority` agree in BOTH
+  directions, so a nudge with no condition (fires forever) and a coaching entry with one
+  (skips the cooldown) both fail.
+- **Prompt catalogue entries are keyed on route AND role** — `(attender)/index.tsx` and
+  `(hoster)/index.tsx` both resolve to the pathname `/`. Each watcher is mounted inside a
+  role-specific layout and passes `role` as a prop; dropping it shows attenders the
+  hoster's Overview hint.
+- **The cloud fires from `CloudPromptWatcher`, mounted beside BOTH tab navigators** —
+  unlike `RewardWatcher`, which hosters skip because every trackable reward keys off
+  attendance, navigation coaching is for everybody. No route file is edited to make this
+  work; `usePathname()` plus the catalogue is the whole mapping.
+- **A nudge is judged only once the account state has SETTLED** — every source behind
+  `PromptState` (`useProfile`, `useChatList`, `useAttendanceStats`, `useConnections`, the
+  registrations fetch) starts empty and fills in later, while AsyncStorage answers in a
+  tick. Deciding on that first snapshot describes a member with no photo, no events and no
+  connections — precisely the shape `no-photo`, `no-rsvp-yet` and `no-connections` test
+  for — so a veteran gets told they have never been to anything, AND the firing burns the
+  3-day cooldown that was meant to protect the real nudge. The watcher gates on a `ready`
+  flag over the four `loading` flags plus the fetch. A FAILED fetch still counts as
+  settled: otherwise one Firestore outage silences every nudge forever.
+- **The watcher's route effect excludes `state` and keys on `ready` instead** — `state`
+  churns as subscriptions arrive, and depending on it would re-run mid-visit and raise a
+  second cloud on one screen. `ready` flips once, from "nothing has loaded" to "this is
+  the account". Because it is in the dep list, a `raisedFor` ref caps it at one cloud per
+  `uid:pathname` visit — a token refresh retriggers `useProfile`'s loading flag, which
+  would otherwise put back a cloud the user had just dismissed.
+- **Hosters get the watcher but NOT its subscriptions** — every hoster catalogue entry is
+  coaching with no condition, so no hoster decision reads `PromptState`. The watcher hands
+  all four hooks `undefined` when `role !== 'attender'`, which is the same reasoning that
+  keeps `RewardWatcher` off the hoster layout entirely.
+- **Two of the comp's golds were darkened for AA** — `#A87A0F` was 3.49:1 and `#8A6B17`
+  was 4.18:1 on the cloud's own body, both at 9px. They became `#856010` and `#7A5A14`.
+  Same treatment the palette already gave the comp's `#5C4F3F`, `#C4501F` and `#6E7A5E`,
+  and guarded by `__tests__/constants/design.test.ts` against BOTH gradient stops.
+- **The cloud's puffs are MEANT to be clipped** — `overflow: 'hidden'` on the body is the
+  comp's own behaviour and is what turns them from cartoon bumps into a bloom of texture
+  inside the top edge. The two `✦` twinkles are the opposite case: in the comp they sit
+  inside that clip and never render, which was read as an accident and fixed by moving
+  them into the wrap.
+- **The cloud's entrance overshoot lives in the INTERPOLATIONS, not the easing** — the
+  comp stacks `cubic-bezier(.2,.75,.15,1.15)` on top of a `82% { scale: 1.045 }` keyframe.
+  Reproducing both in RN doubles the bounce and pushes rotate/translate past zero, which
+  the comp's keyframes never do. `Easing.out(Easing.cubic)` plus literal keyframe stops is
+  the faithful version. The entrance blur is dropped outright — not animatable without
+  `expo-blur`, which this project does not carry.
+- **Cloud seen-state is LOCAL, in AsyncStorage** — `services/cloudPromptsSeen.ts`, keyed
+  per uid, two halves because the kinds forget differently (coaching a flat set, nudges a
+  timestamp map). Same trade as `rewardsSeen.ts`: this decides whether a presentation
+  plays, not what is true about the account. Marked on QUEUE, not dismiss.
 
 ---
 
