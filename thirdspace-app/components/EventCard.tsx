@@ -37,9 +37,10 @@ export function EventCard({ event, onPress, tone = 'deep', trailing, footer }: E
   return (
     <TicketCard
       tone={tone}
-      // CommunityEvent has no image field — TicketCard draws its placeholder instead.
-      // Do not invent one; adding event photos is a separate data-layer change.
-      photoUri={null}
+      // The cover's poster IS the image for a photo, and a generated frame for a clip,
+      // so one prop covers both. TicketCard stays free of domain types on purpose.
+      photoUri={event.cover?.thumbURL || null}
+      showPlayBadge={event.cover?.type === 'video'}
       day={String(startsAt.getDate())}
       month={MONTHS[startsAt.getMonth()]}
       onPress={onPress}

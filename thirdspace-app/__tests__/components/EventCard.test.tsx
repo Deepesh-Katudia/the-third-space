@@ -100,3 +100,21 @@ describe('EventCard', () => {
     expect(queryByText('Starting soon')).toBeNull()
   })
 })
+
+describe('EventCard cover', () => {
+  it('draws the placeholder band for an event with no cover', () => {
+    const { getByTestId, queryByTestId } = render(<EventCard event={event} tone="deep" onPress={() => {}} />)
+    expect(getByTestId('ticket-band')).toBeTruthy()
+    expect(queryByTestId('ticket-play')).toBeNull()
+  })
+
+  it('passes a video cover poster through and asks for a play badge', () => {
+    const withCover = {
+      ...event,
+      cover: { type: 'video' as const, url: 'https://a/v.mp4', thumbURL: 'https://a/p.jpg', width: 16, height: 9, durationMs: 5000 },
+    } as CommunityEvent
+    const { getByTestId, queryByTestId } = render(<EventCard event={withCover} tone="deep" onPress={() => {}} />)
+    expect(queryByTestId('ticket-band')).toBeNull()
+    expect(getByTestId('ticket-play')).toBeTruthy()
+  })
+})

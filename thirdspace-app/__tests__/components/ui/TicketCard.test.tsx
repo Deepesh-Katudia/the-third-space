@@ -72,6 +72,24 @@ describe('TicketCard', () => {
     }
   })
 
+  it('renders no play badge for a still photo', () => {
+    const { queryByTestId } = render(
+      <TicketCard tone="deep" photoUri="https://example.com/a.jpg" day="18" month="Jul" onPress={() => {}}>
+        <Text>x</Text>
+      </TicketCard>
+    )
+    expect(queryByTestId('ticket-play')).toBeNull()
+  })
+
+  it('renders a play badge over the media band when asked', () => {
+    const { getByTestId } = render(
+      <TicketCard tone="deep" photoUri="https://example.com/a.jpg" showPlayBadge day="18" month="Jul" onPress={() => {}}>
+        <Text>x</Text>
+      </TicketCard>
+    )
+    expect(getByTestId('ticket-play')).toBeTruthy()
+  })
+
   it('fires onPress when the card is pressed', () => {
     const onPress = jest.fn()
     const { getByTestId } = render(

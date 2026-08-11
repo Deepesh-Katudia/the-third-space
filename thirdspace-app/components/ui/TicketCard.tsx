@@ -15,27 +15,36 @@ interface TicketCardProps {
   /** MUST match the background of the screen this sits on — the notches are painted in it. */
   tone: 'deep' | 'cream'
   photoUri?: string | null
+  /** Overlays a play badge on the media band. EventCard sets this for a video cover. */
+  showPlayBadge?: boolean
   day: string
   month: string
   onPress: () => void
   children: React.ReactNode
 }
 
-export function TicketCard({ tone, photoUri, day, month, onPress, children }: TicketCardProps) {
+export function TicketCard({ tone, photoUri, showPlayBadge, day, month, onPress, children }: TicketCardProps) {
   const notchColor = tone === 'deep' ? palette.orangeDeep : palette.cream
 
   return (
     <TouchableOpacity testID="ticket-card" onPress={onPress} activeOpacity={0.9} style={styles.card}>
-      {photoUri ? (
-        <Image source={{ uri: photoUri }} style={styles.media} />
-      ) : (
-        // Events carry no image field yet. Rather than leave a blank strip, the
-        // placeholder is filled and captioned so it reads as "a photo goes here".
-        <View testID="ticket-band" style={[styles.media, styles.band]}>
-          <Ionicons name="image-outline" size={30} color={palette.orangeLight} />
-          <Meta role="eyebrow" style={styles.bandLabel}>No photo yet</Meta>
-        </View>
-      )}
+      <View>
+        {photoUri ? (
+          <Image source={{ uri: photoUri }} style={styles.media} />
+        ) : (
+          // Events without a cover get a filled, captioned band rather than a blank
+          // strip, so the card reads as "a photo goes here" instead of broken.
+          <View testID="ticket-band" style={[styles.media, styles.band]}>
+            <Ionicons name="image-outline" size={30} color={palette.orangeLight} />
+            <Meta role="eyebrow" style={styles.bandLabel}>No photo yet</Meta>
+          </View>
+        )}
+        {showPlayBadge ? (
+          <View testID="ticket-play" style={styles.play}>
+            <Ionicons name="play" size={16} color={palette.cream} />
+          </View>
+        ) : null}
+      </View>
 
       <View style={styles.tear} />
       <View testID="ticket-notch" style={[styles.notch, styles.notchLeft, { backgroundColor: notchColor }]} />
@@ -71,6 +80,17 @@ const styles = StyleSheet.create({
   // rather than as image space.
   band: { backgroundColor: palette.clay, alignItems: 'center', justifyContent: 'center', gap: space.xs },
   bandLabel: { color: palette.orangeLight },
+  play: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: MEDIA_HEIGHT / 2 - 18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.ink,
+  },
   tear: { borderTopWidth: 1, borderTopColor: palette.rule, borderStyle: 'dashed', marginHorizontal: space.lg },
   notch: {
     position: 'absolute',

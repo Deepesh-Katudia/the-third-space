@@ -81,6 +81,12 @@ export interface CommunityEvent {
    * backfilling first.
    */
   borough?: Borough
+  /**
+   * Optional for the same reason `borough` is: every event that already exists has
+   * none, and TicketCard's "No photo yet" band is a designed empty state, not a gap.
+   * Set at creation only — this app has no edit-event route.
+   */
+  cover?: MediaAsset
   registeredCount: number
 }
 
