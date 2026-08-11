@@ -35,6 +35,22 @@ function fakeTask(totalBytes: number) {
   return task
 }
 
+/**
+ * A resumable-task stand-in whose settlement is genuinely deferred until `settle()`
+ * is called. `fakeTask` above resolves its `then` synchronously, so it cannot tell
+ * "awaited" apart from "not awaited" — this one can, because there is a real gap
+ * between the task being issued and it settling.
+ */
+function deferredTask() {
+  let resolveTask: (value: unknown) => void = () => {}
+  const donePromise = new Promise((resolve) => { resolveTask = resolve })
+  const task: Record<string, unknown> = {
+    on: jest.fn(),
+    then: (resolve: (v: unknown) => unknown) => donePromise.then(() => resolve({ ref: { path: 'p' } })),
+  }
+  return { task, settle: () => resolveTask(undefined) }
+}
+
 function mockBlob(size: number, type: string) {
   ;(global as unknown as { fetch: jest.Mock }).fetch = jest.fn().mockResolvedValue({
     blob: async () => ({ size, type }),
@@ -130,6 +146,26 @@ describe('uploadMedia — images', () => {
       uploadMedia({ kind: 'avatar', uid: 'u1' }, { uri: 'file://a', type: 'image', width: 1, height: 1 })
     ).rejects.toBeInstanceOf(MediaLimitError)
     expect(uploadBytesResumable).not.toHaveBeenCalled()
+  })
+
+  it('does not resolve the download URL until the resumable upload actually settles', async () => {
+    mockManipulator('file://small', 10, 10)
+    mockBlob(1000, 'image/jpeg')
+    const { task, settle } = deferredTask()
+    ;(uploadBytesResumable as jest.Mock).mockReturnValue(task)
+
+    const pending = uploadMedia({ kind: 'avatar', uid: 'u1' }, { uri: 'file://a', type: 'image', width: 1, height: 1 })
+
+    // A macrotask boundary drains every microtask queued ahead of `await task`
+    // (compress, then toBlob) without the deferred task itself settling, since
+    // `donePromise` only resolves once `settle()` is called below.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(getDownloadURL).not.toHaveBeenCalled()
+
+    settle()
+    await pending
+
+    expect(getDownloadURL).toHaveBeenCalledTimes(1)
   })
 })
 
