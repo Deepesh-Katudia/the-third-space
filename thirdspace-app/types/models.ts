@@ -59,6 +59,8 @@ export interface Venue {
   borough: Borough
   neighborhood: string
   description: string
+  /** Up to 6. Optional: venues created before the gallery shipped have none. */
+  photos?: MediaAsset[]
 }
 
 export interface CommunityEvent {

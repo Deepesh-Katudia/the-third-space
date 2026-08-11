@@ -39,7 +39,7 @@ export default function VenueSetup() {
         <Display role="screenTitle" style={styles.title}>Set up your venue</Display>
         <Body role="bodyLg" style={styles.subtitle}>This is how your events appear to the community.</Body>
         {error ? <Banner message={error} /> : null}
-        <VenueForm submitLabel="Save and continue" onSubmit={handleSubmit} />
+        <VenueForm venueUid={user!.uid} submitLabel="Save and continue" onSubmit={handleSubmit} />
       </ScrollView>
     </Screen>
   )

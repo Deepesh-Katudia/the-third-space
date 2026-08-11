@@ -43,7 +43,7 @@ export default function VenueTab() {
           <Meta style={styles.chevron}>›</Meta>
         </TouchableOpacity>
         {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
-        <VenueForm initial={venue} submitLabel="Save changes" onSubmit={handleSubmit} />
+        <VenueForm venueUid={user!.uid} initial={venue} submitLabel="Save changes" onSubmit={handleSubmit} />
         <TouchableOpacity onPress={() => signOut(auth)} style={styles.signOutButton}>
           <Meta role="eyebrow" tone="clay">Sign out</Meta>
         </TouchableOpacity>
