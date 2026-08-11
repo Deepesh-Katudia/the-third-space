@@ -16,23 +16,32 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Styling | React Native StyleSheet + NativeWind |
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
-| Tests | Jest (jest-expo) — 62 suites / 484 tests; `@firebase/rules-unit-testing` for rules (31/31) |
+| Media | expo-image-picker + expo-video (playback) + expo-video-thumbnails (posters) + expo-image-manipulator (compression) — all bundled in Expo Go, no config plugin, no rebuild |
+| Tests | Jest (jest-expo) — 69 suites / 559 tests; `@firebase/rules-unit-testing` for rules (45/45) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
 ---
 
-## Build Status (2026-08-06)
+## Build Status (2026-08-11)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **484/484 pass**, 62 suites
+- `npx jest` — **559/559 pass**, 69 suites
+- `npm run test:rules` — **45/45 pass** (31 Firestore + 14 Storage)
+- `cd functions && npx jest` — **23/23 pass**, 9 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
   `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
   `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, the Socials section never
   appears for anyone, and the edit form shows handles as unloadable rather than letting them be edited.
   Other profile edits are unaffected.
-- Firebase **Storage is NOT provisioned** (free Spark plan) — photo uploads fail gracefully to colored-initials avatars.
+- Media uploads (profile avatar + vibe, event cover, venue gallery, chat attachments) are **code-complete
+  and untestable on device**: the bucket `the-third-space-626e8.firebasestorage.app` does not exist yet.
+  Someone must click Firebase Console → Build → Storage → Get started. Until then every upload fails and
+  degrades — `utils/avatar.ts` renders colored initials, `TicketCard` draws its "No photo yet" band, and
+  the vibe/venue/cover slots stay empty.
+- `storage.rules` is written and emulator-tested but **not deployed**. It ships with the two pending
+  Firestore changes: `npx firebase-tools deploy --only firestore:rules,storage`.
 
 ---
 
@@ -89,7 +98,8 @@ thirdspace-app/
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
 ├── firestore.rules           # TWO changes undeployed: conversations null guard + socials gate
-├── storage.rules             # NOT deployed (Storage not provisioned)
+├── shared/mediaLabel.ts      # The ONE attachment label. Zero imports — compiled by BOTH workspaces
+├── storage.rules             # All four media surfaces. Emulator-tested, NOT deployed (no bucket yet)
 └── app/                      # expo-router routes (38 files)
     ├── _layout.tsx             # Fonts + useAuth + AuthRedirect guard
     ├── index.tsx               # Immediate redirect
@@ -232,7 +242,96 @@ when signed in with setup incomplete.
 
 ---
 
+## Storage Layout
+
+Every path is produced by `utils/media.ts` `mediaPath()`/`thumbPath()`, and `storage.rules`
+matches the **filename**, not just the prefix. The two must agree exactly — a path the rules
+do not recognise is a permission-denied at runtime, and a prefix-only rule would turn every
+member's folder into unbounded free hosting.
+
+| Path | Holds | Writable by |
+|------|-------|-------------|
+| `profilePhotos/{uid}/avatar.jpg` | Image only | `uid` |
+| `profilePhotos/{uid}/vibe[0-2]` (+`_thumb`) | Image or video | `uid` |
+| `eventCovers/{hosterUid}/{eventId}/cover` (+`_thumb`) | Image or video | `hosterUid` |
+| `venuePhotos/{uid}/[0-5]` (+`_thumb`) | Image or video | `uid` |
+| `chatMedia/{authorUid}/{threadId}/{messageId}` (+`_thumb`) | Image or video | `authorUid` |
+
+Reads are `signedIn()` everywhere. Caps: images **under** 5 MB, video **under** 50 MB, both
+strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
+
+---
+
 ## Key Invariants & Gotchas
+
+- **`MediaAsset.thumbURL` is ALWAYS populated, and that is what buys one render path** —
+  for a photo it IS the image; for a clip it is a generated poster frame. So every surface
+  draws exactly one thing and adds a play badge only when `type === 'video'`. The third
+  case, `thumbURL === ''`, means poster generation failed on device: `MediaThumb` draws a
+  flat ink tile with the badge rather than a broken image. There is deliberately no
+  "processing" state — uploads are synchronous from the client.
+- **`components/MediaThumb.tsx` is the only way media is drawn, and `MediaViewer` the only
+  way it plays** — nothing autoplays inline, which is what keeps a video-capable
+  `EventCard` in a scrolling feed as cheap as an image-only one. Four surfaces share both
+  so they cannot drift into four slightly different play buttons.
+- **`services/media.ts` is the only module that touches Firebase Storage** — and
+  `storage.rules` is the only real enforcement. The client caps are a courtesy.
+- **Cheap checks run before the file is materialised** — the Firebase JS SDK has no
+  streaming upload on React Native, so `fetch(uri).blob()` pulls the whole file into JS
+  memory. A 200 MB clip must be rejected from its picker metadata or it is a crash, not an
+  error message. `uploadMedia` checks `fileSize`/`durationMs` first for exactly this.
+- **Video duration is NOT enforceable in `storage.rules`** — rules see only `size` and
+  `contentType`, never media metadata. The 60s cap is a product constraint checked
+  client-side; the size ceiling is the only real backstop.
+- **Chat media is readable by any signed-in member — a known, asserted limitation** —
+  Storage rules cannot `get()` a Firestore document, so a DM attachment cannot be gated on
+  conversation membership. It is protected by the unguessable token in its download URL.
+  Same posture `profiles/{uid}` already takes. `storage.rules.test.ts` asserts it so the
+  trade-off stays visible rather than becoming accidental.
+- **Rules split `create, update` from `delete`** — on a delete there is no
+  `request.resource`, so a size/contentType check would raise an evaluation error rather
+  than returning false. Exactly the split the socials rule in `firestore.rules` makes.
+- **Extensions are dropped on every slot that can hold either kind** — content type lives
+  in object metadata, and the fixed path means swapping a photo for a clip OVERWRITES
+  rather than stranding the old object. That is what makes replacement orphan-free. The
+  avatar keeps `.jpg` because it is always an image and existing uploads already live
+  there.
+- **The event cover is rooted at the HOSTER uid, not the event id** — Storage rules cannot
+  ask Firestore who owns an event, so ownership has to be expressible in the path itself.
+- **Two ids are minted BEFORE their write, because a storage path contains them** —
+  `newEventRef()` (`services/events.ts`) and `newMessageRef()` (`services/chat.ts`).
+  `addDoc` cannot give you the id in advance, so both take a caller-supplied ref.
+- **Optional fields are SPREAD in, never assigned `undefined`** — `buildEventDoc` writes
+  `...(cover ? { cover } : {})`. Firestore rejects an explicit `undefined`, and
+  `CommunityEvent.cover` is optional precisely so pre-existing events have no key.
+- **Picking a chat attachment STAGES it; nothing uploads until send** — `chat/[id].tsx`
+  holds a `staged` PickedMedia (no network yet) and a `pending` optimistic bubble (in
+  flight). On failure the upload's result is cleaned up from a variable declared OUTSIDE
+  the try: cleaning up the local copy instead would hand `deleteMedia` a `file://` URI,
+  which silently does nothing and leaves the real bytes orphaned in the bucket.
+- **`shared/mediaLabel.ts` has ZERO imports, and must keep them** — it is compiled twice,
+  under the app's Expo tsconfig and the functions' es2021/commonjs one, so anything it
+  imported would have to resolve under both. It takes a structural `{ type?: string }`
+  rather than `MediaAsset` because `types/models.ts` imports `firebase/firestore` for
+  `Timestamp`, and Cloud Functions must not pull in the client SDK. `utils/media.ts`
+  `mediaPreviewLabel` is a typed wrapper over it. The dependency points one way: both
+  workspaces depend on `shared/`, neither on the other.
+- **`functions/tsconfig.json` has `rootDir: ".."`, which moved the build output** — the
+  entry point now emits to `lib/functions/src/index.js`, and `functions/package.json`
+  `main` follows it. Change one without the other and `firebase deploy` uploads a package
+  whose entry point does not exist.
+- **`Profile.vibePhotos` was retyped `string[]` → `MediaAsset[]` with no backfill** — it
+  was never written by any code path, so every stored value is `[]`. Readers still run
+  `coerceLegacyVibe()` anyway, because assuming production data matches your assumptions is
+  how you find out it does not.
+- **The event detail hero and its tear notches live in one wrapper** — the notches are
+  absolutely positioned at `top: HERO_HEIGHT - NOTCH/2`, so before the cover band existed
+  they measured from the scroll content's top and happened to be right. A band above would
+  slide them into the middle of the cover; `heroWrap` is what pins them to the seam.
+- **Two orphan cases are accepted knowingly** — a removed vibe/venue slot whose profile
+  save is then abandoned, and an event cover uploaded against a `newEventRef()` the hoster
+  never publishes. Both leave one object behind. Reconciling them needs a scheduled
+  function; the alternative was blocking the UI on cleanup.
 
 - **The ambient field is mounted by `Screen`, not by individual routes** — that is what
   makes it app-wide, and it is why no screen may replace its background with an opaque
@@ -499,6 +598,7 @@ when signed in with setup incomplete.
 |------|----------------------------------|
 | Dev server | `npx expo start` |
 | Unit tests | `npx jest` |
-| Rules tests | `npm run test:rules` (needs Firebase CLI + Java) |
+| Rules tests | `npm run test:rules` (Firestore + Storage emulators; needs Firebase CLI + Java) |
+| Functions tests | `cd functions && npx jest` |
 | Typecheck | `npx tsc --noEmit` |
-| Deploy rules | `npx firebase-tools deploy --only firestore:rules` |
+| Deploy rules | `npx firebase-tools deploy --only firestore:rules,storage` |
