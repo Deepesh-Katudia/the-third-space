@@ -10,7 +10,8 @@ import { InterestChip } from '../../components/InterestChip'
 import { BOROUGHS } from '../../constants/categories'
 import { Borough } from '../../types/models'
 import { createProfile } from '../../services/profiles'
-import { pickImage, uploadProfilePhoto } from '../../services/photos'
+import { pickMedia, uploadMedia, MediaLimitError, type PickedMedia } from '../../services/media'
+import { limitMessage } from '../../utils/media'
 import { ageFromDOB } from '../../utils/profile'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
@@ -27,7 +28,7 @@ export default function CreateProfile() {
   const { user } = useAuth()
   const name = user?.displayName ?? 'Member'
 
-  const [photoUri, setPhotoUri] = useState<string | null>(null)
+  const [pickedAvatar, setPickedAvatar] = useState<PickedMedia | null>(null)
   const [bio, setBio] = useState('')
   const [interests, setInterests] = useState<string[]>([])
   const [neighborhood, setNeighborhood] = useState('')
@@ -44,12 +45,8 @@ export default function CreateProfile() {
     setInterests((prev) => (prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]))
 
   const handlePickPhoto = async () => {
-    try {
-      const uri = await pickImage('avatar')
-      if (uri) setPhotoUri(uri)
-    } catch {
-      // user cancelled or denied permission — ignore
-    }
+    const picked = await pickMedia({ allowVideo: false, aspect: [1, 1] })
+    if (picked) setPickedAvatar(picked)
   }
 
   const handleSubmit = async () => {
@@ -58,8 +55,17 @@ export default function CreateProfile() {
     setError('')
     try {
       let photoURL: string | null = null
-      if (photoUri) {
-        try { photoURL = await uploadProfilePhoto(user.uid, 'avatar', photoUri) } catch { photoURL = null }
+      if (pickedAvatar) {
+        try {
+          const asset = await uploadMedia({ kind: 'avatar', uid: user.uid }, pickedAvatar)
+          photoURL = asset.url
+        } catch (e: unknown) {
+          // A failed avatar must not block profile creation — but it must never be
+          // silent either. The old `catch { photoURL = null }` told the user nothing.
+          setError(e instanceof MediaLimitError
+            ? limitMessage(e.result, pickedAvatar.type)
+            : "Couldn't upload your photo. Your profile was saved without it.")
+        }
       }
       await createProfile(
         user.uid,
@@ -84,8 +90,8 @@ export default function CreateProfile() {
 
           <View style={styles.photoWrap}>
             <TouchableOpacity style={styles.photoSlot} onPress={handlePickPhoto} accessibilityRole="button" accessibilityLabel="Pick a profile photo">
-              {photoUri ? (
-                <Image source={{ uri: photoUri }} style={styles.photoImg} />
+              {pickedAvatar ? (
+                <Image source={{ uri: pickedAvatar.uri }} style={styles.photoImg} />
               ) : (
                 <View style={[styles.photoFallback, { backgroundColor: avatarColor(name) }]}>
                   <Text style={styles.photoInitials}>{initials(name)}</Text>

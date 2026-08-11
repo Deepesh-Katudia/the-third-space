@@ -14,7 +14,8 @@ import { Borough, SocialHandles, SocialPlatform } from '../../types/models'
 import { SOCIAL_PLATFORMS, normalizeHandle, isValidHandle, shouldSeedSocials } from '../../utils/socials'
 import { useSocials } from '../../hooks/useSocials'
 import { updateProfile, setSocials } from '../../services/profiles'
-import { pickImage, uploadProfilePhoto } from '../../services/photos'
+import { pickMedia, uploadMedia, MediaLimitError, type PickedMedia } from '../../services/media'
+import { limitMessage } from '../../utils/media'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
@@ -32,8 +33,7 @@ export default function EditProfile() {
   const { handles: loadedSocials, loading: socialsLoading, visible: socialsVisible } = useSocials(user?.uid)
 
   const [seeded, setSeeded] = useState(false)
-  const [photoUri, setPhotoUri] = useState<string | null>(null)
-  const [newPhotoPicked, setNewPhotoPicked] = useState(false)
+  const [pickedAvatar, setPickedAvatar] = useState<PickedMedia | null>(null)
   const [bio, setBio] = useState('')
   const [interests, setInterests] = useState<string[]>([])
   const [neighborhood, setNeighborhood] = useState('')
@@ -49,7 +49,6 @@ export default function EditProfile() {
   // clobber in-progress edits.
   useEffect(() => {
     if (seeded || !profile) return
-    setPhotoUri(profile.photoURL)
     setBio(profile.bio)
     setInterests(profile.interests)
     setNeighborhood(profile.neighborhood)
@@ -112,15 +111,8 @@ export default function EditProfile() {
     Object.keys(socialErrors).length === 0
 
   const handlePickPhoto = async () => {
-    try {
-      const uri = await pickImage('avatar')
-      if (uri) {
-        setPhotoUri(uri)
-        setNewPhotoPicked(true)
-      }
-    } catch {
-      // user cancelled or denied permission — ignore
-    }
+    const picked = await pickMedia({ allowVideo: false, aspect: [1, 1] })
+    if (picked) setPickedAvatar(picked)
   }
 
   const handleSave = async () => {
@@ -129,8 +121,15 @@ export default function EditProfile() {
     setError('')
     try {
       let photoURL = profile?.photoURL ?? null
-      if (newPhotoPicked && photoUri) {
-        try { photoURL = await uploadProfilePhoto(user.uid, 'avatar', photoUri) } catch { /* keep existing */ }
+      if (pickedAvatar) {
+        try {
+          const asset = await uploadMedia({ kind: 'avatar', uid: user.uid }, pickedAvatar)
+          photoURL = asset.url
+        } catch (e: unknown) {
+          setError(e instanceof MediaLimitError
+            ? limitMessage(e.result, pickedAvatar.type)
+            : "Couldn't upload your photo. Your other changes were saved.")
+        }
       }
       await updateProfile(user.uid, {
         bio: bio.trim(),
@@ -177,8 +176,8 @@ export default function EditProfile() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.photoWrap}>
             <TouchableOpacity style={styles.photoSlot} onPress={handlePickPhoto} accessibilityRole="button" accessibilityLabel="Change profile photo">
-              {photoUri ? (
-                <Image source={{ uri: photoUri }} style={styles.photoImg} />
+              {pickedAvatar?.uri ?? profile?.photoURL ? (
+                <Image source={{ uri: pickedAvatar?.uri ?? profile?.photoURL ?? undefined }} style={styles.photoImg} />
               ) : (
                 <View style={[styles.photoFallback, { backgroundColor: avatarColor(name) }]}>
                   <Text style={styles.photoInitials}>{initials(name)}</Text>
