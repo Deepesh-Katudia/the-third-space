@@ -22,6 +22,7 @@ import { RegistrationConfirmation } from '../../../components/RegistrationConfir
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
 import { AmbientBackdrop } from '../../../components/AmbientBackdrop'
 import { subscribeAnnouncements } from '../../../services/announcements'
+import { getVenue } from '../../../services/venues'
 import { CommunityEvent, MediaAsset, Registration, Announcement } from '../../../types/models'
 import { MediaThumb } from '../../../components/MediaThumb'
 import { MediaViewer } from '../../../components/MediaViewer'
@@ -48,6 +49,7 @@ export default function EventDetail() {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [latestAnnouncement, setLatestAnnouncement] = useState<Announcement | null>(null)
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
+  const [venuePhotos, setVenuePhotos] = useState<MediaAsset[]>([])
 
   const isOwner = !!user && !!event && event.venueId === user.uid
 
@@ -73,6 +75,18 @@ export default function EventDetail() {
     if (!id || (!isOwner && !isRegistered)) return
     return subscribeAnnouncements(id, (list) => setLatestAnnouncement(list[0] ?? null), () => {})
   }, [id, isOwner, isRegistered])
+
+  useEffect(() => {
+    const venueId = event?.venueId
+    if (!venueId) return
+    let cancelled = false
+    // One-shot, not a subscription: venue photos do not change while somebody reads an
+    // event, and a second live listener per event screen buys nothing.
+    getVenue(venueId)
+      .then((v) => { if (!cancelled) setVenuePhotos(v?.photos ?? []) })
+      .catch(() => { /* the strip simply does not render */ })
+    return () => { cancelled = true }
+  }, [event?.venueId])
 
   if (event === undefined) return <LoadingView />
 
@@ -173,7 +187,15 @@ export default function EventDetail() {
 
         <View style={styles.body}>
           <Display role="screenTitle" style={styles.title}>{event.title}</Display>
-          <Body role="bodyLg" style={styles.venue}>{event.venueName} · {event.neighborhood}</Body>
+          <Body role="bodyLg" style={venuePhotos.length > 0 ? undefined : styles.venue}>{event.venueName} · {event.neighborhood}</Body>
+
+          {venuePhotos.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.venueStrip}>
+              {venuePhotos.map((media, i) => (
+                <MediaThumb key={i} media={media} style={styles.venueTile} onPress={() => setViewing(media)} />
+              ))}
+            </ScrollView>
+          ) : null}
 
           {/* Info cards */}
           <View style={styles.infoRow}>
@@ -328,6 +350,10 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: space.xl, paddingTop: space.xl },
   title: { marginBottom: space.xs + 2 },
   venue: { marginBottom: space.xl },
+  // The strip carries the bottom margin when it is present, so the venue line above it
+  // drops its own — otherwise the two stack into a gap twice the size.
+  venueStrip: { gap: space.sm, paddingTop: space.sm, paddingBottom: space.xl },
+  venueTile: { width: 96, height: 96 },
 
   infoRow: { flexDirection: 'row', gap: space.md, marginBottom: space.xl },
   infoCard: {
