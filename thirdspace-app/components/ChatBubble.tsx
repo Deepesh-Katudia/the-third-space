@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { avatarColor, initials } from '../utils/avatar'
+import { MediaAsset } from '../types/models'
+import { MediaThumb } from './MediaThumb'
 import { palette, radius, space, font } from '../constants/design'
 import { Body, Meta } from './ui/Text'
 
@@ -9,6 +11,7 @@ export interface ChatMessage {
   author: string
   text: string
   time: string
+  media?: MediaAsset
 }
 
 interface ChatBubbleProps {
@@ -19,9 +22,60 @@ interface ChatBubbleProps {
   isAnnouncement?: boolean
   /** Show the author's name + avatar (first message in a run from others). */
   showAuthor?: boolean
+  /** 0-1 while the attachment uploads; null or absent once it is stored. */
+  uploadProgress?: number | null
+  onPressMedia?: () => void
 }
 
-export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement = false, showAuthor = true }: ChatBubbleProps) {
+/**
+ * Media sits INSIDE the bubble's existing padding, above the caption — the bubble keeps
+ * its geometry and simply gains a child. Edge-to-edge media would mean dropping the
+ * padding conditionally and clipping the image's corner to match the bubble's, which is
+ * a second layout for one component to hold.
+ *
+ * Shared by the self and other branches so the two cannot drift into different bubbles.
+ */
+function BubbleContent({ message, isSelf, uploadProgress, onPressMedia }: {
+  message: ChatMessage
+  isSelf: boolean
+  uploadProgress?: number | null
+  onPressMedia?: () => void
+}) {
+  const uploading = uploadProgress !== null && uploadProgress !== undefined
+  return (
+    <>
+      {message.media ? (
+        <View style={styles.mediaWrap}>
+          <MediaThumb media={message.media} style={styles.media} onPress={uploading ? undefined : onPressMedia} />
+          {uploading ? (
+            <View style={styles.uploadTrack}>
+              <View
+                testID="bubble-upload-fill"
+                style={[styles.uploadFill, { width: `${Math.round((uploadProgress ?? 0) * 100)}%` }]}
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+      {message.text ? (
+        <Body role="bodyLg" tone={isSelf ? undefined : 'ink'} style={isSelf ? styles.onInk : undefined}>
+          {message.text}
+        </Body>
+      ) : null}
+      <Meta style={[styles.time, isSelf ? styles.onInk : undefined]}>{message.time}</Meta>
+    </>
+  )
+}
+
+export function ChatBubble({
+  message,
+  isSelf,
+  isSystem = false,
+  isAnnouncement = false,
+  showAuthor = true,
+  uploadProgress,
+  onPressMedia,
+}: ChatBubbleProps) {
   if (isSystem) {
     return (
       <View style={styles.systemRow}>
@@ -48,8 +102,7 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
     return (
       <View style={[styles.row, styles.rowSelf]}>
         <View style={[styles.bubble, styles.bubbleSelf]}>
-          <Body role="bodyLg" style={styles.onInk}>{message.text}</Body>
-          <Meta style={[styles.time, styles.onInk]}>{message.time}</Meta>
+          <BubbleContent message={message} isSelf uploadProgress={uploadProgress} onPressMedia={onPressMedia} />
         </View>
       </View>
     )
@@ -67,8 +120,7 @@ export function ChatBubble({ message, isSelf, isSystem = false, isAnnouncement =
       <View style={styles.otherCol}>
         {showAuthor ? <Meta style={styles.author}>{message.author}</Meta> : null}
         <View style={[styles.bubble, styles.bubbleOther]}>
-          <Body role="bodyLg" tone="ink">{message.text}</Body>
-          <Meta style={styles.time}>{message.time}</Meta>
+          <BubbleContent message={message} isSelf={false} uploadProgress={uploadProgress} onPressMedia={onPressMedia} />
         </View>
       </View>
     </View>
@@ -88,6 +140,13 @@ const styles = StyleSheet.create({
   bubbleOther: { backgroundColor: palette.orangeLight, borderTopLeftRadius: 4, borderWidth: 1, borderColor: palette.rule },
   bubbleSelf: { backgroundColor: palette.ink, borderTopRightRadius: 4, maxWidth: '76%' },
   onInk: { color: palette.cream },
+  mediaWrap: { position: 'relative', marginBottom: space.sm },
+  media: { width: 200, height: 150, borderRadius: radius.ticket - 6 },
+  uploadTrack: {
+    position: 'absolute', left: space.sm, right: space.sm, bottom: space.sm,
+    height: 4, borderRadius: radius.pill, overflow: 'hidden', backgroundColor: palette.rule,
+  },
+  uploadFill: { height: '100%', backgroundColor: palette.clay },
   time: { marginTop: space.xs, alignSelf: 'flex-end' },
   center: { textAlign: 'center' },
   systemRow: { alignItems: 'center', marginBottom: space.md + 2, paddingHorizontal: space.lg },
