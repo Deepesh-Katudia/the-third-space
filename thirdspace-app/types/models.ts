@@ -32,6 +32,28 @@ export type AgeRequirement = '18+' | '21+'
 
 export type Borough = 'Brooklyn' | 'Manhattan' | 'Queens' | 'Bronx' | 'Staten Island'
 
+// ── Media ─────────────────────────────────────────────────────────────────
+export type MediaType = 'image' | 'video'
+
+/**
+ * One uploaded asset. `thumbURL` is ALWAYS populated so every render site draws
+ * exactly one thing and adds a play badge only when `type === 'video'`:
+ *   - image  -> thumbURL === url
+ *   - video  -> thumbURL is a generated poster frame
+ *   - video whose poster generation failed on device -> thumbURL === ''
+ * MediaThumb renders an ink tile with a play badge for that last case. There is
+ * deliberately no "processing" state: uploads are synchronous from the client.
+ */
+export interface MediaAsset {
+  type: MediaType
+  url: string
+  thumbURL: string
+  width: number
+  height: number
+  /** Videos only. Milliseconds. */
+  durationMs?: number
+}
+
 export interface Venue {
   name: string
   borough: Borough
