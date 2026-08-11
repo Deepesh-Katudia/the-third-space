@@ -22,7 +22,9 @@ import { RegistrationConfirmation } from '../../../components/RegistrationConfir
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
 import { AmbientBackdrop } from '../../../components/AmbientBackdrop'
 import { subscribeAnnouncements } from '../../../services/announcements'
-import { CommunityEvent, Registration, Announcement } from '../../../types/models'
+import { CommunityEvent, MediaAsset, Registration, Announcement } from '../../../types/models'
+import { MediaThumb } from '../../../components/MediaThumb'
+import { MediaViewer } from '../../../components/MediaViewer'
 import { categoryLabel } from '../../../constants/categories'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
@@ -45,6 +47,7 @@ export default function EventDetail() {
   const [saved, setSaved] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [latestAnnouncement, setLatestAnnouncement] = useState<Announcement | null>(null)
+  const [viewing, setViewing] = useState<MediaAsset | null>(null)
 
   const isOwner = !!user && !!event && event.venueId === user.uid
 
@@ -142,22 +145,31 @@ export default function EventDetail() {
       <AmbientBackdrop />
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Hero — the ink stub of one big ticket, torn off above the detail body. */}
-        <View style={styles.hero}>
-          <SafeAreaView edges={['top']} style={styles.heroBar}>
-            <BackButton variant="circle" />
-            <TouchableOpacity style={styles.heroBtn} onPress={() => setSaved((s) => !s)} hitSlop={8}>
-              <Body role="button" style={styles.onInk}>{saved ? '♥' : '♡'}</Body>
-            </TouchableOpacity>
-          </SafeAreaView>
-          <View style={styles.heroFooter}>
-            <View style={styles.categoryChip}>
-              <Meta role="eyebrow" tone="ink">{categoryLabel(event.category)}</Meta>
+        {event.cover ? (
+          <MediaThumb media={event.cover} style={styles.coverBand} onPress={() => setViewing(event.cover ?? null)} />
+        ) : null}
+
+        {/* Hero — the ink stub of one big ticket, torn off above the detail body.
+            The notches are absolutely positioned at the hero's bottom seam, so they
+            live in a wrapper with the hero rather than in the scroll content: a cover
+            band above would otherwise slide them down into the middle of the cover. */}
+        <View style={styles.heroWrap}>
+          <View style={styles.hero}>
+            <SafeAreaView edges={['top']} style={styles.heroBar}>
+              <BackButton variant="circle" />
+              <TouchableOpacity style={styles.heroBtn} onPress={() => setSaved((s) => !s)} hitSlop={8}>
+                <Body role="button" style={styles.onInk}>{saved ? '♥' : '♡'}</Body>
+              </TouchableOpacity>
+            </SafeAreaView>
+            <View style={styles.heroFooter}>
+              <View style={styles.categoryChip}>
+                <Meta role="eyebrow" tone="ink">{categoryLabel(event.category)}</Meta>
+              </View>
             </View>
           </View>
+          <View style={[styles.notch, styles.notchLeft]} />
+          <View style={[styles.notch, styles.notchRight]} />
         </View>
-        <View style={[styles.notch, styles.notchLeft]} />
-        <View style={[styles.notch, styles.notchRight]} />
 
         <View style={styles.body}>
           <Display role="screenTitle" style={styles.title}>{event.title}</Display>
@@ -272,6 +284,8 @@ export default function EventDetail() {
         }}
         onClose={() => setShowConfirmation(false)}
       />
+
+      <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </View>
   )
 }
@@ -281,6 +295,12 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
 
+  // Deliberately ABOVE the ink hero, not behind it. The hero's tear notches sit at the
+  // ink/field seam at its BOTTOM edge; putting the cover on top leaves that seam — and
+  // the note about those notches being painted orangeDeep — untouched.
+  coverBand: { width: '100%', aspectRatio: 16 / 9, borderRadius: 0 },
+  // overflow stays visible: the notches hang half outside this wrapper on both edges.
+  heroWrap: { position: 'relative' },
   hero: { height: HERO_HEIGHT, justifyContent: 'space-between', backgroundColor: palette.ink },
   heroBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: space.xl - 4, paddingTop: space.sm },
   heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: palette.inkSoft, alignItems: 'center', justifyContent: 'center' },

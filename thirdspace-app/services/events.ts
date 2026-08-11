@@ -23,6 +23,7 @@ import {
 import { db } from '../firebase/config'
 import { AgeRequirement, CommunityEvent, EventCategory, MediaAsset, Registration, Venue } from '../types/models'
 import { POINTS_PER_EVENT, tierForPoints } from '../utils/points'
+import { deleteMedia } from './media'
 
 const DELETE_BATCH_SIZE = 400
 
@@ -213,6 +214,12 @@ export async function cancelRegistration(eventId: string, uid: string): Promise<
 export async function deleteEventWithRegistrations(eventId: string): Promise<void> {
   const eventSnap = await getDoc(doc(db, 'events', eventId))
   const venueId = eventSnap.exists() ? (eventSnap.data().venueId as string) : undefined
+
+  // Best-effort, and deliberately before the doc is gone — this is the last moment the
+  // cover URL is readable. deleteMedia never throws. Reuses the snapshot already read
+  // for venueId rather than paying for a second get.
+  const cover = eventSnap.exists() ? (eventSnap.data().cover as MediaAsset | undefined) : undefined
+  if (cover) await deleteMedia(cover)
 
   const registrations = await getDocs(collection(db, 'events', eventId, 'registrations'))
   const docs = registrations.docs

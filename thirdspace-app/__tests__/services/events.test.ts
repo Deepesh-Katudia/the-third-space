@@ -3,8 +3,13 @@ import {
   registerForEvent, cancelRegistration, createEvent, newEventRef, buildEventDoc,
   deleteEventWithRegistrations,
 } from '../../services/events'
+import { deleteMedia } from '../../services/media'
 
 jest.mock('../../firebase/config', () => ({ db: {} }))
+
+// services/events reaches into the media service only to clean up an event cover on
+// delete. Mocking it keeps expo-image-manipulator (ESM) out of this suite's parse.
+jest.mock('../../services/media', () => ({ deleteMedia: jest.fn() }))
 
 jest.mock('firebase/firestore', () => ({
   // Two call shapes: doc(db, ...segments) addresses a known path, and doc(collectionRef)
@@ -225,5 +230,24 @@ describe('deleteEventWithRegistrations', () => {
     ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
     await deleteEventWithRegistrations('e1')
     expect(updateDoc).toHaveBeenCalledWith({ path: 'venues/v1' }, { eventsCount: { __increment: -1 } })
+  })
+
+  it('deletes the cover while the event doc is still readable', async () => {
+    const cover = { type: 'image' as const, url: 'u', thumbURL: 'u', width: 1, height: 1 }
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ venueId: 'v1', cover }) })
+    ;(getDocs as jest.Mock).mockResolvedValue({ docs: [] })
+    ;(deleteDoc as jest.Mock).mockResolvedValue(undefined)
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    await deleteEventWithRegistrations('e1')
+    expect(deleteMedia).toHaveBeenCalledWith(cover)
+  })
+
+  it('does not call the media service for an event that never had a cover', async () => {
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => true, data: () => ({ venueId: 'v1' }) })
+    ;(getDocs as jest.Mock).mockResolvedValue({ docs: [] })
+    ;(deleteDoc as jest.Mock).mockResolvedValue(undefined)
+    ;(updateDoc as jest.Mock).mockResolvedValue(undefined)
+    await deleteEventWithRegistrations('e1')
+    expect(deleteMedia).not.toHaveBeenCalled()
   })
 })
