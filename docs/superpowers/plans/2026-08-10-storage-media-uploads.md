@@ -39,10 +39,11 @@
 | `__tests__/components/MediaThumb.test.tsx` | Component tests |
 | `__tests__/components/MediaSlotPicker.test.tsx` | Component tests |
 | `__tests__/rules/storage.rules.test.ts` | Storage rules against the emulator |
-| `functions/src/mediaLabel.ts` | Push-body fallback for attachment-only messages |
-| `functions/src/mediaLabel.test.ts` | Its test |
+| `shared/mediaLabel.ts` | The ONE attachment label, compiled by both workspaces. Zero imports |
+| `__tests__/shared/mediaLabel.test.ts` | Its test |
+| `functions/src/onNewDirectMessage.media.test.ts` | Push-body fallback test |
 
-**Modified:** `types/models.ts`, `storage.rules`, `package.json`, `services/photos.ts`, `services/events.ts`, `services/chat.ts`, `components/ui/TicketCard.tsx`, `components/EventCard.tsx`, `components/ChatBubble.tsx`, `components/VenueForm.tsx`, `app/(auth)/create-profile.tsx`, `app/(app)/edit-profile.tsx`, `app/(app)/member/[uid].tsx`, `app/(app)/(attender)/profile.tsx`, `app/(app)/create-event.tsx`, `app/(app)/event/[id].tsx`, `app/(app)/(hoster)/venue.tsx`, `app/(app)/chat/[id].tsx`, `functions/src/onNewDirectMessage.ts`.
+**Modified:** `types/models.ts`, `storage.rules`, `package.json`, `services/photos.ts`, `services/events.ts`, `services/chat.ts`, `utils/media.ts`, `components/ui/TicketCard.tsx`, `components/EventCard.tsx`, `components/ChatBubble.tsx`, `components/VenueForm.tsx`, `app/(auth)/create-profile.tsx`, `app/(app)/edit-profile.tsx`, `app/(app)/member/[uid].tsx`, `app/(app)/(attender)/profile.tsx`, `app/(app)/create-event.tsx`, `app/(app)/event/[id].tsx`, `app/(app)/(hoster)/venue.tsx`, `app/(app)/chat/[id].tsx`, `functions/src/onNewDirectMessage.ts`, `functions/tsconfig.json`, `functions/package.json`.
 
 ---
 
@@ -2988,27 +2989,53 @@ git commit -m "feat: render chat attachments inset in the bubble"
 - Consumes: `newMessageRef`/`sendEventMessage`/`sendDirectMessage` (Task 16), `pickMedia`/`uploadMedia` (Task 3), `ChatBubble` (Task 17), `MediaViewer` (Task 6).
 - Produces: nothing new.
 
-- [ ] **Step 1: Add pending-attachment state**
+**Ruling (2026-08-10):** the spec governs over the plan's first draft here. Picking an
+attachment **stages** it; nothing uploads or posts until the user hits send. Picking an
+image must not silently post it.
+
+- [ ] **Step 1: Add staged-attachment and pending-upload state**
 
 ```tsx
   interface Pending { id: string; media: MediaAsset; progress: number }
 
+  /** Chosen but not yet sent. Nothing has touched the network at this point. */
+  const [staged, setStaged] = useState<PickedMedia | null>(null)
+  /** In flight: uploading, then writing the message doc. */
   const [pending, setPending] = useState<Pending | null>(null)
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
 
   const handleAttach = async () => {
-    if (!myUid || pending) return
+    if (pending) return
     const picked = await pickMedia({ allowVideo: true })
-    if (!picked) return
+    if (picked) setStaged(picked)
+  }
 
+Then extend the screen's existing `send` so one action covers both cases:
+
+```tsx
+  const send = async () => {
+    if (!myUid || pending) return
+    const text = draft
+    if (!text.trim() && !staged) return
+
+    // Text-only: unchanged from today.
+    if (!staged) {
+      await sendText(text)   // the screen's existing group/dm branch
+      setDraft('')
+      return
+    }
+
+    const picked = staged
     // Mint the message id first — the storage path contains it.
     const msgRef = newMessageRef(kind === 'group' ? 'group' : 'dm', id)
-    // A local optimistic bubble so a slow clip does not look like a dead thread.
+    // Move it out of the composer and into the thread as an optimistic bubble, so a
+    // slow clip shows progress where the message will actually appear.
     const local: MediaAsset = {
       type: picked.type, url: picked.uri, thumbURL: picked.uri,
       width: picked.width, height: picked.height,
       ...(picked.durationMs != null ? { durationMs: picked.durationMs } : {}),
     }
+    setStaged(null)
     setPending({ id: msgRef.id, media: local, progress: 0 })
 
     // Declared OUTSIDE the try: if the upload succeeds and the Firestore write then
@@ -3024,9 +3051,9 @@ git commit -m "feat: render chat attachments inset in the bubble"
         (fraction) => setPending((p) => (p ? { ...p, progress: fraction } : p))
       )
       if (kind === 'group') {
-        await sendEventMessage(id, authorInfo, draft, uploaded, msgRef)
+        await sendEventMessage(id, authorInfo, text, uploaded, msgRef)
       } else {
-        await sendDirectMessage(id, participantInfo, authorInfo, draft, uploaded, msgRef)
+        await sendDirectMessage(id, participantInfo, authorInfo, text, uploaded, msgRef)
       }
       setDraft('')
     } catch (e: unknown) {
@@ -3034,8 +3061,10 @@ git commit -m "feat: render chat attachments inset in the bubble"
         ? limitMessage(e.result, picked.type)
         : "Couldn't send that. Check your connection and try again.")
       if (uploaded) void deleteMedia(uploaded)
+      // Put it back in the composer so the send can be retried without re-picking.
+      setStaged(picked)
     } finally {
-      // The real message arrives through the snapshot; drop the optimistic copy.
+      // On success the real message arrives through the snapshot; drop the optimistic copy.
       setPending(null)
     }
   }
@@ -3065,7 +3094,38 @@ Keep whatever field sources `send` already uses — the point is one definition,
           ) : null}
 ```
 
-- [ ] **Step 3: Add the attach button and un-gate send**
+- [ ] **Step 3: Render the staged preview above the composer**
+
+```tsx
+          {staged ? (
+            <View style={styles.stagedRow}>
+              <Image source={{ uri: staged.uri }} style={styles.stagedThumb} />
+              <Body role="bodySm" style={styles.flex}>
+                {staged.type === 'video' ? 'Clip ready to send' : 'Photo ready to send'}
+              </Body>
+              <TouchableOpacity
+                testID="chat-staged-remove"
+                onPress={() => setStaged(null)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Remove attachment"
+              >
+                <Ionicons name="close" size={18} color={palette.ink} />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+```
+
+```tsx
+  stagedRow: {
+    flexDirection: 'row', alignItems: 'center', gap: space.sm,
+    paddingHorizontal: space.lg, paddingVertical: space.sm,
+    borderTopWidth: 1, borderTopColor: palette.rule, backgroundColor: palette.cream,
+  },
+  stagedThumb: { width: 44, height: 44, borderRadius: radius.ticket - 6 },
+```
+
+- [ ] **Step 4: Add the attach button and un-gate send**
 
 Replace the `inputRow` block:
 
@@ -3075,7 +3135,7 @@ Replace the `inputRow` block:
               testID="chat-attach"
               style={styles.attachBtn}
               onPress={handleAttach}
-              disabled={pending !== null}
+              disabled={pending !== null || staged !== null}
               accessibilityRole="button"
               accessibilityLabel="Add a photo or clip"
             >
@@ -3090,13 +3150,21 @@ Replace the `inputRow` block:
               multiline
             />
             <TouchableOpacity
-              style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]}
+              style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
               onPress={send}
-              disabled={!draft.trim()}
+              disabled={!canSend}
             >
               <Body role="button" style={styles.onInk}>↑</Body>
             </TouchableOpacity>
           </View>
+```
+
+with, beside the other derived values:
+
+```tsx
+  // A staged attachment is sendable on its own — an attachment-only message is the
+  // whole point. `pending` blocks a second send while one is in flight.
+  const canSend = (draft.trim().length > 0 || staged !== null) && pending === null
 ```
 
 ```tsx
@@ -3107,18 +3175,16 @@ Replace the `inputRow` block:
   },
 ```
 
-The send button stays gated on `draft.trim()` because an attachment sends itself the moment it is picked — there is no staged-attachment state to send later, which is what keeps this flow one code path instead of two.
-
-- [ ] **Step 4: Pass `media` and the viewer through the mapped messages**
+- [ ] **Step 5: Pass `media` and the viewer through the mapped messages**
 
 In the `messages.map`, add `media: m.media` to the `message` object and `onPressMedia={() => setViewing(m.media ?? null)}`. Mount `<MediaViewer media={viewing} onClose={() => setViewing(null)} />` beside the existing `Toast`.
 
-- [ ] **Step 5: Run the suite and typecheck**
+- [ ] **Step 6: Run the suite and typecheck**
 
 Run: `npx jest && npx tsc --noEmit`
 Expected: green.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add "app/(app)/chat/[id].tsx"
@@ -3127,54 +3193,86 @@ git commit -m "feat: send photo and video attachments from the chat composer"
 
 ---
 
-### Task 19: Push body fallback for attachment-only messages
+### Task 19: One shared media label, used by the app and by Cloud Functions
+
+**Ruling (2026-08-10):** the plan's first draft duplicated the label logic into
+`functions/src/mediaLabel.ts` with a "keep these in step" comment. Overridden — the
+label gets **one** implementation that both workspaces compile against.
 
 **Files:**
-- Create: `thirdspace-app/functions/src/mediaLabel.ts`
-- Create: `thirdspace-app/functions/src/mediaLabel.test.ts`
+- Create: `thirdspace-app/shared/mediaLabel.ts`
+- Create: `thirdspace-app/__tests__/shared/mediaLabel.test.ts`
+- Modify: `thirdspace-app/utils/media.ts` (delegate `mediaPreviewLabel` to the shared module)
+- Modify: `thirdspace-app/functions/tsconfig.json` (`rootDir`, `include`)
+- Modify: `thirdspace-app/functions/package.json` (`main`)
 - Modify: `thirdspace-app/functions/src/onNewDirectMessage.ts:9,24`
+- Create: `thirdspace-app/functions/src/onNewDirectMessage.media.test.ts`
 
 **Interfaces:**
-- Consumes: nothing — `functions/` is a separate workspace and **cannot import from the app**, which is why this helper is duplicated rather than shared.
-- Produces: `mediaLabel(media?: { type?: string }): string`.
+- Consumes: nothing — `shared/mediaLabel.ts` must have **zero imports**. It is compiled
+  twice, under two different tsconfigs (the app's Expo base and the functions' es2021
+  commonjs), so anything it imports has to resolve under both. A pure function does.
+- Produces: `mediaLabel(media?: { type?: string } | null): string` returning `'PHOTO'`,
+  `'VIDEO'` or `''`. `utils/media.ts` keeps exporting `mediaPreviewLabel` with its Task 2
+  signature — callers do not change.
+
+**Why the dependency points this way:** `functions/` depends on `shared/`, and the app
+depends on `shared/`. Neither workspace depends on the other. The alternative considered
+and rejected was putting the file under `functions/src/` and importing it from the app,
+which would make the mobile app depend on Cloud Functions source — backwards, and it
+would pull functions code into the Metro bundle.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `functions/src/mediaLabel.test.ts`:
+Create `__tests__/shared/mediaLabel.test.ts`:
 
 ```ts
-import { mediaLabel } from './mediaLabel'
+import { mediaLabel } from '../../shared/mediaLabel'
 
 describe('mediaLabel', () => {
-  it('labels a photo and a clip in uppercase, matching the app', () => {
+  it('labels a photo and a clip in uppercase, matching every type role in the app', () => {
     expect(mediaLabel({ type: 'image' })).toBe('PHOTO')
     expect(mediaLabel({ type: 'video' })).toBe('VIDEO')
   })
 
   it('returns an empty string when there is no media', () => {
     expect(mediaLabel(undefined)).toBe('')
+    expect(mediaLabel(null)).toBe('')
     expect(mediaLabel({})).toBe('')
+  })
+
+  it('returns an empty string for an unrecognised type rather than guessing', () => {
+    expect(mediaLabel({ type: 'audio' })).toBe('')
   })
 })
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [ ] **Step 2: Run the test to verify it fails**
 
-Run: `cd functions && npx jest src/mediaLabel.test.ts`
-Expected: FAIL — module not found.
+Run: `npx jest __tests__/shared/mediaLabel.test.ts`
+Expected: FAIL — `Cannot find module '../../shared/mediaLabel'`.
 
-- [ ] **Step 3: Implement**
+- [ ] **Step 3: Write the shared module**
 
-Create `functions/src/mediaLabel.ts`:
+Create `shared/mediaLabel.ts`:
 
 ```ts
 /**
- * Deliberately duplicated from the app's utils/media.ts `mediaPreviewLabel`. The
- * functions workspace is compiled separately and cannot import from the app, and a
- * four-line helper is a better trade than a shared build target. Keep the two strings
- * in step.
+ * The ONE implementation of the attachment label, compiled by both the Expo app and
+ * the Cloud Functions workspace. It fills `lastMessageText` for a chat-list row and
+ * the push body for an attachment-only message — two places that must never disagree
+ * about whether something is a PHOTO or a VIDEO.
+ *
+ * ZERO IMPORTS, deliberately. This file is compiled twice under two different
+ * tsconfigs (the app's Expo base; functions' es2021/commonjs), so anything it imported
+ * would have to resolve under both. It also takes a structural `{ type?: string }`
+ * rather than MediaAsset, because types/models.ts imports firebase/firestore for
+ * Timestamp and Cloud Functions must not pull in the client SDK.
+ *
+ * Uppercase because every type role in this app is uppercase — a lowercase "Photo"
+ * would be the only string in the codebase fighting the token.
  */
-export function mediaLabel(media?: { type?: string }): string {
+export function mediaLabel(media?: { type?: string } | null): string {
   if (!media) return ''
   if (media.type === 'video') return 'VIDEO'
   if (media.type === 'image') return 'PHOTO'
@@ -3182,7 +3280,78 @@ export function mediaLabel(media?: { type?: string }): string {
 }
 ```
 
-- [ ] **Step 4: Use it in `onNewDirectMessage.ts`**
+- [ ] **Step 4: Delegate from `utils/media.ts`**
+
+Replace the `mediaPreviewLabel` implementation written in Task 2 with a delegation, so
+there is one behaviour and Task 2's existing tests still pin it:
+
+```ts
+import { mediaLabel } from '../shared/mediaLabel'
+
+/**
+ * Thin wrapper over the shared implementation so the app keeps a MediaAsset-typed
+ * entry point while Cloud Functions use the structural one. See shared/mediaLabel.ts
+ * for why the shared file cannot import MediaAsset.
+ */
+export function mediaPreviewLabel(media?: MediaAsset | null): string {
+  return mediaLabel(media)
+}
+```
+
+- [ ] **Step 5: Run both label suites to verify they pass**
+
+Run: `npx jest __tests__/shared/mediaLabel.test.ts __tests__/utils/media.test.ts`
+Expected: PASS — the Task 2 `mediaPreviewLabel` cases still hold unchanged.
+
+- [ ] **Step 6: Let the functions workspace compile `shared/`**
+
+`functions/tsconfig.json` currently pins `"rootDir": "src"` and `"include": ["src"]`,
+which cannot reach a file outside `functions/`. Change both:
+
+```json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2021",
+    "lib": ["es2021"],
+    "outDir": "lib",
+    "rootDir": "..",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src", "../shared"],
+  "exclude": ["src/**/*.test.ts"]
+}
+```
+
+**`rootDir: ".."` moves the build output.** With `rootDir: "src"` the entry point emitted
+to `lib/index.js`; with `rootDir: ".."` the tree keeps its shape below the new root, so it
+emits to `lib/functions/src/index.js` and `lib/shared/mediaLabel.js`. `functions/package.json`
+`main` must follow, or `firebase deploy` uploads a package whose entry point does not exist:
+
+```json
+  "main": "lib/functions/src/index.js",
+```
+
+- [ ] **Step 7: Verify the built entry point actually resolves**
+
+This is the one step that catches a wrong `main` before a deploy rather than after.
+
+```bash
+cd functions
+rm -rf lib
+npm run build
+node -e "require('./' + require('./package.json').main); console.log('entry point OK')"
+ls lib/shared/mediaLabel.js
+```
+
+Expected: `entry point OK`, and `lib/shared/mediaLabel.js` exists. If `require` throws
+`MODULE_NOT_FOUND`, `main` and the emitted path disagree — fix `main` to match what
+`npm run build` actually produced before going further.
+
+- [ ] **Step 8: Use the shared label in `onNewDirectMessage.ts`**
 
 Widen the message type on line 9:
 
@@ -3191,27 +3360,64 @@ Widen the message type on line 9:
   media?: { type?: string }
 ```
 
-and change line 24:
+Add the import and change line 24:
+
+```ts
+import { mediaLabel } from '../../shared/mediaLabel'
+```
 
 ```ts
     // An attachment-only message has no text; without this the push body is empty.
     body: truncateBody(message.text || mediaLabel(message.media)),
 ```
 
-- [ ] **Step 5: Run the functions suite**
+- [ ] **Step 9: Test the push body fallback**
+
+Create `functions/src/onNewDirectMessage.media.test.ts`, following the existing
+`onNewDirectMessage.test.ts` for how the fake db and handler are set up:
+
+```ts
+import { handleNewDirectMessage } from './onNewDirectMessage'
+
+// Reuse the same fake-db construction the sibling test file uses.
+it('pushes a media label when an attachment arrives with no caption', async () => {
+  const { db, sent } = makeFakeDb()
+  await handleNewDirectMessage(db, 'c1', {
+    authorUid: 'host', authorName: 'Rooftop', text: '', media: { type: 'image' },
+  })
+  expect(sent[0].body).toBe('PHOTO')
+})
+
+it('prefers the caption over the label when both are present', async () => {
+  const { db, sent } = makeFakeDb()
+  await handleNewDirectMessage(db, 'c1', {
+    authorUid: 'host', authorName: 'Rooftop', text: 'look at this', media: { type: 'image' },
+  })
+  expect(sent[0].body).toBe('look at this')
+})
+```
+
+- [ ] **Step 10: Run the functions suite**
 
 Run: `cd functions && npx jest`
-Expected: PASS, including the existing `onNewDirectMessage` tests.
+Expected: PASS, including the existing `onNewDirectMessage` tests unchanged.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 11: Run the app suite and typecheck**
+
+Run: `cd .. && npx jest && npx tsc --noEmit`
+Expected: green. The app's `tsc` now also type-checks `shared/mediaLabel.ts` under the
+Expo config; a pure function passes under both.
+
+- [ ] **Step 12: Commit**
 
 ```bash
-git add functions/src/mediaLabel.ts functions/src/mediaLabel.test.ts functions/src/onNewDirectMessage.ts
-git commit -m "fix: push a media label instead of an empty body for attachment-only DMs"
+git add shared/mediaLabel.ts __tests__/shared/mediaLabel.test.ts utils/media.ts \
+  functions/tsconfig.json functions/package.json functions/src/onNewDirectMessage.ts \
+  functions/src/onNewDirectMessage.media.test.ts
+git commit -m "feat: share one media label between the app and Cloud Functions"
 ```
 
 ---
-
 ## Final verification
 
 - [ ] **Run everything**
