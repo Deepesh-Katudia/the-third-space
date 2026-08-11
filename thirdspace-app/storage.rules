@@ -1,12 +1,71 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function signedIn()     { return request.auth != null; }
+    function ownedBy(uid)   { return signedIn() && request.auth.uid == uid; }
+    function isImage()      { return request.resource.contentType.matches('image/.*'); }
+    function isVideo()      { return request.resource.contentType.matches('video/.*'); }
+    function imageUnder(mb) { return isImage() && request.resource.size < mb * 1024 * 1024; }
+
+    // Video duration is NOT checkable here — rules see size and contentType, never
+    // media metadata. The 60s cap is a product constraint enforced client-side; this
+    // size ceiling is the only real backstop.
+    function validMedia()   { return imageUnder(5)
+                                || (isVideo() && request.resource.size < 50 * 1024 * 1024); }
+
+    // Reads are signedIn() everywhere, chatMedia included. A DM attachment is
+    // protected by the unguessable token in its download URL, not by a membership
+    // check, because Storage rules cannot get() a Firestore document. Same posture
+    // profiles/{uid} already takes. Accepted knowingly; see the design doc.
+    //
+    // create/update is split from delete throughout: on a delete there is no
+    // request.resource, so validMedia() would raise an evaluation error rather than
+    // returning false. Exactly the split the socials rule in firestore.rules makes.
+    //
+    // The FILENAME is matched, not just the prefix. matches() is a whole-string
+    // match, so 'vibe[0-2]' rejects 'vibe0_thumb' and the clauses stay disjoint.
+    // Without this, ownedBy(uid) alone would make every member's prefix unbounded
+    // free hosting — which on the Blaze plan is your bill.
+
     match /profilePhotos/{uid}/{file} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow read: if signedIn();
+      allow create, update: if ownedBy(uid) && (
+        (file == 'avatar.jpg'            && imageUnder(5)) ||
+        (file.matches('vibe[0-2]')       && validMedia())  ||
+        (file.matches('vibe[0-2]_thumb') && imageUnder(5))
+      );
+      allow delete: if ownedBy(uid);
+    }
+
+    match /eventCovers/{hosterUid}/{eventId}/{file} {
+      allow read: if signedIn();
+      allow create, update: if ownedBy(hosterUid) && (
+        (file == 'cover'       && validMedia()) ||
+        (file == 'cover_thumb' && imageUnder(5))
+      );
+      allow delete: if ownedBy(hosterUid);
+    }
+
+    match /venuePhotos/{uid}/{file} {
+      allow read: if signedIn();
+      allow create, update: if ownedBy(uid) && (
+        (file.matches('[0-5]')       && validMedia()) ||
+        (file.matches('[0-5]_thumb') && imageUnder(5))
+      );
+      allow delete: if ownedBy(uid);
+    }
+
+    // Leans on Firestore auto-ids being alphanumeric only (20 chars from a 62-symbol
+    // alphabet), which is what keeps [A-Za-z0-9]+ disjoint from the _thumb variant.
+    // If message ids ever stop being auto-generated, revisit this pattern.
+    match /chatMedia/{authorUid}/{threadId}/{file} {
+      allow read: if signedIn();
+      allow create, update: if ownedBy(authorUid) && (
+        (file.matches('[A-Za-z0-9]+')       && validMedia()) ||
+        (file.matches('[A-Za-z0-9]+_thumb') && imageUnder(5))
+      );
+      allow delete: if ownedBy(authorUid);
     }
   }
 }

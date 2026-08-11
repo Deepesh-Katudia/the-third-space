@@ -52,7 +52,7 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:rules": "npx firebase-tools emulators:exec --only firestore \"jest --config jest.rules.config.js\""
+    "test:rules": "npx firebase-tools emulators:exec --only firestore,storage \"jest --config jest.rules.config.js\""
   },
   "jest": {
     "preset": "jest-expo",
