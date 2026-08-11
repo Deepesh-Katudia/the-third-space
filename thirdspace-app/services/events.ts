@@ -1,5 +1,4 @@
 import {
-  addDoc,
   arrayRemove,
   arrayUnion,
   collection,
@@ -12,15 +11,17 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
   writeBatch,
   DocumentData,
+  DocumentReference,
   DocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { AgeRequirement, CommunityEvent, EventCategory, Registration, Venue } from '../types/models'
+import { AgeRequirement, CommunityEvent, EventCategory, MediaAsset, Registration, Venue } from '../types/models'
 import { POINTS_PER_EVENT, tierForPoints } from '../utils/points'
 
 const DELETE_BATCH_SIZE = 400
@@ -39,8 +40,18 @@ export interface CreateEventInput {
   ageRequirement: AgeRequirement
 }
 
-export async function createEvent(venueId: string, venue: Venue, input: CreateEventInput): Promise<void> {
-  await addDoc(collection(db, 'events'), {
+/**
+ * Mint the id BEFORE the write. The cover's storage path contains the event id
+ * (`eventCovers/{hosterUid}/{eventId}/cover`), so the upload has to happen against a
+ * ref we already hold — which `addDoc` cannot give us.
+ */
+export function newEventRef(): DocumentReference {
+  return doc(collection(db, 'events'))
+}
+
+/** Extracted so the shape can be asserted without a Firestore round-trip. */
+export function buildEventDoc(venueId: string, venue: Venue, input: CreateEventInput, cover?: MediaAsset) {
+  return {
     title: input.title.trim(),
     description: input.description.trim(),
     category: input.category,
@@ -51,9 +62,22 @@ export async function createEvent(venueId: string, venue: Venue, input: CreateEv
     venueName: venue.name,
     neighborhood: venue.neighborhood,
     ...(venue.borough ? { borough: venue.borough } : {}),
+    // Spread rather than `cover: cover` — Firestore rejects an explicit undefined,
+    // and CommunityEvent.cover is optional precisely so old events have no key.
+    ...(cover ? { cover } : {}),
     registeredCount: 0,
     createdAt: serverTimestamp(),
-  })
+  }
+}
+
+export async function createEvent(
+  eventRef: DocumentReference,
+  venueId: string,
+  venue: Venue,
+  input: CreateEventInput,
+  cover?: MediaAsset
+): Promise<void> {
+  await setDoc(eventRef, buildEventDoc(venueId, venue, input, cover))
   await updateDoc(doc(db, 'venues', venueId), { eventsCount: increment(1) })
 }
 

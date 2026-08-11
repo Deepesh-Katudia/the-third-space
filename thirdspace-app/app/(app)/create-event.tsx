@@ -5,7 +5,10 @@ import { StatusBar } from 'expo-status-bar'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { useAuth } from '../../hooks/useAuth'
 import { useVenue } from '../../hooks/useVenue'
-import { createEvent } from '../../services/events'
+import { createEvent, newEventRef } from '../../services/events'
+import { pickMedia, uploadMedia, deleteMedia, MediaLimitError } from '../../services/media'
+import { limitMessage } from '../../utils/media'
+import { MediaSlotPicker } from '../../components/MediaSlotPicker'
 import { validateEventForm, EventFormErrors } from '../../utils/eventValidation'
 import { formatEventDate } from '../../utils/eventHelpers'
 import { EVENT_CATEGORIES } from '../../constants/categories'
@@ -13,7 +16,7 @@ import { FormInput } from '../../components/FormInput'
 import { AuthButton } from '../../components/AuthButton'
 import { Banner } from '../../components/Banner'
 import { LoadingView } from '../../components/LoadingView'
-import { AgeRequirement, EventCategory } from '../../types/models'
+import { AgeRequirement, EventCategory, MediaAsset } from '../../types/models'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
 import { BackButton } from '../../components/ui/BackButton'
@@ -41,6 +44,11 @@ export default function CreateEvent() {
   const [errors, setErrors] = useState<EventFormErrors>({})
   const [banner, setBanner] = useState('')
   const [saving, setSaving] = useState(false)
+  // Minted up front: the cover's storage path contains the event id, so the upload
+  // has to target a ref that exists before the event document is written.
+  const [eventRef] = useState(() => newEventRef())
+  const [cover, setCover] = useState<MediaAsset | null>(null)
+  const [coverProgress, setCoverProgress] = useState<number | null>(null)
 
   if (loading || venueLoading) return <LoadingView tone="cream" />
   if (role !== 'hoster' || !venue) return <Redirect href="/(app)" />
@@ -57,6 +65,32 @@ export default function CreateEvent() {
     })
   }
 
+  const handlePickCover = async () => {
+    const picked = await pickMedia({ allowVideo: true, aspect: [16, 9] })
+    if (!picked || !user) return
+    setCoverProgress(0)
+    try {
+      const asset = await uploadMedia(
+        { kind: 'eventCover', hosterUid: user.uid, eventId: eventRef.id },
+        picked,
+        setCoverProgress
+      )
+      setCover(asset)
+    } catch (e: unknown) {
+      setBanner(e instanceof MediaLimitError
+        ? limitMessage(e.result, picked.type)
+        : "Couldn't upload that cover. You can publish without one.")
+    } finally {
+      setCoverProgress(null)
+    }
+  }
+
+  const handleRemoveCover = () => {
+    const existing = cover
+    setCover(null)
+    if (existing) void deleteMedia(existing)
+  }
+
   const handleSubmit = async () => {
     const formErrors = validateEventForm({ title, description, category, startsAt, capacity })
     if (Object.keys(formErrors).length > 0) {
@@ -67,14 +101,14 @@ export default function CreateEvent() {
     setBanner('')
     setSaving(true)
     try {
-      await createEvent(user!.uid, venue, {
+      await createEvent(eventRef, user!.uid, venue, {
         title,
         description,
         category: category as EventCategory,
         startsAt,
         capacity: Number(capacity),
         ageRequirement,
-      })
+      }, cover ?? undefined)
       router.back()
     } catch {
       setBanner("Couldn't create the event. Check your connection and try again.")
@@ -91,6 +125,16 @@ export default function CreateEvent() {
         </View>
         <Display role="screenTitle" style={styles.title}>Create an event</Display>
         {banner ? <Banner message={banner} /> : null}
+
+        <Meta role="eyebrow" style={styles.label}>Cover</Meta>
+        <MediaSlotPicker
+          style={styles.cover}
+          media={cover}
+          progress={coverProgress}
+          label="Add a photo or clip"
+          onPick={handlePickCover}
+          onRemove={handleRemoveCover}
+        />
 
         <FormInput label="Title" value={title} onChangeText={setTitle} error={errors.title} placeholder="Ceramics Night" />
         <FormInput label="Description" value={description} onChangeText={setDescription} error={errors.description} placeholder="What to expect, what to bring" />
@@ -162,6 +206,7 @@ const styles = StyleSheet.create({
   back: { marginBottom: space.xl },
   title: { marginBottom: space.xl },
   label: { marginBottom: space.sm },
+  cover: { width: '100%', aspectRatio: 16 / 9, marginBottom: space.xl },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.lg },
   chip: {
     borderWidth: 1,
