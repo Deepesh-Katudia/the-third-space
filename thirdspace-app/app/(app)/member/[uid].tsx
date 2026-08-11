@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { View, TouchableOpacity, ScrollView, Image, StyleSheet, Linking } from 'react-native'
+import React, { useMemo, useState } from 'react'
+import { View, TouchableOpacity, ScrollView, StyleSheet, Linking } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { MemberProfileCard, Member } from '../../../components/MemberProfileCard'
@@ -13,6 +13,10 @@ import { useFollowStatus } from '../../../hooks/useFollowStatus'
 import { useSocials } from '../../../hooks/useSocials'
 import { SocialChips } from '../../../components/SocialChips'
 import { hasAnyHandle } from '../../../utils/socials'
+import { MediaThumb } from '../../../components/MediaThumb'
+import { MediaViewer } from '../../../components/MediaViewer'
+import { coerceLegacyVibe } from '../../../utils/media'
+import { MediaAsset } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { BackButton } from '../../../components/ui/BackButton'
@@ -26,6 +30,8 @@ export default function MemberProfile() {
   const { isFollowing, toggle } = useFollowStatus(uid)
   const { handles: socialHandles, visible: socialsVisible } = useSocials(uid)
   const [banner, setBanner] = useState('')
+  const [viewing, setViewing] = useState<MediaAsset | null>(null)
+  const vibes = useMemo(() => coerceLegacyVibe(profile?.vibePhotos), [profile?.vibePhotos])
 
   const handleToggleFollow = async () => {
     setBanner('')
@@ -110,12 +116,12 @@ export default function MemberProfile() {
           </>
         ) : null}
 
-        {profile.vibePhotos.length > 0 ? (
+        {vibes.length > 0 ? (
           <>
             <Meta role="eyebrow" style={styles.sectionLabel}>Vibe</Meta>
             <View style={styles.vibeStrip}>
-              {profile.vibePhotos.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={styles.vibePhoto} />
+              {vibes.map((media, i) => (
+                <MediaThumb key={i} media={media} style={styles.vibePhoto} onPress={() => setViewing(media)} />
               ))}
             </View>
           </>
@@ -125,6 +131,8 @@ export default function MemberProfile() {
           <Body role="bodySm">Block or report</Body>
         </TouchableOpacity>
       </ScrollView>
+
+      <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>
   )
 }

@@ -10,12 +10,13 @@ import { InterestChip } from '../../components/InterestChip'
 import { LoadingView } from '../../components/LoadingView'
 import { EmptyState } from '../../components/EmptyState'
 import { BOROUGHS } from '../../constants/categories'
-import { Borough, SocialHandles, SocialPlatform } from '../../types/models'
+import { Borough, MediaAsset, SocialHandles, SocialPlatform } from '../../types/models'
+import { MediaSlotPicker } from '../../components/MediaSlotPicker'
 import { SOCIAL_PLATFORMS, normalizeHandle, isValidHandle, shouldSeedSocials } from '../../utils/socials'
 import { useSocials } from '../../hooks/useSocials'
 import { updateProfile, setSocials } from '../../services/profiles'
-import { pickMedia, uploadMedia, MediaLimitError, type PickedMedia } from '../../services/media'
-import { limitMessage } from '../../utils/media'
+import { pickMedia, uploadMedia, deleteMedia, MediaLimitError, type PickedMedia } from '../../services/media'
+import { coerceLegacyVibe, limitMessage } from '../../utils/media'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
@@ -24,7 +25,8 @@ import { palette, radius, space, type as typeScale } from '../../constants/desig
 
 const BIO_LIMIT = 300
 const MIN_INTERESTS = 3
-const INTEREST_OPTIONS = ['Art', 'Coffee', 'Film', 'Music', 'Hiking', 'Reading', 'Fitness', 'Food', 'Photography', 'Nightlife', 'Wellness', 'Gaming', 'Fashion', 'Travel', 'Vinyl', 'Cooking']
+const VIBE_SLOTS = [0, 1, 2] as const
+const INTEREST_OPTIONS =['Art', 'Coffee', 'Film', 'Music', 'Hiking', 'Reading', 'Fitness', 'Food', 'Photography', 'Nightlife', 'Wellness', 'Gaming', 'Fashion', 'Travel', 'Vinyl', 'Cooking']
 
 export default function EditProfile() {
   const router = useRouter()
@@ -34,6 +36,8 @@ export default function EditProfile() {
 
   const [seeded, setSeeded] = useState(false)
   const [pickedAvatar, setPickedAvatar] = useState<PickedMedia | null>(null)
+  const [vibes, setVibes] = useState<(MediaAsset | null)[]>([null, null, null])
+  const [vibeProgress, setVibeProgress] = useState<(number | null)[]>([null, null, null])
   const [bio, setBio] = useState('')
   const [interests, setInterests] = useState<string[]>([])
   const [neighborhood, setNeighborhood] = useState('')
@@ -49,6 +53,9 @@ export default function EditProfile() {
   // clobber in-progress edits.
   useEffect(() => {
     if (seeded || !profile) return
+    // Coerce on the way in: the field was typed string[] before it was ever written.
+    const loadedVibes = coerceLegacyVibe(profile.vibePhotos)
+    setVibes([loadedVibes[0] ?? null, loadedVibes[1] ?? null, loadedVibes[2] ?? null])
     setBio(profile.bio)
     setInterests(profile.interests)
     setNeighborhood(profile.neighborhood)
@@ -115,6 +122,37 @@ export default function EditProfile() {
     if (picked) setPickedAvatar(picked)
   }
 
+  const setAt = <T,>(list: T[], index: number, value: T): T[] =>
+    list.map((entry, i) => (i === index ? value : entry))
+
+  const handlePickVibe = async (index: number) => {
+    const picked = await pickMedia({ allowVideo: true })
+    if (!picked || !user) return
+    setVibeProgress((p) => setAt(p, index, 0))
+    try {
+      const asset = await uploadMedia(
+        { kind: 'vibe', uid: user.uid, index },
+        picked,
+        (fraction) => setVibeProgress((p) => setAt(p, index, fraction))
+      )
+      setVibes((v) => setAt(v, index, asset))
+    } catch (e: unknown) {
+      setError(e instanceof MediaLimitError
+        ? limitMessage(e.result, picked.type)
+        : "Couldn't upload that. Check your connection and try again.")
+    } finally {
+      setVibeProgress((p) => setAt(p, index, null))
+    }
+  }
+
+  const handleRemoveVibe = (index: number) => {
+    const existing = vibes[index]
+    setVibes((v) => setAt(v, index, null))
+    // Fire-and-forget: deleteMedia never throws, and the slot is already empty in the
+    // UI. The write on save is what actually detaches it from the profile.
+    if (existing) void deleteMedia(existing)
+  }
+
   const handleSave = async () => {
     if (!user || !canSubmit || busy) return
     setBusy(true)
@@ -137,6 +175,7 @@ export default function EditProfile() {
         neighborhood: neighborhood.trim(),
         borough,
         photoURL,
+        vibePhotos: vibes.filter((v): v is MediaAsset => v !== null),
       })
       if (socialsSeeded && socialsChanged) {
         await setSocials(user.uid, cleanedSocials)
@@ -234,6 +273,22 @@ export default function EditProfile() {
             ))
           )}
 
+          <Meta role="eyebrow" style={styles.fieldLabel}>Vibe</Meta>
+          <Body role="bodySm" style={styles.vibeHint}>Up to three photos or clips. Clips can be 60 seconds.</Body>
+          <View style={styles.vibeGrid}>
+            {VIBE_SLOTS.map((index) => (
+              <MediaSlotPicker
+                key={index}
+                style={styles.vibeSlot}
+                media={vibes[index]}
+                progress={vibeProgress[index]}
+                label={index === 0 ? 'Add' : undefined}
+                onPick={() => handlePickVibe(index)}
+                onRemove={() => handleRemoveVibe(index)}
+              />
+            ))}
+          </View>
+
           <Meta role="eyebrow" style={styles.fieldLabel}>Pick at least {MIN_INTERESTS} interests</Meta>
           <View style={styles.chipWrap}>
             {INTEREST_OPTIONS.map((label) => (
@@ -285,6 +340,10 @@ const styles = StyleSheet.create({
   },
   counter: { alignSelf: 'flex-end', marginTop: space.xs + 2, marginBottom: space.lg },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.xl - 4 },
+  vibeHint: { marginBottom: space.sm },
+  vibeGrid: { flexDirection: 'row', gap: space.sm, marginBottom: space.xl },
+  // 4:5 slots, three across.
+  vibeSlot: { flex: 1, aspectRatio: 4 / 5 },
   error: { marginBottom: space.md },
   submitWrap: { marginTop: space.md },
 })

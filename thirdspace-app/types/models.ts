@@ -102,7 +102,13 @@ export type MessagePrivacy = 'everyone' | 'event-mates' | 'no-one'
 export interface Profile {
   displayName: string
   photoURL: string | null
-  vibePhotos: string[]
+  /**
+   * Was `string[]`, and was never written by any code path — every stored value is
+   * `[]`, so this retype needed no backfill. Readers still run coerceLegacyVibe()
+   * because assuming production data matches your assumptions is how you find out
+   * it does not.
+   */
+  vibePhotos: MediaAsset[]
   bio: string
   interests: string[]
   neighborhood: string
@@ -122,7 +128,7 @@ export interface Profile {
 export interface CreateProfileInput {
   displayName: string
   photoURL: string | null
-  vibePhotos: string[]
+  vibePhotos: MediaAsset[]
   bio: string
   interests: string[]
   neighborhood: string

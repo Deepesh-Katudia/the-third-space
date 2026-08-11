@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Switch, Image, StyleSheet, Linking } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
@@ -15,6 +15,10 @@ import { SocialChips } from '../../../components/SocialChips'
 import { avatarColor, initials } from '../../../utils/avatar'
 import { messagePrivacyLabel } from '../../../utils/profile'
 import { hasAnyHandle } from '../../../utils/socials'
+import { MediaThumb } from '../../../components/MediaThumb'
+import { MediaViewer } from '../../../components/MediaViewer'
+import { coerceLegacyVibe } from '../../../utils/media'
+import { MediaAsset } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { palette, radius, space, type as typeScale, NAV_CLEARANCE } from '../../../constants/design'
@@ -28,6 +32,9 @@ export default function Profile() {
   const { connectionUids, loading: connectionsLoading, hasError: connectionsHasError } = useConnections(user?.uid)
   // The owner always passes the rules gate, so `visible` needs no check here.
   const { handles: myHandles } = useSocials(user?.uid)
+
+  const [viewing, setViewing] = useState<MediaAsset | null>(null)
+  const vibes = useMemo(() => coerceLegacyVibe(profile?.vibePhotos), [profile?.vibePhotos])
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
   const neighborhood = profile?.neighborhood ?? ''
@@ -74,6 +81,17 @@ export default function Profile() {
             onPress={() => router.push('/(app)/connections')}
           />
         </View>
+
+        {vibes.length > 0 ? (
+          <>
+            <Meta role="eyebrow" style={styles.sectionLabel}>Vibe</Meta>
+            <View style={styles.vibeStrip}>
+              {vibes.map((media, i) => (
+                <MediaThumb key={i} media={media} style={styles.vibePhoto} onPress={() => setViewing(media)} />
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {hasAnyHandle(myHandles) ? (
           <>
@@ -127,6 +145,8 @@ export default function Profile() {
           <Meta role="eyebrow" tone="clay">Sign out</Meta>
         </TouchableOpacity>
       </ScrollView>
+
+      <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>
   )
 }
@@ -197,6 +217,8 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 32, backgroundColor: palette.rule },
 
   sectionLabel: { marginBottom: space.sm + 2 },
+  vibeStrip: { flexDirection: 'row', gap: space.sm, marginBottom: space.xxl - 4 },
+  vibePhoto: { flex: 1, aspectRatio: 4 / 5 },
   card: {
     backgroundColor: palette.orangeLight,
     borderRadius: radius.chip,
