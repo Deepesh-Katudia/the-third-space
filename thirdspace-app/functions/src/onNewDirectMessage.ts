@@ -2,11 +2,13 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import { Firestore, getFirestore } from 'firebase-admin/firestore'
 import { sendPush, truncateBody, PushMessage } from './sendPush'
 import { activeTokensFor, isThreadMuted, pruneDeadTokens } from './recipients'
+import { mediaLabel } from '../../shared/mediaLabel'
 
 interface DirectMessageDoc {
   authorUid: string
   authorName: string
   text: string
+  media?: { type?: string }
 }
 
 export async function handleNewDirectMessage(db: Firestore, cid: string, message: DirectMessageDoc): Promise<void> {
@@ -21,7 +23,8 @@ export async function handleNewDirectMessage(db: Firestore, cid: string, message
   const messages: PushMessage[] = targets.map((t) => ({
     to: t.token,
     title: message.authorName || 'New message',
-    body: truncateBody(message.text || ''),
+    // An attachment-only message has no text; without this the push body is empty.
+    body: truncateBody(message.text || mediaLabel(message.media)),
     data: { type: 'dm', convId: cid },
   }))
 

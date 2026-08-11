@@ -1,4 +1,5 @@
 import { MediaAsset, MediaType } from '../types/models'
+import { mediaLabel } from '../shared/mediaLabel'
 
 /**
  * Where an asset lives. One union rather than one function per surface: adding a
@@ -124,11 +125,12 @@ export function coerceLegacyVibe(value: unknown): MediaAsset[] {
 }
 
 /**
- * Fills `lastMessageText` and the push body for an attachment-only message. Uppercase
- * because every type role in this app is uppercase — a lowercase "Photo" would be the
- * only string in the codebase fighting the token.
+ * Fills `lastMessageText` and the push body for an attachment-only message.
+ *
+ * A thin wrapper over the shared implementation so the app keeps a MediaAsset-typed
+ * entry point while Cloud Functions use the structural one. See shared/mediaLabel.ts
+ * for why the shared file cannot import MediaAsset.
  */
 export function mediaPreviewLabel(media?: MediaAsset | null): string {
-  if (!media) return ''
-  return media.type === 'video' ? 'VIDEO' : 'PHOTO'
+  return mediaLabel(media)
 }
