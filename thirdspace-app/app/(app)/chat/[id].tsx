@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
+  View, Text, TextInput, TouchableOpacity, ScrollView, Image,
   KeyboardAvoidingView, Platform, StyleSheet,
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { Ionicons } from '@expo/vector-icons'
 import { ChatBubble } from '../../../components/ChatBubble'
+import { MediaViewer } from '../../../components/MediaViewer'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { Banner } from '../../../components/Banner'
 import { Toast } from '../../../components/Toast'
@@ -16,10 +18,12 @@ import { useProfile } from '../../../hooks/useProfile'
 import { useThreadMessages } from '../../../hooks/useThreadMessages'
 import {
   subscribeEventChatMeta, subscribeConversation, sendEventMessage, sendDirectMessage,
-  acceptRequest, markThreadRead, setThreadMuted, getThreadRead,
+  acceptRequest, markThreadRead, setThreadMuted, getThreadRead, newMessageRef,
   MessageAuthor, ParticipantInfo,
 } from '../../../services/chat'
-import { Conversation } from '../../../types/models'
+import { pickMedia, uploadMedia, deleteMedia, MediaLimitError, type PickedMedia } from '../../../services/media'
+import { limitMessage } from '../../../utils/media'
+import { Conversation, MediaAsset } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { BackButton } from '../../../components/ui/BackButton'
@@ -29,6 +33,9 @@ function clockTime(date: Date | null): string {
   if (!date) return 'now'
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
+
+/** An attachment mid-flight: uploading, then writing the message doc. */
+interface Pending { id: string; media: MediaAsset; progress: number }
 
 export default function ChatThreadScreen() {
   const params = useLocalSearchParams<{ id: string; kind?: string; name?: string }>()
@@ -48,6 +55,10 @@ export default function ChatThreadScreen() {
   const [draft, setDraft] = useState('')
   const [toast, setToast] = useState('')
   const [sendError, setSendError] = useState('')
+  /** Chosen but not yet sent. Nothing has touched the network at this point. */
+  const [staged, setStaged] = useState<PickedMedia | null>(null)
+  const [pending, setPending] = useState<Pending | null>(null)
+  const [viewing, setViewing] = useState<MediaAsset | null>(null)
   const scrollRef = useRef<ScrollView>(null)
   const everExisted = useRef(false)
 
@@ -91,26 +102,93 @@ export default function ChatThreadScreen() {
   const isPendingIncoming = kind === 'dm' && conversation?.status === 'pending' && conversation.requestedBy !== myUid
   const declined = kind === 'dm' && !loading && conversation === null && everExisted.current
 
+  // One definition, used by both the text-only and attachment paths — two inline copies
+  // would eventually disagree about who the participants are.
+  const participants: ParticipantInfo[] = useMemo(() => ([
+    { uid: myUid, name: myName, photoURL: profile?.photoURL ?? null },
+    { uid: otherUid, name: otherProfile?.displayName ?? params.name ?? 'Member', photoURL: otherProfile?.photoURL ?? null },
+  ]), [myUid, myName, profile?.photoURL, otherUid, otherProfile?.displayName, otherProfile?.photoURL, params.name])
+
+  // A staged attachment is sendable on its own — an attachment-only message is the
+  // whole point. `pending` blocks a second send while one is in flight.
+  const canSend = (draft.trim().length > 0 || staged !== null) && pending === null
+
+  // Picking STAGES the attachment; nothing uploads or posts until send is pressed.
+  const handleAttach = async () => {
+    if (pending) return
+    const picked = await pickMedia({ allowVideo: true })
+    if (picked) setStaged(picked)
+  }
+
+  const sendText = async (text: string) => {
+    if (kind === 'group') {
+      await sendEventMessage(id, author, text)
+    } else {
+      const { created } = await sendDirectMessage(id, participants, author, text)
+      if (created) setToast(`Request sent to ${headerName}`)
+    }
+  }
+
   const send = async () => {
-    const text = draft.trim()
-    if (!text || !myUid) return
-    setDraft('')
+    if (!myUid || pending) return
+    const text = draft
+    if (!text.trim() && !staged) return
     setSendError('')
+
+    if (!staged) {
+      setDraft('')
+      try {
+        await sendText(text.trim())
+      } catch {
+        // Put the text back so a failed send never loses what they typed.
+        setDraft((current) => (current ? current : text))
+        setSendError("Couldn't send that message. Check your connection and try again.")
+      }
+      return
+    }
+
+    const picked = staged
+    // Mint the message id first — the storage path contains it.
+    const msgRef = newMessageRef(kind, id)
+    // Move it out of the composer and into the thread as an optimistic bubble, so a
+    // slow clip shows progress where the message will actually appear.
+    const local: MediaAsset = {
+      type: picked.type, url: picked.uri, thumbURL: picked.uri,
+      width: picked.width, height: picked.height,
+      ...(picked.durationMs != null ? { durationMs: picked.durationMs } : {}),
+    }
+    setStaged(null)
+    setPending({ id: msgRef.id, media: local, progress: 0 })
+
+    // Declared OUTSIDE the try: if the upload succeeds and the Firestore write then
+    // fails, this holds the REAL uploaded asset. Cleaning up `local` instead would
+    // pass a file:// URI to deleteMedia, which silently does nothing and leaves the
+    // actual bytes orphaned in the bucket.
+    let uploaded: MediaAsset | null = null
+
     try {
+      uploaded = await uploadMedia(
+        { kind: 'chat', authorUid: myUid, threadId: id, messageId: msgRef.id },
+        picked,
+        (fraction) => setPending((p) => (p ? { ...p, progress: fraction } : p))
+      )
       if (kind === 'group') {
-        await sendEventMessage(id, author, text)
+        await sendEventMessage(id, author, text, uploaded, msgRef)
       } else {
-        const participants: ParticipantInfo[] = [
-          { uid: myUid, name: myName, photoURL: profile?.photoURL ?? null },
-          { uid: otherUid, name: otherProfile?.displayName ?? params.name ?? 'Member', photoURL: otherProfile?.photoURL ?? null },
-        ]
-        const { created } = await sendDirectMessage(id, participants, author, text)
+        const { created } = await sendDirectMessage(id, participants, author, text, uploaded, msgRef)
         if (created) setToast(`Request sent to ${headerName}`)
       }
-    } catch {
-      // Put the text back so a failed send never loses what they typed.
-      setDraft((current) => (current ? current : text))
-      setSendError("Couldn't send that message. Check your connection and try again.")
+      setDraft('')
+    } catch (e: unknown) {
+      setSendError(e instanceof MediaLimitError
+        ? limitMessage(e.result, picked.type)
+        : "Couldn't send that. Check your connection and try again.")
+      if (uploaded) void deleteMedia(uploaded)
+      // Put it back in the composer so the send can be retried without re-picking.
+      setStaged(picked)
+    } finally {
+      // On success the real message arrives through the snapshot; drop the optimistic copy.
+      setPending(null)
     }
   }
 
@@ -172,13 +250,28 @@ export default function ChatThreadScreen() {
             return (
               <ChatBubble
                 key={m.id}
-                message={{ id: m.id, author: m.authorName, text: m.text, time: clockTime(m.createdAt ? m.createdAt.toDate() : null) }}
+                message={{
+                  id: m.id,
+                  author: m.authorName,
+                  text: m.text,
+                  time: clockTime(m.createdAt ? m.createdAt.toDate() : null),
+                  media: m.media,
+                }}
                 isSelf={isSelf && !isAnnouncement}
                 isAnnouncement={isAnnouncement}
                 showAuthor={!isSelf && shouldShowAuthor(messages, i)}
+                onPressMedia={() => setViewing(m.media ?? null)}
               />
             )
           })}
+          {pending ? (
+            <ChatBubble
+              key={pending.id}
+              message={{ id: pending.id, author: '', text: draft, time: '', media: pending.media }}
+              isSelf
+              uploadProgress={pending.progress}
+            />
+          ) : null}
         </ScrollView>
 
         {isPendingIncoming ? (
@@ -189,22 +282,52 @@ export default function ChatThreadScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              placeholder={kind === 'group' ? 'Message the group' : 'Message'}
-              placeholderTextColor={palette.inkSoft}
-              value={draft}
-              onChangeText={setDraft}
-              multiline
-            />
-            <TouchableOpacity style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]} onPress={send} disabled={!draft.trim()}>
-              <Body role="button" style={styles.onInk}>↑</Body>
-            </TouchableOpacity>
-          </View>
+          <>
+            {staged ? (
+              <View style={styles.stagedRow}>
+                <Image source={{ uri: staged.uri }} style={styles.stagedThumb} />
+                <Body role="bodySm" style={styles.flex}>
+                  {staged.type === 'video' ? 'Clip ready to send' : 'Photo ready to send'}
+                </Body>
+                <TouchableOpacity
+                  testID="chat-staged-remove"
+                  onPress={() => setStaged(null)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove attachment"
+                >
+                  <Ionicons name="close" size={18} color={palette.ink} />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+            <View style={styles.inputRow}>
+              <TouchableOpacity
+                testID="chat-attach"
+                style={styles.attachBtn}
+                onPress={handleAttach}
+                disabled={pending !== null || staged !== null}
+                accessibilityRole="button"
+                accessibilityLabel="Add a photo or clip"
+              >
+                <Ionicons name="image-outline" size={20} color={palette.ink} />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.input}
+                placeholder={kind === 'group' ? 'Message the group' : 'Message'}
+                placeholderTextColor={palette.inkSoft}
+                value={draft}
+                onChangeText={setDraft}
+                multiline
+              />
+              <TouchableOpacity style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]} onPress={send} disabled={!canSend}>
+                <Body role="button" style={styles.onInk}>↑</Body>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </KeyboardAvoidingView>
       {toast ? <Toast message={toast} onDismiss={() => setToast('')} /> : null}
+      <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>
   )
 }
@@ -251,6 +374,17 @@ const styles = StyleSheet.create({
     paddingBottom: space.sm + 2,
     color: palette.ink,
   },
+  attachBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: palette.orangeLight, borderWidth: 1, borderColor: palette.rule,
+  },
+  stagedRow: {
+    flexDirection: 'row', alignItems: 'center', gap: space.sm,
+    paddingHorizontal: space.lg, paddingVertical: space.sm,
+    borderTopWidth: 1, borderTopColor: palette.rule, backgroundColor: palette.cream,
+  },
+  stagedThumb: { width: 44, height: 44, borderRadius: radius.ticket - 6 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: palette.ink, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { backgroundColor: palette.inkSoft },
   onInk: { color: palette.cream },
