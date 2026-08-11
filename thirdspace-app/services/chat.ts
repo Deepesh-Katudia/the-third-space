@@ -1,10 +1,11 @@
 import {
   collection, deleteDoc, doc, getDoc, getDocs, increment, limit, onSnapshot, orderBy,
   query, serverTimestamp, setDoc, updateDoc, where, writeBatch,
-  DocumentData, QueryDocumentSnapshot,
+  DocumentData, DocumentReference, QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { ChatRead, Conversation, EventChatMeta, Message } from '../types/models'
+import { ChatRead, Conversation, EventChatMeta, MediaAsset, Message } from '../types/models'
+import { mediaPreviewLabel } from '../utils/media'
 
 const MESSAGE_PAGE = 50
 const DECLINE_BATCH_SIZE = 400
@@ -23,7 +24,19 @@ function toMessage(d: QueryDocumentSnapshot<DocumentData>): Message {
     text: (data.text as string) ?? '',
     createdAt: (data.createdAt as Message['createdAt']) ?? null,
     kind: (data.kind as Message['kind']) ?? 'group',
+    ...(data.media ? { media: data.media as MediaAsset } : {}),
   }
+}
+
+/**
+ * Mint the message id BEFORE the write: the attachment's storage path contains it
+ * (`chatMedia/{authorUid}/{threadId}/{messageId}`), so the upload has to run against
+ * a ref the caller already holds.
+ */
+export function newMessageRef(kind: 'group' | 'dm', threadId: string): DocumentReference {
+  return kind === 'group'
+    ? doc(collection(db, 'eventChats', threadId, 'messages'))
+    : doc(collection(db, 'conversations', threadId, 'messages'))
 }
 
 // ── Group chats ───────────────────────────────────────────────────────────
@@ -48,18 +61,26 @@ export function subscribeEventChatMeta(
   )
 }
 
-export async function sendEventMessage(eventId: string, author: MessageAuthor, text: string): Promise<void> {
+export async function sendEventMessage(
+  eventId: string,
+  author: MessageAuthor,
+  text: string,
+  media?: MediaAsset,
+  msgRef: DocumentReference = newMessageRef('group', eventId)
+): Promise<void> {
   const trimmed = text.trim()
-  if (!trimmed) return
+  if (!trimmed && !media) return
+  // An attachment-only message would otherwise leave the chat list row blank.
+  const preview = trimmed || mediaPreviewLabel(media)
   const batch = writeBatch(db)
-  const msgRef = doc(collection(db, 'eventChats', eventId, 'messages'))
   batch.set(msgRef, {
     authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
     text: trimmed, createdAt: serverTimestamp(),
+    ...(media ? { media } : {}),
   })
   batch.set(
     doc(db, 'eventChats', eventId),
-    { lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1) },
+    { lastMessageText: preview, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1) },
     { merge: true }
   )
   await batch.commit()
@@ -110,10 +131,19 @@ export async function sendDirectMessage(
   convId: string,
   participants: ParticipantInfo[],
   author: MessageAuthor,
-  text: string
+  text: string,
+  media?: MediaAsset,
+  msgRef: DocumentReference = newMessageRef('dm', convId)
 ): Promise<SendDirectMessageResult> {
   const trimmed = text.trim()
-  if (!trimmed) return { created: false }
+  if (!trimmed && !media) return { created: false }
+  const preview = trimmed || mediaPreviewLabel(media)
+  const body = {
+    authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
+    text: trimmed, createdAt: serverTimestamp(),
+    ...(media ? { media } : {}),
+  }
+
   const convRef = doc(db, 'conversations', convId)
   const snap = await getDoc(convRef)
   if (!snap.exists()) {
@@ -126,27 +156,20 @@ export async function sendDirectMessage(
       participants: participants.map((p) => p.uid),
       names, photos,
       status: 'pending', requestedBy: author.uid,
-      lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: 1,
+      lastMessageText: preview, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: 1,
     })
-    await setDoc(doc(collection(db, 'conversations', convId, 'messages')), {
-      authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
-      text: trimmed, createdAt: serverTimestamp(),
-    })
+    await setDoc(msgRef, body)
     return { created: true }
-  } else {
-    // Subsequent sends: conversation already exists, safe to batch.
-    const batch = writeBatch(db)
-    const msgRef = doc(collection(db, 'conversations', convId, 'messages'))
-    batch.set(msgRef, {
-      authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
-      text: trimmed, createdAt: serverTimestamp(),
-    })
-    batch.update(convRef, {
-      lastMessageText: trimmed, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1),
-    })
-    await batch.commit()
-    return { created: false }
   }
+
+  // Subsequent sends: conversation already exists, safe to batch.
+  const batch = writeBatch(db)
+  batch.set(msgRef, body)
+  batch.update(convRef, {
+    lastMessageText: preview, lastMessageAt: serverTimestamp(), lastMessageAuthor: author.name, messageCount: increment(1),
+  })
+  await batch.commit()
+  return { created: false }
 }
 
 export async function acceptRequest(convId: string): Promise<void> {

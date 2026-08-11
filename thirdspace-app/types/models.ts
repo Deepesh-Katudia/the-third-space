@@ -192,6 +192,8 @@ export interface Message {
   text: string
   createdAt: Timestamp | null
   kind?: 'group' | 'announcement'   // absent = group; 'announcement' renders the pinned/highlighted variant
+  /** One attachment per message — the ordinary chat convention. */
+  media?: MediaAsset
 }
 
 export interface EventChatMeta {

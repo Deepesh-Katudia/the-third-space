@@ -53,4 +53,37 @@ describe('sendDirectMessage', () => {
     expect(getDoc).not.toHaveBeenCalled()
     expect(setDoc).not.toHaveBeenCalled()
   })
+
+  it('sends an attachment with no caption and previews it as VIDEO in the list', async () => {
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => false })
+    ;(setDoc as jest.Mock).mockResolvedValue(undefined)
+    const media = { type: 'video' as const, url: 'u', thumbURL: 't', width: 1, height: 1, durationMs: 3000 }
+
+    await sendDirectMessage('me_you', participants, author, '', media)
+
+    const convWrite = (setDoc as jest.Mock).mock.calls.find(
+      ([ref]: [{ path: string }]) => ref.path === 'conversations/me_you'
+    )
+    expect(convWrite[1].lastMessageText).toBe('VIDEO')
+  })
+
+  it('prefers the caption over the media label when both are present', async () => {
+    ;(getDoc as jest.Mock).mockResolvedValue({ exists: () => false })
+    ;(setDoc as jest.Mock).mockResolvedValue(undefined)
+    const media = { type: 'image' as const, url: 'u', thumbURL: 'u', width: 1, height: 1 }
+
+    await sendDirectMessage('me_you', participants, author, 'look at this', media)
+
+    const convWrite = (setDoc as jest.Mock).mock.calls.find(
+      ([ref]: [{ path: string }]) => ref.path === 'conversations/me_you'
+    )
+    expect(convWrite[1].lastMessageText).toBe('look at this')
+  })
+
+  it('still refuses a send with neither text nor media', async () => {
+    const result = await sendDirectMessage('me_you', participants, author, '   ')
+
+    expect(result).toEqual({ created: false })
+    expect(setDoc).not.toHaveBeenCalled()
+  })
 })
