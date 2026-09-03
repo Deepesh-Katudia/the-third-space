@@ -1,20 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'expo-router'
 import { CloudPrompt } from './CloudPrompt'
 import { useAuth } from '../hooks/useAuth'
-import { useProfile } from '../hooks/useProfile'
-import { useChatList } from '../hooks/useChatList'
-import { useAttendanceStats } from '../hooks/useAttendanceStats'
-import { useConnections } from '../hooks/useConnections'
-import { getMyRegisteredEvents } from '../services/events'
-import { pickPrompt } from '../utils/cloudPrompts'
-import { getSeenPrompts, markCoachingSeen, markNudgeFired } from '../services/cloudPromptsSeen'
+import { isFirstRun, pickPrompt, SESSION_STARTED_AT } from '../utils/cloudPrompts'
+import { beginFirstRun, closeFirstRun, getSeenPrompts, markCoachingSeen } from '../services/cloudPromptsSeen'
 import { tabAnchor } from '../constants/cloudPrompts'
-import type { CloudPrompt as Prompt, PromptRole, PromptState } from '../constants/cloudPrompts'
-import type { CommunityEvent } from '../types/models'
+import type { CloudPrompt as Prompt, PromptRole } from '../constants/cloudPrompts'
 
 /**
- * Raises a cloud wherever the user happens to be.
+ * Raises a cloud wherever the user happens to be, during their FIRST session only.
  *
  * Mounted once per tab navigator and BESIDE it, not inside — the same position
  * RewardWatcher occupies, and for the same reason: `CloudPrompt` is a Modal and has to
@@ -26,6 +20,12 @@ import type { CommunityEvent } from '../types/models'
  *
  * No route file is edited to make this work. Route -> prompt is the whole mapping, and
  * it lives in constants/cloudPrompts.ts where it can be read top to bottom.
+ *
+ * This used to subscribe to the profile, the chat list, attendance and connections, and
+ * to fetch registrations, because the behavioural nudges judged themselves against all of
+ * it — and it needed a `ready` gate so a nudge was never decided on the empty first
+ * snapshot. The nudges are gone, so all of that is too: a first-run hint depends on the
+ * route and on local storage, both of which answer immediately.
  */
 export function CloudPromptWatcher({ role }: { role: PromptRole }) {
   const pathname = usePathname()
@@ -33,115 +33,49 @@ export function CloudPromptWatcher({ role }: { role: PromptRole }) {
   const { user } = useAuth()
   const uid = user?.uid
 
-  // Only attenders have nudges — every hoster entry is coaching, with no condition, so
-  // none of the state below is ever read for one. Handing these hooks `undefined` for a
-  // hoster keeps four live subscriptions and a fetch from opening to feed a decision
-  // nobody makes. Same reasoning that keeps RewardWatcher off the hoster layout.
-  const stateUid = role === 'attender' ? uid : undefined
-
-  const { profile, loading: profileLoading } = useProfile(stateUid)
-  const { threads, loading: threadsLoading } = useChatList(stateUid)
-  const { attendedEvents, loading: attendanceLoading } = useAttendanceStats(stateUid)
-  const { connectionUids, loading: connectionsLoading } = useConnections(stateUid)
-
-  const [registrations, setRegistrations] = useState<CommunityEvent[]>([])
-  const [registrationsLoaded, setRegistrationsLoaded] = useState(false)
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   /** The `uid:pathname` visit a cloud was last raised for. See the raise effect. */
   const raisedFor = useRef<string | null>(null)
 
-  // One-shot rather than a subscription: `getMyRegisteredEvents` is what my-events
-  // already uses, and a nudge does not need live updates to decide whether to appear.
-  useEffect(() => {
-    if (!stateUid) {
-      setRegistrations([])
-      setRegistrationsLoaded(true)
-      return
-    }
-    let cancelled = false
-    setRegistrationsLoaded(false)
-    getMyRegisteredEvents(stateUid)
-      .then((events) => {
-        if (!cancelled) {
-          setRegistrations(events)
-          setRegistrationsLoaded(true)
-        }
-      })
-      // A failed load simply means the events-based nudges stay quiet. It must never
-      // take the screen down — and it must still count as settled, or a Firestore
-      // outage would hold every nudge back forever.
-      .catch(() => {
-        if (!cancelled) {
-          setRegistrations([])
-          setRegistrationsLoaded(true)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [stateUid])
-
-  const state: PromptState = useMemo(
-    () => ({
-      photoURL: profile?.photoURL ?? null,
-      attendedCount: attendedEvents.length,
-      upcomingRegistrations: registrations,
-      // A group thread with unread messages is one the user has not caught up on.
-      unopenedEventChatIds: threads.filter((t) => t.kind === 'group' && t.unread > 0).map((t) => t.id),
-      connectionsCount: connectionUids.length,
-    }),
-    [profile?.photoURL, attendedEvents.length, registrations, threads, connectionUids.length],
-  )
-
-  /**
-   * Whether `state` describes the account or merely describes nothing having loaded yet.
-   *
-   * Every one of these sources starts empty and settles later, while AsyncStorage answers
-   * in a tick — so judging a nudge at mount asks the catalogue about a member with no
-   * photo, no events and no connections, which is exactly the shape `no-photo`,
-   * `no-rsvp-yet` and `no-connections` all test for. A veteran would be told they had
-   * never been to anything, and the firing would burn the 3-day cooldown that was
-   * supposed to protect the REAL nudge.
-   *
-   * Coaching does not read state at all, but it is gated alongside: it is a first-visit
-   * hint, and a few hundred milliseconds later is still the first visit.
-   */
-  const ready =
-    !profileLoading && !threadsLoading && !attendanceLoading && !connectionsLoading && registrationsLoaded
-
   // Keyed on the ROUTE, so a re-render at the same pathname cannot re-raise a cloud.
   useEffect(() => {
-    if (!uid || !ready) return
+    if (!uid) return
     let cancelled = false
 
-    // At most one raise per visit to a route. `ready` is part of the key below, and a
-    // token refresh can retrigger the profile subscription's loading flag, so the effect
-    // can legitimately re-run at an unchanged pathname — without this, that would put
-    // back a cloud the user had just dismissed.
+    // At most one raise per visit to a route, so a re-render at an unchanged pathname
+    // cannot put back a cloud the user has just dismissed.
     const visit = `${uid}:${pathname}`
     if (raisedFor.current === visit) return
 
-    getSeenPrompts(uid).then((seen) => {
+    void getSeenPrompts(uid).then((seen) => {
       if (cancelled) return
-      const next = pickPrompt({ route: pathname, role, state, seen, now: new Date() })
+
+      if (!isFirstRun({ seen, sessionStartedAt: SESSION_STARTED_AT })) {
+        // Close it once, then never ask the clock again: every subsequent navigation is
+        // answered by the flag. Guarding on the flag is what keeps this from being an
+        // AsyncStorage write per route change for the whole life of the install.
+        if (!seen.firstRunDone) void closeFirstRun(uid)
+        return
+      }
+
+      const next = pickPrompt({ route: pathname, role, seen, sessionStartedAt: SESSION_STARTED_AT })
       if (!next) return
+
       raisedFor.current = visit
       setPrompt(next)
       // Marked on QUEUE, not on dismiss: a force-quit mid-animation should not mean the
       // same cloud every launch.
-      if (next.kind === 'coaching') void markCoachingSeen(uid, next.id)
-      else void markNudgeFired(uid, next.id, new Date())
+      void markCoachingSeen(uid, next.id)
+      // Stamped from the first hint actually raised rather than from mount, so an account
+      // whose first launch shows nothing (no catalogue entry for the route it landed on)
+      // still gets its tour on the next one.
+      if (!seen.firstRunStartedAt) void beginFirstRun(uid, new Date())
     })
 
     return () => {
       cancelled = true
     }
-    // `state` is deliberately excluded: it changes as subscriptions settle, and
-    // including it would re-run this mid-visit and raise a second cloud on one screen.
-    // `ready` stands in for it — one flip, from "nothing has loaded" to "this is the
-    // account", which is the only change of state a prompt decision should react to.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, pathname, role, ready])
+  }, [uid, pathname, role])
 
   // Clear on account change, so a sign-out mid-cloud does not hand the next user
   // someone else's prompt — nor the next user's first visit the last one's visit record.

@@ -1,39 +1,25 @@
 import type { Href } from 'expo-router'
-import type { CommunityEvent } from '../types/models'
 
 /**
  * Everything the cloud can say, in one table. Source comp: docs/cloud-thought-prompt.html.
  * Spec: docs/superpowers/specs/2026-08-06-cloud-thought-prompt-design.md
  *
- * Two kinds share one shape. COACHING fires the first time an account reaches a surface
- * and then never again — self-limiting by construction. NUDGES fire on a condition over
- * live data and are NOT self-limiting, which is the entire reason `utils/cloudPrompts.ts`
- * puts a cooldown in front of them.
+ * Every entry is a FIRST-RUN hint: it explains a surface the first time the account
+ * reaches it, and only while the account's first session is still under way. There used
+ * to be a second kind — behavioural nudges over live data ('no-photo', 'no-rsvp-yet',
+ * 'event-today', ...) with a 3-day cooldown in front of them — and they were deleted
+ * rather than switched off, because a prompt that can fire on a returning user is exactly
+ * what "popups only the first time" rules out. `utils/cloudPrompts.ts` holds the gate.
  *
  * Content is hardcoded on purpose. If prompts ever need to change without a release,
  * this table is the seam to move to Firestore — `pickPrompt` already takes the catalogue
  * as data and would not change.
  */
 
-export type PromptKind = 'coaching' | 'nudge'
 export type PromptRole = 'attender' | 'hoster'
-
-/**
- * The snapshot a nudge's condition runs against. Deliberately a closed set of five
- * fields, all assembled from hooks and services that already exist — a nudge must not
- * be able to quietly demand a new Firestore subscription.
- */
-export interface PromptState {
-  photoURL: string | null
-  attendedCount: number
-  upcomingRegistrations: readonly CommunityEvent[]
-  unopenedEventChatIds: readonly string[]
-  connectionsCount: number
-}
 
 export interface CloudPrompt {
   id: string
-  kind: PromptKind
   /**
    * `(attender)/index` and `(hoster)/index` BOTH resolve to the pathname '/'. Keying on
    * route alone would show attenders the hoster's Overview hint. Each watcher is mounted
@@ -45,15 +31,14 @@ export interface CloudPrompt {
   title: string
   body: string
   cta: string
-  /** When present the CTA navigates here; otherwise it just closes the cloud. */
-  href?: Href
-  /** Nudges only. Lower fires first. */
-  priority?: number
   /**
-   * Nudges only. Takes the clock as an argument rather than calling `new Date()` —
-   * a condition that reads the wall clock itself is untestable through `pickPrompt`.
+   * When present the CTA navigates here; otherwise it just closes the cloud. No shipped
+   * entry uses it today — the nudges that did are gone — but it is what `tabAnchor` reads
+   * to point the tail at the surface a prompt is ABOUT rather than the one it is on, so
+   * the field stays rather than being rediscovered the next time a hint sends somebody
+   * somewhere.
    */
-  condition?: (state: PromptState, now: Date) => boolean
+  href?: Href
 }
 
 /**
@@ -102,10 +87,9 @@ function stripGroups(href: string): string {
  * Which tab the cloud should point at.
  *
  * The cloud is a thought bubble, and a thought bubble belongs to something. It points at
- * where the prompt is SENDING you when the CTA targets a tab — "they are already talking"
- * pointing at Chats says more than the same words floating mid-screen — and otherwise at
- * the tab it is speaking on, which is the coaching case: every hint is about the surface
- * the user just opened.
+ * where the prompt is SENDING you when the CTA targets a tab, and otherwise at the tab it
+ * is speaking on — which is every shipped hint, since each one is about the surface the
+ * user just opened.
  *
  * Null when neither resolves to a tab (an href into a pushed route like `edit-profile`
  * whose own screen is not a tab); the component centres itself over the bar instead.
@@ -122,22 +106,10 @@ export function tabAnchor(prompt: CloudPrompt, role: PromptRole): TabAnchor | nu
   return null
 }
 
-/** Same calendar day AND still ahead — an event that already ended is not "tonight". */
-export function startsToday(event: CommunityEvent, now: Date): boolean {
-  const start = event.startsAt.toDate()
-  if (start.getTime() < now.getTime()) return false
-  return (
-    start.getFullYear() === now.getFullYear() &&
-    start.getMonth() === now.getMonth() &&
-    start.getDate() === now.getDate()
-  )
-}
-
 export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
-  // ── Coaching: attender ──────────────────────────────────────────────────
+  // ── Attender ────────────────────────────────────────────────────────────
   {
     id: 'coach-discover',
-    kind: 'coaching',
     role: 'attender',
     routes: ['/'],
     eyebrow: 'just a thought',
@@ -147,17 +119,15 @@ export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
   },
   {
     id: 'coach-my-events',
-    kind: 'coaching',
     role: 'attender',
     routes: ['/my-events'],
     eyebrow: 'just a thought',
     title: 'Everything you said yes to.',
-    body: 'Upcoming, hosting and past all live here — each with its own group chat.',
+    body: 'Upcoming and past both live here — each with its own group chat.',
     cta: 'Got it',
   },
   {
     id: 'coach-chats',
-    kind: 'coaching',
     role: 'attender',
     routes: ['/chats'],
     eyebrow: 'just a thought',
@@ -167,7 +137,6 @@ export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
   },
   {
     id: 'coach-profile',
-    kind: 'coaching',
     role: 'attender',
     routes: ['/profile'],
     eyebrow: 'just a thought',
@@ -176,10 +145,9 @@ export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
     cta: 'Got it',
   },
 
-  // ── Coaching: hoster ────────────────────────────────────────────────────
+  // ── Hoster ──────────────────────────────────────────────────────────────
   {
     id: 'coach-overview',
-    kind: 'coaching',
     role: 'hoster',
     routes: ['/'],
     eyebrow: 'just a thought',
@@ -189,7 +157,6 @@ export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
   },
   {
     id: 'coach-events',
-    kind: 'coaching',
     role: 'hoster',
     routes: ['/events'],
     eyebrow: 'just a thought',
@@ -199,80 +166,11 @@ export const CLOUD_PROMPTS: readonly CloudPrompt[] = [
   },
   {
     id: 'coach-venue',
-    kind: 'coaching',
     role: 'hoster',
     routes: ['/venue'],
     eyebrow: 'just a thought',
     title: 'People come for the room.',
     body: 'Name it and place it once — every event you create inherits all of it.',
     cta: 'Got it',
-  },
-
-  // ── Nudges: attender only ───────────────────────────────────────────────
-  // Priority is explicit and distinct so ordering never depends on this array's order.
-  {
-    id: 'event-today',
-    kind: 'nudge',
-    role: 'attender',
-    routes: ['/'],
-    priority: 1, // outranks everything: it expires at midnight
-    eyebrow: 'just a thought',
-    title: 'Tonight is the night.',
-    body: 'You said yes to something today. It is still on.',
-    cta: "I'm going",
-    href: '/(app)/(attender)/my-events',
-    condition: (s, now) => s.upcomingRegistrations.some((e) => startsToday(e, now)),
-  },
-  {
-    id: 'rsvp-chat-unopened',
-    kind: 'nudge',
-    role: 'attender',
-    routes: ['/my-events'],
-    priority: 2,
-    eyebrow: 'just a thought',
-    title: 'They are already talking.',
-    body: 'One of your events has a chat you have not opened yet.',
-    cta: 'Open it',
-    href: '/(app)/(attender)/chats',
-    condition: (s) => s.unopenedEventChatIds.length > 0,
-  },
-  {
-    id: 'no-rsvp-yet',
-    kind: 'nudge',
-    role: 'attender',
-    routes: ['/'],
-    priority: 3,
-    // The comp's own copy. This is the prompt the whole design was drawn for.
-    eyebrow: 'just a thought',
-    title: "Don't just scroll. Show up.",
-    body: "There's a spot open tonight. You know the one.",
-    cta: "I'm in",
-    // No href: they are already looking at the answer.
-    condition: (s) => s.attendedCount === 0 && s.upcomingRegistrations.length === 0,
-  },
-  {
-    id: 'no-connections',
-    kind: 'nudge',
-    role: 'attender',
-    routes: ['/chats'],
-    priority: 4,
-    eyebrow: 'just a thought',
-    title: 'Nobody is a stranger twice.',
-    body: 'Follow someone who follows you back and you can message them directly.',
-    cta: 'Got it',
-    condition: (s) => s.connectionsCount === 0,
-  },
-  {
-    id: 'no-photo',
-    kind: 'nudge',
-    role: 'attender',
-    routes: ['/profile'],
-    priority: 5,
-    eyebrow: 'just a thought',
-    title: 'Put a face to the name.',
-    body: 'A photo makes it far likelier someone says hi when you walk in.',
-    cta: 'Add one',
-    href: '/(app)/edit-profile',
-    condition: (s) => s.photoURL === null,
   },
 ]

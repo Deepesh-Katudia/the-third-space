@@ -35,7 +35,6 @@ function stubReduceMotion(enabled: boolean) {
 
 const prompt: Prompt = {
   id: 'coach-discover',
-  kind: 'coaching',
   role: 'attender',
   routes: ['/'],
   eyebrow: 'just a thought',

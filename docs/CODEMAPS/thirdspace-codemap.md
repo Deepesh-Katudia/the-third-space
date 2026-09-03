@@ -524,14 +524,31 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   `.env.example` lists the keys.
 - **Google OAuth placeholder** — unset client id would be `undefined` and crash the auth screen, so
   `useGoogleAuth` substitutes `'google-auth-not-configured'`; it is never sent to Google.
-- **The cloud prompt is ONE presenter with TWO sources** — `constants/cloudPrompts.ts` holds
-  both coaching hints (first visit to a surface, then never again) and behavioural nudges
-  (a condition over live data, with a 3-day per-id cooldown). `utils/cloudPrompts.ts`
-  `pickPrompt()` always prefers coaching: somebody who has never seen a screen needs to be
-  told what it IS before what to do on it. `__tests__/constants/cloudPrompts.test.ts`
-  asserts the kind flag and the presence of `condition`/`priority` agree in BOTH
-  directions, so a nudge with no condition (fires forever) and a coaching entry with one
-  (skips the cooldown) both fail.
+- **The cloud is a FIRST-RUN feature, and "first run" means the first SESSION** — prompts
+  appear during the first app session an account ever has on a device, and after that never
+  again. `utils/cloudPrompts.ts` `isFirstRun()` is the whole gate and `pickPrompt()` returns
+  null before it even looks at the catalogue. A session is a process lifetime:
+  `SESSION_STARTED_AT` is captured at module import, and a stored `firstRunStartedAt` at or
+  after that instant means the marker was written by the run happening now. Backgrounding
+  and resuming keeps the session; a relaunch or an OS kill ends it.
+- **The behavioural nudges are GONE, deleted rather than switched off** — `no-photo`,
+  `no-rsvp-yet`, `event-today`, `rsvp-chat-unopened` and `no-connections` fired on a
+  condition over live data with a 3-day cooldown, and a prompt that can fire on a returning
+  user is precisely what a first-run-only feature rules out. With them went `PromptKind`,
+  `condition`, `priority`, `PromptState`, `startsToday()`, the cooldown in
+  `utils/cloudPrompts.ts` and `markNudgeFired()`. `__tests__/constants/cloudPrompts.test.ts`
+  fails if `kind`, `condition` or `priority` reappears on a catalogue entry.
+- **Three storage states answer "is this the first run", and the third is the upgrade
+  path** — `firstRunDone` closes it forever; a `firstRunStartedAt` from an earlier process
+  says the session is over; and a record with NO marker but a non-empty `coaching` list was
+  written by the old build, so that account was already using the app and gets nothing. A
+  brand-new install is the only record with neither. A corrupt marker resolves to "not the
+  first run" — the opposite call from the cooldown it replaced, because there the risk was
+  silencing a wanted prompt and here it is showing an unwanted one.
+- **The watcher closes the first run ONCE, then stops asking the clock** — the first
+  navigation that turns out not to be in the first session writes `firstRunDone`, and every
+  later one is answered from that flag. Without the `if (!seen.firstRunDone)` guard this
+  would be an AsyncStorage write per route change for the life of the install.
 - **Prompt catalogue entries are keyed on route AND role** — `(attender)/index.tsx` and
   `(hoster)/index.tsx` both resolve to the pathname `/`. Each watcher is mounted inside a
   role-specific layout and passes `role` as a prop; dropping it shows attenders the
@@ -540,25 +557,17 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   unlike `RewardWatcher`, which hosters skip because every trackable reward keys off
   attendance, navigation coaching is for everybody. No route file is edited to make this
   work; `usePathname()` plus the catalogue is the whole mapping.
-- **A nudge is judged only once the account state has SETTLED** — every source behind
-  `PromptState` (`useProfile`, `useChatList`, `useAttendanceStats`, `useConnections`, the
-  registrations fetch) starts empty and fills in later, while AsyncStorage answers in a
-  tick. Deciding on that first snapshot describes a member with no photo, no events and no
-  connections — precisely the shape `no-photo`, `no-rsvp-yet` and `no-connections` test
-  for — so a veteran gets told they have never been to anything, AND the firing burns the
-  3-day cooldown that was meant to protect the real nudge. The watcher gates on a `ready`
-  flag over the four `loading` flags plus the fetch. A FAILED fetch still counts as
-  settled: otherwise one Firestore outage silences every nudge forever.
-- **The watcher's route effect excludes `state` and keys on `ready` instead** — `state`
-  churns as subscriptions arrive, and depending on it would re-run mid-visit and raise a
-  second cloud on one screen. `ready` flips once, from "nothing has loaded" to "this is
-  the account". Because it is in the dep list, a `raisedFor` ref caps it at one cloud per
-  `uid:pathname` visit — a token refresh retriggers `useProfile`'s loading flag, which
-  would otherwise put back a cloud the user had just dismissed.
-- **Hosters get the watcher but NOT its subscriptions** — every hoster catalogue entry is
-  coaching with no condition, so no hoster decision reads `PromptState`. The watcher hands
-  all four hooks `undefined` when `role !== 'attender'`, which is the same reasoning that
-  keeps `RewardWatcher` off the hoster layout entirely.
+- **The watcher subscribes to NOTHING, and that fell out of dropping the nudges** — it
+  used to hold `useProfile`, `useChatList`, `useAttendanceStats`, `useConnections` and a
+  registrations fetch, plus a `ready` flag over their four loading flags, because judging a
+  nudge on the empty first snapshot told a veteran they had never been to anything and burnt
+  the cooldown doing it. A first-run hint depends only on the route and on AsyncStorage, both
+  of which answer immediately, so all of that is gone — along with the reason hosters had to
+  be handed `undefined` for every hook. A `raisedFor` ref still caps it at one cloud per
+  `uid:pathname` visit, so a re-render cannot put back a cloud the user just dismissed.
+- **The start marker is stamped from the first hint RAISED, not from mount** — an account
+  whose first launch lands somewhere the catalogue says nothing about would otherwise burn
+  its first run on a screen that showed it nothing.
 - **The cloud ANCHORS to a tab — it is a thought bubble, not a dialog** — the body sits
   just above the tab bar over the tab the prompt is about, and a tail of three shrinking
   dots points at that icon. `tabAnchor()` in `constants/cloudPrompts.ts` resolves it: the
@@ -603,9 +612,11 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   the faithful version. The entrance blur is dropped outright — not animatable without
   `expo-blur`, which this project does not carry.
 - **Cloud seen-state is LOCAL, in AsyncStorage** — `services/cloudPromptsSeen.ts`, keyed
-  per uid, two halves because the kinds forget differently (coaching a flat set, nudges a
-  timestamp map). Same trade as `rewardsSeen.ts`: this decides whether a presentation
-  plays, not what is true about the account. Marked on QUEUE, not dismiss.
+  per uid: the hints already shown, plus the two first-run fields. Same trade as
+  `rewardsSeen.ts`: this decides whether a presentation plays, not what is true about the
+  account, so a reinstall replaying the tour is the acceptable worst case. Hints are marked
+  on QUEUE, not dismiss. `parse()` ignores the old `nudges` map rather than choking on it,
+  and the `coaching` list it keeps is exactly what identifies a pre-upgrade account.
 
 ---
 

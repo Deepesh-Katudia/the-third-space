@@ -1,58 +1,65 @@
-import { CLOUD_PROMPTS, type CloudPrompt, type PromptRole, type PromptState } from '../constants/cloudPrompts'
+import { CLOUD_PROMPTS, type CloudPrompt, type PromptRole } from '../constants/cloudPrompts'
 import type { SeenPrompts } from '../services/cloudPromptsSeen'
 
 /**
- * Which cloud — if any — should fire on this route, for this account, right now.
+ * Whether the cloud may speak at all, and if so which hint it should raise.
  *
- * Pure, and takes its catalogue and its clock as arguments, which is the same split
- * `utils/authRoute.ts` uses: all the policy is testable without a renderer, a device or
- * a Firestore connection, and the watcher above it is a thin effect wrapper.
+ * Pure, and takes its catalogue and its session clock as arguments, which is the same
+ * split `utils/authRoute.ts` uses: all the policy is testable without a renderer, a device
+ * or a Firestore connection, and the watcher above it is a thin effect wrapper.
+ *
+ * Prompts are a FIRST-RUN feature. They appear during the first session an account ever
+ * has on this device and then never again — no behavioural nudges, no cooldowns, nothing
+ * that can surface for a returning user.
  */
 
-/** How long a nudge stays quiet after firing. */
-export const NUDGE_COOLDOWN_DAYS = 3
+/**
+ * When this app process started, captured at import. A "session" is a process lifetime:
+ * backgrounding and resuming the app keeps the same one, and a relaunch (or an OS kill)
+ * starts a new one. That is what makes a stored start marker answerable — a marker written
+ * at or after this instant belongs to the run happening now.
+ */
+export const SESSION_STARTED_AT = Date.now()
 
-const DAY_MS = 24 * 60 * 60 * 1000
+export interface FirstRunInput {
+  seen: SeenPrompts
+  /** `SESSION_STARTED_AT` in production; a fixed number in tests. */
+  sessionStartedAt: number
+}
 
-export interface PickPromptInput {
+export function isFirstRun({ seen, sessionStartedAt }: FirstRunInput): boolean {
+  if (seen.firstRunDone) return false
+
+  // No marker: either nothing has ever been shown on this device, or the record predates
+  // first-run tracking. A record carrying hints it has already shown is the second case —
+  // an account that was using the app before this, which must not be handed the tour.
+  if (!seen.firstRunStartedAt) return seen.coaching.length === 0
+
+  const startedAt = Date.parse(seen.firstRunStartedAt)
+  // A corrupt marker cannot prove this is still the first session, and the user has asked
+  // for popups to stop, so silence is the safe reading. Note this is the OPPOSITE call
+  // from the nudge cooldown it replaced, which treated corruption as "no cooldown": there
+  // the risk was silencing a prompt forever, here it is showing one that is not wanted.
+  if (Number.isNaN(startedAt)) return false
+
+  return startedAt >= sessionStartedAt
+}
+
+export interface PickPromptInput extends FirstRunInput {
   /** `usePathname()`, with group segments already stripped by expo-router. */
   route: string
   role: PromptRole
-  state: PromptState
-  seen: SeenPrompts
-  now: Date
   /** Injectable for tests. Defaults to the real catalogue. */
   catalogue?: readonly CloudPrompt[]
 }
 
-function cooldownExpired(lastFired: string | undefined, now: Date): boolean {
-  if (!lastFired) return true
-  const at = Date.parse(lastFired)
-  // An unparseable timestamp must not silence a nudge forever — a corrupt record is
-  // not a statement that the user has seen something.
-  if (Number.isNaN(at)) return true
-  return now.getTime() - at >= NUDGE_COOLDOWN_DAYS * DAY_MS
-}
-
 export function pickPrompt(input: PickPromptInput): CloudPrompt | null {
+  if (!isFirstRun(input)) return null
+
   const catalogue = input.catalogue ?? CLOUD_PROMPTS
-  const here = catalogue.filter((p) => p.role === input.role && p.routes.includes(input.route))
-
-  // Coaching first, always. Somebody who has never seen this screen needs to know what
-  // it is before being told what to do on it.
-  const coaching = here.find((p) => p.kind === 'coaching' && !input.seen.coaching.includes(p.id))
-  if (coaching) return coaching
-
-  const eligible = here.filter(
-    (p) =>
-      p.kind === 'nudge' &&
-      (p.condition?.(input.state, input.now) ?? false) &&
-      cooldownExpired(input.seen.nudges[p.id], input.now),
+  return (
+    catalogue.find(
+      (p) => p.role === input.role && p.routes.includes(input.route) && !input.seen.coaching.includes(p.id),
+    ) ?? null
   )
-  if (eligible.length === 0) return null
-
-  // Lower number wins. `<` is strict, so a tie keeps the earlier catalogue entry —
-  // though the catalogue test requires distinct priorities, so ties should not arise.
-  const rank = (p: CloudPrompt) => p.priority ?? Number.MAX_SAFE_INTEGER
-  return eligible.reduce((best, p) => (rank(p) < rank(best) ? p : best))
 }
