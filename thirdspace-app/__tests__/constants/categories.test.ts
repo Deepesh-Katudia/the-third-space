@@ -1,8 +1,8 @@
 import { EVENT_CATEGORIES, categoryLabel, categoryMeta, BOROUGHS } from '../../constants/categories'
 
 describe('event categories', () => {
-  it('ships exactly eight categories', () => {
-    expect(EVENT_CATEGORIES).toHaveLength(8)
+  it('ships exactly ten categories', () => {
+    expect(EVENT_CATEGORIES).toHaveLength(10)
   })
 
   it('gives every category a unique slug', () => {
@@ -48,6 +48,18 @@ describe('event categories', () => {
     expect(categoryLabel('lets-eat')).toBe('Eat')
     expect(categoryLabel('game-time')).toBe('Game Night')
     expect(categoryLabel('level-up')).toBe('Networking')
+  })
+
+  it('offers Speed Friending and Date Night as the two newest categories', () => {
+    // Added after the original eight. Their slugs DO resemble their labels, unlike the
+    // renamed six — that is fine: the indirection protects against a future rename, it
+    // does not require the slug to be unrecognisable on the day it is minted.
+    expect(categoryLabel('speed-friending')).toBe('Speed Friending')
+    expect(categoryLabel('date-night')).toBe('Date Night')
+
+    // Order is intentional: both sit at the end, and Date Night last of all. It is the
+    // one category the product explicitly frames as an occasional aside.
+    expect(EVENT_CATEGORIES.map((c) => c.id).slice(-2)).toEqual(['speed-friending', 'date-night'])
   })
 
   it('retires the two dropped categories without orphaning their events', () => {

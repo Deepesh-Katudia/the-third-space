@@ -26,6 +26,10 @@ export const EVENT_CATEGORIES: EventCategoryMeta[] = [
   { id: 'game-time',       label: 'Game Night',  blurb: 'Arcades, barcades, and gaming sessions', emoji: '🎮' },
   { id: 'slow-down',       label: 'Slow Down',   blurb: 'Sound baths, massage, and genuinely relaxing sessions', emoji: '🧘' },
   { id: 'level-up',        label: 'Networking',  blurb: 'Career, business, and networking events', emoji: '📈' },
+  { id: 'speed-friending', label: 'Speed Friending', blurb: 'Meet a handful of potential friends, fast', emoji: '⚡' },
+  // Last on purpose. The blurb says out loud what the ordering already implies: this is
+  // a friendship app that hosts the occasional date night, not a dating app with events.
+  { id: 'date-night',      label: 'Date Night',  blurb: "We're a friendship app first. Every once in a while we host a date night too — never the focus, just an option", emoji: '🌹' },
 ]
 
 /**

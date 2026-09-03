@@ -431,7 +431,7 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
 - **Event categories are stored as slugs, never display strings** — `constants/categories.ts`
   holds the id/label/blurb/emoji table and `categoryLabel()` resolves it. Rendering
   `event.category` raw is a bug. The point is that copy can be reworded without orphaning
-  events, which is exactly what renaming a stored display string would do. There are eight
+  events, which is exactly what renaming a stored display string would do. There are ten
   categories and no catch-all; `Social` was deliberately dropped.
 - **The slugs deliberately no longer resemble their labels** — every category was relabelled
   on 2026-08-05 (`creative-outlet` → Make, `curious-minds` → Learn, `stage-time` → Stage,
@@ -439,6 +439,16 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   moved, so not one event moved either. Renaming a slug to match its new label is the
   precise failure the indirection exists to prevent. `__tests__/constants/categories.test.ts`
   pins each pairing.
+- **`speed-friending` and `date-night` were added on 2026-09-03, and their slugs DO look
+  like their labels** — that is not a contradiction of the rule above. The indirection
+  exists so a future rename cannot orphan events; it never required a slug to be
+  unrecognisable on the day it is minted. Date Night sits last in `EVENT_CATEGORIES`
+  deliberately, and its blurb says out loud what the ordering implies — a friendship app
+  that hosts the occasional date night, not a dating app with events. One knock-on:
+  Experimenter of Variety reads `EVENT_CATEGORIES.every()`, so the reward now needs ten
+  categories attended instead of eight. That is the rule being honest about "every
+  category" rather than a regression, and `__tests__/utils/rewards.test.ts` derives its
+  fixtures from the list, so nothing had to be restated there.
 - **Retired categories keep their labels, out of the picker** — `day-drinks-nightlife` and
   `lets-get-active` were dropped from `EVENT_CATEGORIES` in the same change. They live on in
   a `RETIRED_CATEGORIES` lookup that only `categoryLabel()` reads, so an event filed under

@@ -19,6 +19,8 @@ export type EventCategory =
   | 'game-time'
   | 'slow-down'
   | 'level-up'
+  | 'speed-friending'
+  | 'date-night'
 
 /**
  * Slugs no host can pick any more, but that existing Firestore documents still carry.
