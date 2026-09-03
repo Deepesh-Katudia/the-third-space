@@ -15,7 +15,7 @@ import { Screen } from '../../../components/ui/Screen'
 import { Display, Meta } from '../../../components/ui/Text'
 import { palette, radius, space, NAV_CLEARANCE } from '../../../constants/design'
 
-type TabKey = 'upcoming' | 'hosting' | 'past'
+type TabKey = 'upcoming' | 'past'
 
 export default function MyEvents() {
   const router = useRouter()
@@ -53,7 +53,6 @@ export default function MyEvents() {
 
   const tabs: { key: TabKey; label: string; count: number | null }[] = [
     { key: 'upcoming', label: 'Upcoming', count: upcoming.length },
-    { key: 'hosting', label: 'Hosting', count: 0 },
     { key: 'past', label: 'Past', count: null },
   ]
 
@@ -128,16 +127,6 @@ export default function MyEvents() {
               ) : null}
             </>
           ))}
-
-        {tab === 'hosting' && (
-          <EmptyState
-            emoji="✦"
-            title="You're not hosting yet"
-            body="Become a host to create events and gather your own community."
-            actionLabel="Become a host"
-            onAction={() => router.push('/(app)/(attender)/profile')}
-          />
-        )}
 
         {tab === 'past' &&
           (past.length === 0 ? (

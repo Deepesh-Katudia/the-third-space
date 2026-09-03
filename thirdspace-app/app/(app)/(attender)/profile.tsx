@@ -114,8 +114,7 @@ export default function Profile() {
           ) : null}
           <Row label="Points & rewards" onPress={() => router.push('/(app)/badges')} />
           <Row label="Interests & preferences" onPress={() => router.push('/(app)/edit-profile')} />
-          <Row label="Neighborhoods" onPress={() => router.push('/(app)/edit-profile')} />
-          <Row label="Become a host" badge="New" onPress={() => router.push('/(app)/become-host')} last />
+          <Row label="Neighborhoods" onPress={() => router.push('/(app)/edit-profile')} last />
         </View>
 
         <Meta role="eyebrow" style={styles.sectionLabel}>Privacy</Meta>

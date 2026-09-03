@@ -17,7 +17,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
 | Media | expo-image-picker + expo-video (playback) + expo-video-thumbnails (posters) + expo-image-manipulator (compression) — all bundled in Expo Go, no config plugin, no rebuild |
-| Tests | Jest (jest-expo) — 69 suites / 559 tests; `@firebase/rules-unit-testing` for rules (45/45) |
+| Tests | Jest (jest-expo) — 69 suites / 559 tests; `@firebase/rules-unit-testing` for rules (52/52) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -27,11 +27,12 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 
 - `npx tsc --noEmit` — **clean**
 - `npx jest` — **559/559 pass**, 69 suites
-- `npm run test:rules` — **45/45 pass** (31 Firestore + 14 Storage)
+- `npm run test:rules` — **52/52 pass** (38 Firestore + 14 Storage)
 - `cd functions && npx jest` — **23/23 pass**, 9 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
-- Firestore rules **have two undeployed changes**: the conversations read on a non-existent doc, and the
-  `profiles/{uid}/private/socials` mutual-follow gate. Both ship together on the next
+- Firestore rules **have three undeployed changes**: the conversations read on a non-existent doc, the
+  `profiles/{uid}/private/socials` mutual-follow gate, and the write-once `role` split on
+  `users/{uid}`. All three ship together on the next
   `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, the Socials section never
   appears for anyone, and the edit form shows handles as unloadable rather than letting them be edited.
   Other profile edits are unaffected.
@@ -97,10 +98,10 @@ thirdspace-app/
 ├── utils/                    # 20 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
-├── firestore.rules           # TWO changes undeployed: conversations null guard + socials gate
+├── firestore.rules           # THREE undeployed: conversations null guard + socials gate + write-once role
 ├── shared/mediaLabel.ts      # The ONE attachment label. Zero imports — compiled by BOTH workspaces
 ├── storage.rules             # All four media surfaces. Emulator-tested, NOT deployed (no bucket yet)
-└── app/                      # expo-router routes (38 files)
+└── app/                      # expo-router routes (37 files)
     ├── _layout.tsx             # Fonts + useAuth + AuthRedirect guard
     ├── index.tsx               # Immediate redirect
     ├── (auth)/
@@ -125,7 +126,7 @@ thirdspace-app/
         ├── borough-picker.tsx  # Borough selection modal (Discover → location override)
         ├── message-requests.tsx  message-privacy.tsx
         ├── settings.tsx  change-password.tsx
-        ├── become-host.tsx  verify-identity.tsx
+        ├── verify-identity.tsx
 ```
 
 ---
@@ -213,6 +214,14 @@ setupComplete        → '/(app)' unless already in (app)
 signed in, no role   → next step 'role-select'
 signed in, no profile→ next step 'create-profile'   (attenders only)
 ```
+
+**Role is chosen once, at `role-select`, and never again.** There is no switching: an account is an
+attender or a hoster for its whole life, and somebody who wants to host signs up a second account. The
+enforcement is `firestore.rules` — `users/{uid}` splits `create` from `update`, and an update whose
+post-write `role` differs from the stored one is denied. `become-host.tsx` and the attender My Events
+"Hosting" tab were both deleted rather than hidden, since neither could ever do anything again.
+Accounts that switched before this landed keep `role: 'hoster'` and an orphaned `profiles/{uid}`;
+that was a deliberate call not to migrate.
 
 **Principle**: onboarding is home base for any account that isn't fully set up. Setup steps are reached by
 *forward* navigation — never dumped on the user at cold start. Onboarding is an allowed resting place even

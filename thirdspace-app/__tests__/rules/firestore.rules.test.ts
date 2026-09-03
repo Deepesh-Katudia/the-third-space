@@ -299,3 +299,58 @@ test('the private subcollection does not over-grant beyond the socials doc', asy
   const me = env.authenticatedContext('me').firestore()
   await assertFails(getDoc(doc(me, 'profiles/me/private/somethingElse')))
 })
+
+// ── users/{uid}: role is write-once ────────────────────────────────────────
+// Role switching was removed from the app (there is no longer any screen that
+// rewrites `role`), but the UI is not the enforcement — these rules are. The doc
+// still takes ordinary updates from setPushEnabled, the birthdate write and the
+// registeredEventIds counters, so this cannot simply forbid updates.
+test('owner can set role when creating their own user doc', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'users/me'), { uid: 'me', role: 'attender' }))
+})
+
+test('owner cannot change role once it is set', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', role: 'attender' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(updateDoc(doc(me, 'users/me'), { role: 'hoster' }))
+})
+
+test('owner can update other fields while re-sending an unchanged role', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', role: 'attender' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'users/me'), { role: 'attender', displayName: 'Me' }, { merge: true }))
+})
+
+test('owner can update fields that do not touch role', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', role: 'attender' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(updateDoc(doc(me, 'users/me'), { pushEnabled: true, registeredEventIds: ['e1'] }))
+})
+
+test('owner can set role on a user doc that does not have one yet', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', pushEnabled: true })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'users/me'), { role: 'attender' }, { merge: true }))
+})
+
+test('owner cannot delete their user doc, which would reset role', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', role: 'attender' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(deleteDoc(doc(me, 'users/me')))
+})
+
+test('a stranger cannot write another user doc', async () => {
+  const stranger = env.authenticatedContext('stranger').firestore()
+  await assertFails(setDoc(doc(stranger, 'users/me'), { uid: 'me', role: 'hoster' }))
+})

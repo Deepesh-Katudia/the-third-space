@@ -54,7 +54,24 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid;
+
+      // `role` is write-once. There is no role switching in the app, and the UI is
+      // not what enforces that — this is. The doc still takes ordinary updates
+      // (pushEnabled, birthdate, registeredEventIds), so this gates the one field
+      // rather than the write. On any update `request.resource.data` is the
+      // POST-write document, so a write that never mentions role still carries the
+      // stored one — which is why the comparison, not the key check, does the work.
+      // `.get('role', ...)` defaults rather than dereferencing: a doc with no role
+      // yet would make a bare `resource.data.role` raise an evaluation error rather
+      // than return false. Same trap the conversations read guards against.
+      allow update: if signedIn() && request.auth.uid == uid
+        && (!('role' in request.resource.data)
+            || request.resource.data.role == resource.data.get('role', request.resource.data.role));
+
+      // No delete: deleting and recreating the doc would be a role switch by another
+      // name. Nothing in the app deletes it.
 
       match /pushTokens/{token} {
         allow read, write: if signedIn() && request.auth.uid == uid;

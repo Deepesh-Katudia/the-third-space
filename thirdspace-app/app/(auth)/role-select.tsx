@@ -67,7 +67,9 @@ export default function RoleSelect() {
     <Screen tone="cream">
       <View style={styles.content}>
         <Display role="screenTitle" style={styles.heading}>How will you use{'\n'}Your Third Space?</Display>
-        <Body role="bodyLg" style={styles.subtitle}>Choose your role to get started.</Body>
+        <Body role="bodyLg" style={styles.subtitle}>
+          Choose your role to get started. This can&apos;t be changed later — hosting needs its own account.
+        </Body>
 
         {error ? <Banner message={error} /> : null}
 
