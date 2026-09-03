@@ -30,12 +30,10 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 - `npm run test:rules` — **52/52 pass** (38 Firestore + 14 Storage)
 - `cd functions && npx jest` — **23/23 pass**, 9 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
-- Firestore rules **have three undeployed changes**: the conversations read on a non-existent doc, the
-  `profiles/{uid}/private/socials` mutual-follow gate, and the write-once `role` split on
-  `users/{uid}`. All three ship together on the next
-  `npx firebase-tools deploy --only firestore:rules`. Until then DMs misbehave, the Socials section never
-  appears for anyone, and the edit form shows handles as unloadable rather than letting them be edited.
-  Other profile edits are unaffected.
+- Firestore rules are **deployed** as of 2026-09-03 — the conversations read on a non-existent doc, the
+  `profiles/{uid}/private/socials` mutual-follow gate and the write-once `role` split on `users/{uid}`
+  all went out together via `npx firebase-tools deploy --only firestore:rules` (run from
+  `thirdspace-app/`). So DMs, the Socials section and the handle editor all behave on device now.
 - Media uploads (profile avatar + vibe, event cover, venue gallery, chat attachments) are **code-complete
   and untestable on device**: the bucket `the-third-space-626e8.firebasestorage.app` does not exist yet.
   Someone must click Firebase Console → Build → Storage → Get started. Until then every upload fails and
@@ -98,7 +96,7 @@ thirdspace-app/
 ├── utils/                    # 20 pure modules (all unit-tested)
 ├── functions/src/            # Cloud Functions: sendPush, recipients,
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
-├── firestore.rules           # THREE undeployed: conversations null guard + socials gate + write-once role
+├── firestore.rules           # Deployed 2026-09-03: conversations guard + socials gate + write-once role
 ├── shared/mediaLabel.ts      # The ONE attachment label. Zero imports — compiled by BOTH workspaces
 ├── storage.rules             # All four media surfaces. Emulator-tested, NOT deployed (no bucket yet)
 └── app/                      # expo-router routes (37 files)
