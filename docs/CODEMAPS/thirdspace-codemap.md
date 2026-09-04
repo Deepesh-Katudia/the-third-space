@@ -17,7 +17,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
 | Media | expo-image-picker + expo-video (playback) + expo-video-thumbnails (posters) + expo-image-manipulator (compression) — all bundled in Expo Go, no config plugin, no rebuild |
-| Tests | Jest (jest-expo) — 70 suites / 566 tests; `@firebase/rules-unit-testing` for rules (52/52) |
+| Tests | Jest (jest-expo) — 70 suites / 564 tests; `@firebase/rules-unit-testing` for rules (52/52) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -26,7 +26,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-08-11)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **566/566 pass**, 70 suites
+- `npx jest` — **564/564 pass**, 70 suites
 - `npm run test:rules` — **52/52 pass** (38 Firestore + 14 Storage)
 - `cd functions && npx jest` — **23/23 pass**, 9 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
@@ -34,13 +34,14 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
   `profiles/{uid}/private/socials` mutual-follow gate and the write-once `role` split on `users/{uid}`
   all went out together via `npx firebase-tools deploy --only firestore:rules` (run from
   `thirdspace-app/`). So DMs, the Socials section and the handle editor all behave on device now.
-- Media uploads (profile avatar + vibe, event cover, venue gallery, chat attachments) are **code-complete
-  and untestable on device**: the bucket `the-third-space-626e8.firebasestorage.app` does not exist yet.
-  Someone must click Firebase Console → Build → Storage → Get started. Until then every upload fails and
-  degrades — `utils/avatar.ts` renders colored initials, `TicketCard` draws its "No photo yet" band, and
-  the vibe/venue/cover slots stay empty.
-- `storage.rules` is written and emulator-tested but **not deployed**. It ships with the two pending
-  Firestore changes: `npx firebase-tools deploy --only firestore:rules,storage`.
+- The Storage bucket **now exists and `storage.rules` is deployed** (2026-09-04). An anonymous read of
+  `the-third-space-626e8.firebasestorage.app` answers **403, not 404**, which is the deployed rules
+  refusing a not-signed-in caller — the bucket is there and it is protected. Media uploads (profile
+  avatar + vibe, event cover, venue gallery, chat attachments) should therefore work for the first time;
+  they have **not yet been exercised on a device**, so that is the next thing to check rather than
+  something known good. The degrade paths stay where they are: if an upload does fail,
+  `utils/avatar.ts` renders colored initials, `TicketCard` draws its "No photo yet" band, and the
+  vibe/venue/cover slots stay empty.
 
 ---
 
@@ -98,7 +99,7 @@ thirdspace-app/
 │                             #   onNewDirectMessage, onNewFollow, onNewAnnouncement
 ├── firestore.rules           # Deployed 2026-09-03: conversations guard + socials gate + write-once role
 ├── shared/mediaLabel.ts      # The ONE attachment label. Zero imports — compiled by BOTH workspaces
-├── storage.rules             # All four media surfaces. Emulator-tested, NOT deployed (no bucket yet)
+├── storage.rules             # All four media surfaces. Emulator-tested AND deployed (2026-09-04)
 └── app/                      # expo-router routes (37 files)
     ├── _layout.tsx             # Fonts + useAuth + AuthRedirect guard
     ├── index.tsx               # Immediate redirect
@@ -565,8 +566,11 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
 - **`verified` is owner-set (simulated)** — `verify-identity.tsx` captures ID + selfie **on-device, never
   uploaded**, then `submitVerification` sets `profiles/{uid}.verified` from the client. Rules permit this
   because there is no real KYC. Skippable, attenders-only. Move to server-set if real KYC lands.
-- **Storage is not provisioned** — free Spark plan. `services/photos.ts` failures are caught; `photoURL`
-  falls back to `null` and `utils/avatar.ts` renders deterministic colored initials.
+- **Storage IS provisioned as of 2026-09-04, and the degrade paths stay anyway** — `services/photos.ts`
+  failures are still caught, `photoURL` still falls back to `null` and `utils/avatar.ts` still renders
+  deterministic colored initials. An upload can fail for a dozen reasons that have nothing to do with
+  whether a bucket exists (no signal, a rejected file, a revoked token), so the fallbacks are not
+  scaffolding to be removed now that the bucket is real.
 - **No `expo-blur`** — blur effects faked with semi-transparent overlays to avoid a native rebuild.
 - **`react-native-svg` IS installed, as of 2026-08-05** — the earlier "would mean a native
   rebuild" note was over-cautious: it ships inside Expo Go, so dev needs no rebuild and EAS
