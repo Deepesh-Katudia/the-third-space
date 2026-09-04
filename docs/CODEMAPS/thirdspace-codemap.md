@@ -42,6 +42,17 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
   something known good. The degrade paths stay where they are: if an upload does fail,
   `utils/avatar.ts` renders colored initials, `TicketCard` draws its "No photo yet" band, and the
   vibe/venue/cover slots stay empty.
+- **Cloud Functions are NOT deployed, and the wall is IAM rather than the plan** (attempted 2026-09-04).
+  `deploy --only functions` builds, packages and enables every API, then stops at
+  *"We failed to modify the IAM policy for the project"*. Blaze is evidently active — Storage exists,
+  which Blaze also gates — so the blocker is that the deploying account cannot add the three service-agent
+  bindings a v2 function needs: `roles/iam.serviceAccountTokenCreator` on the pubsub service agent, and
+  `roles/run.invoker` + `roles/eventarc.eventReceiver` on the default compute service account. Either run
+  the three `gcloud projects add-iam-policy-binding` commands the CLI prints (Cloud Shell has gcloud
+  ready) as a project **Owner**, or grant them in the console's IAM page, then re-deploy. If gcloud reports
+  the compute service account does not exist, enable the Compute Engine API first — that is what creates
+  it. Until this lands: **email sign-up fails after creating the Auth account** (it calls the
+  `completeSignUp` callable), phone sign-in fails, and no push is ever delivered.
 
 ---
 
