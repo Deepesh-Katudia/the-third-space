@@ -17,7 +17,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
 | Media | expo-image-picker + expo-video (playback) + expo-video-thumbnails (posters) + expo-image-manipulator (compression) — all bundled in Expo Go, no config plugin, no rebuild |
-| Tests | Jest (jest-expo) — 69 suites / 559 tests; `@firebase/rules-unit-testing` for rules (52/52) |
+| Tests | Jest (jest-expo) — 70 suites / 566 tests; `@firebase/rules-unit-testing` for rules (52/52) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -26,7 +26,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-08-11)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **559/559 pass**, 69 suites
+- `npx jest` — **566/566 pass**, 70 suites
 - `npm run test:rules` — **52/52 pass** (38 Firestore + 14 Storage)
 - `cd functions && npx jest` — **23/23 pass**, 9 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
@@ -362,6 +362,12 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   installed but a full SVG layer per screen is far heavier than this), so the falloff is
   faked with five stacked concentric rings of one colour. Past ~0.15 the outer ring stops being invisible and the blob reads as a
   hard-edged disc. `__tests__/constants/design.test.ts` guards the ceiling.
+- **The glows drift SIDEWAYS only — never vertically** — a `translateY` of ±17px rode
+  alongside the horizontal drift until 2026-08-15. Every scrolling surface in the app
+  scrolls vertically over the field, and a field that rises reads as the background
+  sliding with the scroll rather than sitting still underneath it. `DRIFT_X` and the
+  0.94→1.12 scale carry the same life without ever competing with a scroll gesture.
+  `__tests__/components/AmbientBackdrop.test.tsx` fails if a `translateY` comes back.
 - **Reduced motion means NO loops, and the in-flight probe counts as reduced** —
   `useReduceMotion` starts at `true`. Starting loops optimistically and stopping them once
   the probe answers animates at exactly the users who asked not to be.
@@ -369,10 +375,60 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   is only visible mid-transition, but transparent would let modal routes show the screen
   underneath through the gap. React Navigation's own default there is white, which flashes
   hard against the field.
-- **Every screen runs its own drift loops** — react-navigation keeps stacked screens
-  mounted, so a 3-deep stack has 3 fields looping. They are all native-driver, so this
-  costs UI-thread compositing rather than JS, but focus-gating is the lever to reach for
-  if a low-end device ever struggles.
+- **There is ONE set of drift loops for the whole app, and one animation phase** — the
+  drivers and their loops are module-level in `AmbientBackdrop.tsx`, refcounted by a
+  mount counter. Per-instance drivers started every new field at phase 0, so pushing
+  `event/[id]` over Discover — or swapping `LoadingView` for the screen it stood in for —
+  put a fresh field beside one that had been drifting for a minute and the glows visibly
+  jumped at the moment of the transition. That reads as the background shifting under
+  you, which is the one thing the field must never do. Sharing the phase also collapses
+  a 3-deep stack's 30 loops back to 10. `syncLoops()` derives "should these run" from the
+  counter plus the reduced-motion flag rather than starting and stopping inside each
+  effect, because React does not promise the order in which sibling effects and cleanups
+  interleave.
+- **Liquid glass is a token set, not a blur** — `palette.glass*`. There is no
+  `expo-blur` here, and a gaussian would buy nothing anyway: what sits behind a glass
+  surface is the ambient field, which is already a soft gradient with no hard edges to
+  blur. The effect is a low-alpha wash of the light tone plus a lit hairline edge, which
+  is the same way the rest of the app fakes depth. `design.test.ts` holds every glass
+  fill under 0.5 — past that it stops reading as a pane over the field and starts reading
+  as a washed-out solid, at which point a flat tone would be the honest choice.
+- **`AttendeeAvatarStack` has a `glass` variant that drops the identity tint** — used on
+  `event/[id]`, where the stack sits directly on the field and five saturated discs
+  punched into a soft gradient were the loudest thing on the screen. Identity still comes
+  from the initials and the photo; the tint was a second, redundant channel for it. The
+  variant also flips the initials from cream to ink, because cream clears AA on the dark
+  solid tints and vanishes on a light wash. `ringColor` is ignored under `glass` — a ring
+  in the surface colour would punch an opaque hole in the thing the glass is showing.
+- **EVERY screen root is clipped, and that is what stops the layout jittering** —
+  `AmbientBackdrop`, `Screen`, `LoadingView`, `onboarding` and `event/[id]` all carry
+  `overflow: 'hidden'` on their outermost View. Measured at 430x932 (iPhone 14 Pro Max,
+  the viewport in the bug report) with the clips removed: `scrollWidth` 445 vs
+  `clientWidth` 430, and 48px of vertical overflow. With them: 0 and 0.
+  That 15px matters because it is scrollbar-width. A scrollbar appears, takes ~15px out
+  of the viewport, every glow's position and radius is a fraction of
+  `useWindowDimensions()` so the whole field re-lays-out, the overflow changes, and the
+  scrollbar disappears again — a feedback loop with nothing to converge on. The page
+  oscillates forever, which is what "the background shifts when I scroll" looks like from
+  outside. The glows are the app-wide source; `event/[id]`'s tear notches at
+  `left/right: -7` are a second one on that screen. Neither is a bug in itself — both are
+  *meant* to bleed off the edge — they only need to stop extending the scrollable area.
+  `AmbientBackdrop.test.tsx` fails if the clip comes off the field.
+- **`event/[id]`'s detail body rides a glass sheet** — the field is a fixed
+  deep-to-light ramp the height of the VIEWPORT, so content laid straight onto it changes
+  shade as it scrolls past. A translucent sheet travels with the content and settles
+  that, while still letting the glows through. Its top corners use `radius.sheet`
+  deliberately — the hero's tear notches hang 7pt below the seam at the very edges, and a
+  tighter radius clips their lower half.
+- **`event/[id]` sizes its hero from the top inset and its bottom clearance by
+  measurement** — `HERO_BODY` (190) is the hero BELOW the status bar and the rendered
+  height is `HERO_BODY + insets.top`, so a Dynamic Island phone does not get a squashed
+  stub with the category chip jammed under the back button. The sticky footer reports its
+  own height via `onLayout` and the sheet pads to clear it; the old constant 120 was
+  wrong by the ~34pt home indicator on every device that has one. The outer ScrollView
+  sets `contentInsetAdjustmentBehavior="never"` because the screen is full-bleed and
+  already paints under the status bar — iOS's automatic adjustment adds a second top
+  inset and reconciles it a frame later, which lands as a jolt on the first drag.
 - **`event/[id]`'s tear notches no longer match the background exactly** — they are painted
   `orangeDeep` while the field is now a gradient they scroll through. Each is a 7x14px
   half-disc at the hero seam, where the field is within a few percent of orangeDeep, so
@@ -588,8 +644,8 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
 - **The comet path ends at the anchor, not at fixed window fractions** — the sparks trace
   the path the cloud then travels, so an endpoint pinned to mid-screen would stream toward
   one place while the cloud landed in another.
-- **`CloudPrompt` is the app's only `useSafeAreaInsets()` caller** — it needs the real
-  home-indicator inset to clear the bar (`tabBar.height + insets.bottom`; React Navigation
+- **`CloudPrompt` and `event/[id]` are the app's only `useSafeAreaInsets()` callers** —
+  the cloud needs the real home-indicator inset to clear the bar (`tabBar.height + insets.bottom`; React Navigation
   lays the bar out at the height given and pads the inset in underneath, so they add).
   This works because expo-router's own `ExpoRoot` wraps the app in a `SafeAreaProvider` —
   nothing in `app/` does. Tests that render the cloud in isolation must supply one, which

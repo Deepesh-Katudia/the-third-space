@@ -139,7 +139,8 @@ export default function Onboarding() {
 }
 
 const styles = StyleSheet.create({
-  field: { flex: 1 },
+  // Clipped like every other screen root — see the note in `components/ui/Screen`.
+  field: { flex: 1, overflow: 'hidden' },
   flex: { flex: 1 },
   logoWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
   markRow: { alignItems: 'center' },

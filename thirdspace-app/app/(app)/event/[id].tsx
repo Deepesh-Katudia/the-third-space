@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../../hooks/useAuth'
@@ -33,7 +33,20 @@ import { BackButton } from '../../../components/ui/BackButton'
 import { palette, radius, space } from '../../../constants/design'
 
 const NOTCH = 14
-const HERO_HEIGHT = 190
+
+/**
+ * Usable height of the ink hero, measured BELOW the status bar. The rendered hero is
+ * this plus the device's top inset, so the stub keeps the same proportions on a phone
+ * with a Dynamic Island as on one with a 20pt status bar. A fixed total height gave the
+ * notch devices a squashed hero and pushed the category chip up under the back button.
+ */
+const HERO_BODY = 190
+
+/** Breathing room between the end of the sheet's content and the sticky footer. */
+const FOOTER_GAP = 24
+
+/** Stand-in clearance for the single frame before the footer reports its own height. */
+const FOOTER_FALLBACK = 132
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -50,6 +63,13 @@ export default function EventDetail() {
   const [latestAnnouncement, setLatestAnnouncement] = useState<Announcement | null>(null)
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
   const [venuePhotos, setVenuePhotos] = useState<MediaAsset[]>([])
+  // The footer is absolutely positioned and its height depends on the bottom inset, so
+  // the scroll content cannot clear it with a constant. A phone with a home indicator
+  // and one without differ by ~34pt, which is the whole last line of the description.
+  const [footerHeight, setFooterHeight] = useState(0)
+
+  const insets = useSafeAreaInsets()
+  const heroHeight = HERO_BODY + insets.top
 
   const isOwner = !!user && !!event && event.venueId === user.uid
 
@@ -158,7 +178,17 @@ export default function EventDetail() {
           not go through `Screen` and has to carry the ambient field itself. */}
       <AmbientBackdrop />
       <StatusBar style="light" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        // This screen is full-bleed and paints under the status bar itself. iOS's
+        // automatic inset adjustment would add a top inset of its own on top of that,
+        // then reconcile it a frame later — which lands as a visible jolt the first time
+        // you drag. The safe areas here are handled explicitly, so opt out.
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustsScrollIndicatorInsets={false}
+        scrollIndicatorInsets={{ bottom: footerHeight || FOOTER_FALLBACK }}
+      >
         {event.cover ? (
           <MediaThumb media={event.cover} style={styles.coverBand} onPress={() => setViewing(event.cover ?? null)} />
         ) : null}
@@ -168,7 +198,7 @@ export default function EventDetail() {
             live in a wrapper with the hero rather than in the scroll content: a cover
             band above would otherwise slide them down into the middle of the cover. */}
         <View style={styles.heroWrap}>
-          <View style={styles.hero}>
+          <View style={[styles.hero, { height: heroHeight }]}>
             <SafeAreaView edges={['top']} style={styles.heroBar}>
               <BackButton variant="circle" />
               <TouchableOpacity style={styles.heroBtn} onPress={() => setSaved((s) => !s)} hitSlop={8}>
@@ -181,11 +211,18 @@ export default function EventDetail() {
               </View>
             </View>
           </View>
-          <View style={[styles.notch, styles.notchLeft]} />
-          <View style={[styles.notch, styles.notchRight]} />
+          <View style={[styles.notch, styles.notchLeft, { top: heroHeight - NOTCH / 2 }]} />
+          <View style={[styles.notch, styles.notchRight, { top: heroHeight - NOTCH / 2 }]} />
         </View>
 
-        <View style={styles.body}>
+        {/* The detail body rides on a glass sheet rather than directly on the ambient
+            field. The field is a fixed deep-to-light ramp the height of the viewport, so
+            content laid straight onto it appears to swim through a colour change as you
+            scroll — the background reads as shifting even though it never moves. A
+            translucent sheet travels WITH the content, which settles that, and it still
+            lets the glows through the way an opaque fill would not. */}
+        <View style={[styles.sheet, { paddingBottom: (footerHeight || FOOTER_FALLBACK) + FOOTER_GAP }]}>
+          <View style={styles.sheetSheen} pointerEvents="none" />
           <Display role="screenTitle" style={styles.title}>{event.title}</Display>
           <Body role="bodyLg" style={venuePhotos.length > 0 ? undefined : styles.venue}>{event.venueName} · {event.neighborhood}</Body>
 
@@ -229,7 +266,7 @@ export default function EventDetail() {
                 photoURLs={attendees.map((a) => a.photoURL ?? null)}
                 count={attendees.length}
                 size={36}
-                ringColor={palette.orangeDeep}
+                variant="glass"
               />
               <Body role="bodySm" tone="ink">
                 {attendees.length} {isOwner ? 'registered' : 'going'}
@@ -243,7 +280,7 @@ export default function EventDetail() {
           ) : (
             <View style={styles.whosGoingLocked}>
               <View style={styles.lockedAvatars}>
-                <AttendeeAvatarStack uids={lockedSeeds} count={3} size={36} max={3} ringColor={palette.orangeDeep} />
+                <AttendeeAvatarStack uids={lockedSeeds} count={3} size={36} max={3} variant="glass" />
                 <View style={styles.blurredGroup}>
                   <View style={styles.blurredAvatar} />
                   <View style={[styles.blurredAvatar, { marginLeft: -11 }]} />
@@ -264,7 +301,11 @@ export default function EventDetail() {
       </ScrollView>
 
       {/* Sticky footer */}
-      <SafeAreaView edges={['bottom']} style={styles.footer}>
+      <SafeAreaView
+        edges={['bottom']}
+        style={styles.footer}
+        onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
+      >
         <View style={styles.footerInner}>
           <View>
             <Display role="stubDay" tone="clay">Free</Display>
@@ -313,8 +354,15 @@ export default function EventDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { paddingBottom: 120 },
+  // Clipped at the screen edge. The hero's tear notches sit at `left/right: -7` so they
+  // read as torn out of the page, and unclipped that 7px is real scrollable overflow —
+  // on web it raises a scrollbar, which resizes the viewport, which re-lays-out the
+  // ambient field, which changes the overflow again. Same loop `AmbientBackdrop` clips
+  // for; the notches are this screen's second source of it.
+  container: { flex: 1, overflow: 'hidden' },
+  // flexGrow lets the glass sheet stretch to the bottom of the viewport on a short
+  // event, so it never ends in a hard edge halfway down the screen.
+  scroll: { flexGrow: 1 },
   backCenter: { alignItems: 'center', paddingBottom: 40 },
 
   // Deliberately ABOVE the ink hero, not behind it. The hero's tear notches sit at the
@@ -323,7 +371,7 @@ const styles = StyleSheet.create({
   coverBand: { width: '100%', aspectRatio: 16 / 9, borderRadius: 0 },
   // overflow stays visible: the notches hang half outside this wrapper on both edges.
   heroWrap: { position: 'relative' },
-  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', backgroundColor: palette.ink },
+  hero: { justifyContent: 'space-between', backgroundColor: palette.ink },
   heroBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: space.xl - 4, paddingTop: space.sm },
   heroBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: palette.inkSoft, alignItems: 'center', justifyContent: 'center' },
   onInk: { color: palette.cream },
@@ -341,13 +389,33 @@ const styles = StyleSheet.create({
     width: NOTCH,
     height: NOTCH,
     borderRadius: NOTCH / 2,
-    top: HERO_HEIGHT - NOTCH / 2,
     backgroundColor: palette.orangeDeep,
   },
   notchLeft: { left: -NOTCH / 2 },
   notchRight: { right: -NOTCH / 2 },
 
-  body: { paddingHorizontal: space.xl, paddingTop: space.xl },
+  /**
+   * Two layers, not one: `glassFill` over the field plus a `glassSheen` wash on top of
+   * it come to roughly 0.55 combined, which is enough to settle the gradient underneath
+   * while still reading as glass. A single token at that alpha would look like a
+   * washed-out solid instead.
+   *
+   * The top corners use `radius.sheet` deliberately. The hero's tear notches hang 7pt
+   * below the seam at the very edges, and a tighter radius would clip their lower half
+   * as the sheet paints over them.
+   */
+  sheet: {
+    flexGrow: 1,
+    paddingHorizontal: space.xl,
+    paddingTop: space.xl,
+    backgroundColor: palette.glassFill,
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
+    borderTopWidth: 1,
+    borderTopColor: palette.glassEdge,
+    overflow: 'hidden',
+  },
+  sheetSheen: { ...StyleSheet.absoluteFillObject, backgroundColor: palette.glassSheen },
   title: { marginBottom: space.xs + 2 },
   venue: { marginBottom: space.xl },
   // The strip carries the bottom margin when it is present, so the venue line above it

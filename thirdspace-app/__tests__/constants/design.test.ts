@@ -147,6 +147,21 @@ describe('ambient field tokens', () => {
     expect(new Set(GLOWS).size).toBe(GLOWS.length)
   })
 
+  it('keeps every glass token translucent enough to still be glass', () => {
+    // Glass exists to let the ambient field through. Past roughly 0.5 the wash stops
+    // reading as a pane over the field and starts reading as a washed-out solid, at
+    // which point an honest flat tone would be the better choice. The one exception is
+    // the lit edge, which is a 1px hairline rather than a fill.
+    const FILLS = [palette.glassFill, palette.glassSheen, palette.glassEdgeSoft]
+    for (const token of FILLS) {
+      const alpha = Number(token.slice(token.lastIndexOf(',') + 1, -1))
+      expect(alpha).toBeGreaterThan(0)
+      expect(alpha).toBeLessThan(0.5)
+    }
+    const edge = Number(palette.glassEdge.slice(palette.glassEdge.lastIndexOf(',') + 1, -1))
+    expect(edge).toBeLessThan(1)
+  })
+
   it('leaves the cream veil short of opaque, so the field still moves under forms', () => {
     const alpha = Number(palette.creamVeil.slice(palette.creamVeil.lastIndexOf(',') + 1, -1))
     expect(alpha).toBeGreaterThan(0.7)

@@ -23,6 +23,7 @@ export function LoadingView({ tone = 'deep' }: LoadingViewProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Clipped for the same reason as `Screen` — see the note there.
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   veil: { ...StyleSheet.absoluteFillObject, backgroundColor: palette.creamVeil },
 })

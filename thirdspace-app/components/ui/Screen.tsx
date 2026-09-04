@@ -46,6 +46,9 @@ export function Screen({ tone = 'deep', padBottom = false, children }: ScreenPro
 }
 
 const styles = StyleSheet.create({
-  field: { flex: 1 },
+  // Clipped so nothing a screen hangs off its own edge — a ticket notch, a decorative
+  // blob — can extend the scrollable area. On web that overflow becomes a scrollbar,
+  // which resizes the viewport, which re-lays-out the field: a loop that never settles.
+  field: { flex: 1, overflow: 'hidden' },
   veil: { ...StyleSheet.absoluteFillObject, backgroundColor: palette.creamVeil },
 })

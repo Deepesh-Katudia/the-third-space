@@ -61,6 +61,25 @@ export const palette = {
    * on half the app.
    */
   creamVeil: 'rgba(251,243,233,0.88)',
+
+  /**
+   * Liquid glass — the one surface treatment that lets the ambient field show THROUGH
+   * it rather than covering it up. Built the way the rest of the app fakes depth, with
+   * no `expo-blur`: a low-alpha wash of the light tone, a lit edge where the light would
+   * catch, and a soft ink hairline where it falls away.
+   *
+   * A real gaussian would buy little here anyway — what sits behind a glass surface is
+   * the ambient field, which is already a slow gradient with soft glows. There is
+   * nothing sharp underneath to blur.
+   *
+   * Every alpha stays well under `creamVeil`'s 0.88 on purpose. Past roughly 0.5 the
+   * wash stops reading as glass and starts reading as a washed-out solid, which is the
+   * exact look these tokens exist to avoid.
+   */
+  glassFill: 'rgba(252,227,192,0.34)',
+  glassSheen: 'rgba(255,248,238,0.32)',
+  glassEdge: 'rgba(255,248,238,0.62)',
+  glassEdgeSoft: 'rgba(43,32,21,0.12)',
 } as const
 
 export type PaletteKey = keyof typeof palette
