@@ -76,6 +76,15 @@ export const palette = {
    * wash stops reading as glass and starts reading as a washed-out solid, which is the
    * exact look these tokens exist to avoid.
    */
+  /**
+   * Washes the screen behind a bottom sheet — the safety and report sheets, and any
+   * decision surface that follows. Deliberately INK at low alpha rather than the field's
+   * orange (`cloud.scrim`): a sheet asking a question should read as the app dimming
+   * behind it, where the cloud is a thought bubble and its scrim leans into the field's
+   * own tone. Two different jobs, two tokens.
+   */
+  sheetScrim: 'rgba(43,32,21,0.45)',
+
   glassFill: 'rgba(252,227,192,0.34)',
   glassSheen: 'rgba(255,248,238,0.32)',
   glassEdge: 'rgba(255,248,238,0.62)',

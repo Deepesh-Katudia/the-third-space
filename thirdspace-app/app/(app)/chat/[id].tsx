@@ -142,7 +142,11 @@ export default function ChatThreadScreen() {
       } catch {
         // Put the text back so a failed send never loses what they typed.
         setDraft((current) => (current ? current : text))
-        setSendError("Couldn't send that message. Check your connection and try again.")
+        // Neutral on purpose: a message into a thread where either party has blocked the
+        // other is denied by firestore.rules with permission-denied, which is
+        // indistinguishable from being offline — and must stay that way. Naming the block
+        // here would leak it to the person who was blocked.
+        setSendError('This message could not be sent.')
       }
       return
     }
@@ -180,9 +184,11 @@ export default function ChatThreadScreen() {
       }
       setDraft('')
     } catch (e: unknown) {
+      // A size/duration rejection is the caller's own file and safe to explain. Anything
+      // else stays neutral for the same reason as the text path above.
       setSendError(e instanceof MediaLimitError
         ? limitMessage(e.result, picked.type)
-        : "Couldn't send that. Check your connection and try again.")
+        : 'This message could not be sent.')
       if (uploaded) void deleteMedia(uploaded)
       // Put it back in the composer so the send can be retried without re-picking.
       setStaged(picked)

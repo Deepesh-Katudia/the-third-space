@@ -11,6 +11,8 @@ import { dmConversationId } from '../../../utils/chat'
 import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
 import { useBlocks } from '../../../hooks/useBlocks'
+import { MemberActionSheet } from '../../../components/MemberActionSheet'
+import { blockUser } from '../../../services/blocks'
 import { useSocials } from '../../../hooks/useSocials'
 import { SocialChips } from '../../../components/SocialChips'
 import { hasAnyHandle } from '../../../utils/socials'
@@ -33,6 +35,7 @@ export default function MemberProfile() {
   const { handles: socialHandles, visible: socialsVisible } = useSocials(uid)
   const [banner, setBanner] = useState('')
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const vibes = useMemo(() => coerceLegacyVibe(profile?.vibePhotos), [profile?.vibePhotos])
 
   const handleToggleFollow = async () => {
@@ -40,7 +43,24 @@ export default function MemberProfile() {
     try {
       await toggle()
     } catch {
-      setBanner("Couldn't update follow. Check your connection and try again.")
+      // Deliberately says nothing about why. A follow denied by a block fails at the
+      // rules layer with permission-denied, exactly like a network failure, and the two
+      // must read identically — copy that named the block would undo the privacy the
+      // whole arrangement rests on. Do not "improve" this message.
+      setBanner("That didn't work. Try again.")
+    }
+  }
+
+  const handleBlock = async () => {
+    if (!user || !uid) return
+    setSheetOpen(false)
+    try {
+      await blockUser(user.uid, uid)
+      // Leave: this screen now renders a blocked state, so staying on it would show the
+      // member the empty shell of the profile they were just looking at.
+      router.back()
+    } catch {
+      setBanner("That didn't work. Try again.")
     }
   }
 
@@ -149,10 +169,17 @@ export default function MemberProfile() {
           </>
         ) : null}
 
-        <TouchableOpacity style={styles.blockBtn}>
+        <TouchableOpacity style={styles.blockBtn} onPress={() => setSheetOpen(true)} activeOpacity={0.7}>
           <Body role="bodySm">Block or report</Body>
         </TouchableOpacity>
       </ScrollView>
+
+      <MemberActionSheet
+        visible={sheetOpen}
+        memberName={profile.displayName}
+        onClose={() => setSheetOpen(false)}
+        onBlock={handleBlock}
+      />
 
       <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>
