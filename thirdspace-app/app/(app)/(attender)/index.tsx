@@ -10,6 +10,8 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useProfile } from '../../../hooks/useProfile'
 import { useUpcomingEvents } from '../../../hooks/useUpcomingEvents'
 import { useDiscoverFilters } from '../../../hooks/useDiscoverFilters'
+import { useBlocks } from '../../../hooks/useBlocks'
+import { hideBlockedEvents } from '../../../utils/blocks'
 import { useUserLocation, resolveLocation } from '../../../hooks/useUserLocation'
 import { filterByBorough } from '../../../utils/locationFilter'
 import { applyEventFilters, hasActiveFilters } from '../../../utils/eventFilters'
@@ -26,6 +28,7 @@ export default function Discover() {
   const { profile, loading: profileLoading } = useProfile(user?.uid)
   const { events, loading, hasError } = useUpcomingEvents()
   const { filters, query, setQuery, setFilters, reset } = useDiscoverFilters()
+  const { blocked } = useBlocks()
 
   // Only `borough` is read here — the picker route owns setBorough.
   const { borough } = useUserLocation()
@@ -38,7 +41,10 @@ export default function Discover() {
   }, [profileLoading, profile?.borough])
 
   const name = profile?.displayName ?? user?.displayName ?? 'Member'
-  const filtered = useMemo(() => applyEventFilters(events, filters, query), [events, filters, query])
+  // Blocked hosts drop out FIRST, before the filters and before the borough step, so the
+  // widen-rather-than-empty fallback counts only events this member can actually see.
+  const visibleEvents = useMemo(() => hideBlockedEvents(events, blocked), [events, blocked])
+  const filtered = useMemo(() => applyEventFilters(visibleEvents, filters, query), [visibleEvents, filters, query])
   // Location composes around the existing filters rather than being folded into
   // EventFilters, so "Clear filters" never silently resets the user's location.
   const { events: visible, widened } = useMemo(() => filterByBorough(filtered, borough), [filtered, borough])

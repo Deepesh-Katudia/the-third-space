@@ -10,6 +10,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { dmConversationId } from '../../../utils/chat'
 import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
+import { useBlocks } from '../../../hooks/useBlocks'
 import { useSocials } from '../../../hooks/useSocials'
 import { SocialChips } from '../../../components/SocialChips'
 import { hasAnyHandle } from '../../../utils/socials'
@@ -27,6 +28,7 @@ export default function MemberProfile() {
   const router = useRouter()
   const { profile, loading, hasError } = useProfile(uid)
   const { user } = useAuth()
+  const { isBlocked } = useBlocks()
   const { isFollowing, toggle } = useFollowStatus(uid)
   const { handles: socialHandles, visible: socialsVisible } = useSocials(uid)
   const [banner, setBanner] = useState('')
@@ -46,6 +48,26 @@ export default function MemberProfile() {
   const openSocial = (url: string) => { Linking.openURL(url).catch(() => {}) }
 
   if (loading) return <LoadingView />
+
+  // Ahead of the error branch on purpose: a blocked member's profile is not "unavailable",
+  // and the member did this deliberately, so the screen says so and offers the way back.
+  if (isBlocked(uid)) {
+    return (
+      <Screen tone="deep">
+        <StatusBar style="dark" />
+        <View style={styles.header}>
+          <BackButton />
+        </View>
+        <EmptyState
+          emoji="🚫"
+          title="You blocked this member"
+          body="They can't message or follow you. You can undo this in Settings."
+          actionLabel="Open settings"
+          onAction={() => router.push('/(app)/settings')}
+        />
+      </Screen>
+    )
+  }
 
   if (hasError || !profile) {
     return (

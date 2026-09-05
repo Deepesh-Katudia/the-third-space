@@ -7,7 +7,16 @@ jest.mock('../../services/follows', () => ({
   subscribeFollowers: jest.fn(),
 }))
 
-beforeEach(() => jest.clearAllMocks())
+// Mocked rather than left real because useBlocks reaches services/blocks and therefore
+// firebase/config, which this suite has no business loading. `mock`-prefixed name because
+// babel-plugin-jest-hoist rejects any other out-of-scope reference in a factory.
+let mockBlocks: { blocked: Set<string>; isBlocked: (uid: string) => boolean; loading: boolean }
+jest.mock('../../hooks/useBlocks', () => ({ useBlocks: () => mockBlocks }))
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  mockBlocks = { blocked: new Set(), isBlocked: () => false, loading: false }
+})
 
 function captureBoth() {
   let emitFollowing: (uids: string[]) => void = () => {}
@@ -67,4 +76,18 @@ describe('useConnections', () => {
     expect(cb.unsubFollowing).toHaveBeenCalledTimes(1)
     expect(cb.unsubFollowers).toHaveBeenCalledTimes(1)
   })
+})
+
+it('excludes a blocked member from the mutuals', async () => {
+  // A block denies NEW follow edges, it does not delete existing ones — so a mutual that
+  // predates the block survives in Firestore and has to be filtered out here.
+  mockBlocks = { blocked: new Set(['bad']), isBlocked: (uid) => uid === 'bad', loading: false }
+  const h = captureBoth()
+  const { result } = renderHook(() => useConnections('me'))
+  await act(async () => {
+    h.emitFollowing(['bad', 'good'])
+    h.emitFollowers(['bad', 'good'])
+  })
+  await waitFor(() => expect(result.current.loading).toBe(false))
+  expect(result.current.connectionUids).toEqual(['good'])
 })

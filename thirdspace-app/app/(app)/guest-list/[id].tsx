@@ -10,6 +10,8 @@ import { LoadingView } from '../../../components/LoadingView'
 import { EmptyState } from '../../../components/EmptyState'
 import { CommunityEvent, Registration } from '../../../types/models'
 import { avatarColor, initials } from '../../../utils/avatar'
+import { useBlocks } from '../../../hooks/useBlocks'
+import { hideBlockedRegistrations } from '../../../utils/blocks'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
 import { BackButton } from '../../../components/ui/BackButton'
@@ -19,6 +21,7 @@ export default function GuestList() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { user } = useAuth()
+  const { blocked } = useBlocks()
 
   const [event, setEvent] = useState<CommunityEvent | null | undefined>(undefined)
   const [attendees, setAttendees] = useState<Registration[]>([])
@@ -59,7 +62,11 @@ export default function GuestList() {
   }
 
   const youAreGoing = !!user && attendees.some((a) => a.uid === user.uid)
+  // The header count stays TRUE — how many people are going is a fact about the event,
+  // and hiding one row should not misreport it. The section label below uses the visible
+  // count so it describes the list it sits on top of.
   const total = attendees.length
+  const visibleAttendees = hideBlockedRegistrations(attendees, blocked)
   const hostName = venue?.name ?? event.venueName
   const hostStat = venue ? `Hosting · ${venue.eventsCount} event${venue.eventsCount === 1 ? '' : 's'}` : 'Host'
 
@@ -97,11 +104,11 @@ export default function GuestList() {
           </TouchableOpacity>
         </View>
 
-        <Meta role="eyebrow" style={styles.sectionLabel}>Attendees · {attendees.length}</Meta>
-        {attendees.length === 0 ? (
+        <Meta role="eyebrow" style={styles.sectionLabel}>Attendees · {visibleAttendees.length}</Meta>
+        {visibleAttendees.length === 0 ? (
           <Body role="bodySm" style={styles.emptyAttendees}>No one has registered yet. Be the first.</Body>
         ) : (
-          attendees.map((a) => {
+          visibleAttendees.map((a) => {
             const metaParts = [a.neighborhood, (a.interestsPreview ?? []).join(', ')].filter(Boolean)
             return (
               <TouchableOpacity

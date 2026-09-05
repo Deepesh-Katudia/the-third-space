@@ -3,6 +3,8 @@ import { ChatThread } from '../types/models'
 import { getMyRegisteredEvents } from '../services/events'
 import { subscribeEventChatMeta, subscribeMyConversations, subscribeChatReads } from '../services/chat'
 import { buildChatThreads, GroupChatInput, ReadMap } from '../utils/chat'
+import { useBlocks } from './useBlocks'
+import { hideBlockedThreads } from '../utils/blocks'
 
 export function useChatList(uid: string | undefined) {
   const [groups, setGroups] = useState<GroupChatInput[]>([])
@@ -51,9 +53,13 @@ export function useChatList(uid: string | undefined) {
     )
   }, [uid])
 
+  // Read-side suppression is client-side because rules allow or deny a whole query and
+  // never filter one. The write gates in firestore.rules already stop the blocked party
+  // sending; this is what stops the thread appearing to the blocker.
+  const { blocked } = useBlocks()
   const threads: ChatThread[] = useMemo(
-    () => (uid ? buildChatThreads(groups, conversations, reads, uid) : []),
-    [groups, conversations, reads, uid]
+    () => (uid ? hideBlockedThreads(buildChatThreads(groups, conversations, reads, uid), blocked, uid) : []),
+    [groups, conversations, reads, uid, blocked]
   )
 
   return { threads, loading, hasError }
