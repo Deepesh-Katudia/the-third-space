@@ -17,7 +17,7 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 | Storage | AsyncStorage (auth session persistence) |
 | Vector | react-native-svg 15.12.1 — reward mascots only; bundled in Expo Go, no local rebuild |
 | Media | expo-image-picker + expo-video (playback) + expo-video-thumbnails (posters) + expo-image-manipulator (compression) — all bundled in Expo Go, no config plugin, no rebuild |
-| Tests | Jest (jest-expo) — 70 suites / 564 tests; `@firebase/rules-unit-testing` for rules (52/52) |
+| Tests | Jest (jest-expo) — 80 suites / 638 tests; `@firebase/rules-unit-testing` for rules (68/68) |
 
 **Firebase project**: `the-third-space-626e8` (see `.firebaserc`). App display name: "Your Third Space".
 
@@ -26,9 +26,9 @@ _Generated: 2026-08-06. Re-run `/update-codemaps` after major structural changes
 ## Build Status (2026-08-11)
 
 - `npx tsc --noEmit` — **clean**
-- `npx jest` — **564/564 pass**, 70 suites
-- `npm run test:rules` — **52/52 pass** (38 Firestore + 14 Storage)
-- `cd functions && npx jest` — **23/23 pass**, 9 suites
+- `npx jest` — **638/638 pass**, 80 suites
+- `npm run test:rules` — **68/68 pass** (54 Firestore + 14 Storage)
+- `cd functions && npx jest` — **43/43 pass**, 11 suites
 - **No mock data remains.** Phase 1 (UI), Phase 2 A–F (profiles, discover, chat, points, social, announcements), Phase 3 (push), and ID verification are all live-wired to Firestore.
 - Firestore rules are **deployed** as of 2026-09-03 — the conversations read on a non-existent doc, the
   `profiles/{uid}/private/socials` mutual-follow gate and the write-once `role` split on `users/{uid}`
@@ -136,6 +136,7 @@ thirdspace-app/
         ├── borough-picker.tsx  # Borough selection modal (Discover → location override)
         ├── message-requests.tsx  message-privacy.tsx
         ├── settings.tsx  change-password.tsx
+        ├── blocked-users.tsx  delete-account.tsx   # safety + Guideline 5.1.1(v)
         ├── verify-identity.tsx
 ```
 
@@ -258,6 +259,9 @@ when signed in with setup incomplete.
 | `conversations/{convId}` | `Conversation` | convId = sorted uid pair |
 | `conversations/{id}/messages/{id}` | `Message` | Participant-gated incl. delete |
 | `follows/{follower_target}` | `Follow` | One edge doc; no counters |
+| `users/{uid}/blocks/{blockedUid}` | `{ createdAt }` | Private to the blocker. Doc id IS the blocked uid |
+| `reports/{reportId}` | `Report` | Create-only. Readable by NOBODY, including its author |
+| `mail/{autoId}` | Trigger Email doc | Written by `onReportCreated`; consumed by the Firebase extension |
 
 ---
 
@@ -572,8 +576,15 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   `getDoc` before creating the request. Same trap applies to any future collection read before create.
 - **DM create is two sequential writes, not a batch** — rules `get()` sees pre-batch state, so batching
   conversation-create + first message gets denied. Conversation first, then message.
-- **Discover filtering is entirely client-side** over one subscription — no composite indexes anywhere in
-  this app. All Firestore queries use single-field `where` only.
+- **Discover filtering is entirely client-side** over one subscription, and there is still no composite
+  index anywhere. **Amended 2026-09-05: there is now exactly ONE explicit index**, a collection-group
+  single-field index on `messages.authorUid` in `firestore.indexes.json`, because account deletion has to
+  find every message a user authored across `conversations/*/messages` AND `eventChats/*/messages`.
+  Collection-group single-field indexes are not created automatically, so without it the cascade fails at
+  its first step. Everything else still uses single-field `where` on one collection: registrations come
+  from the `users/{uid}.registeredEventIds` array, and events-by-host / follows-by-follower /
+  follows-by-target are indexed by Firestore on its own. A SECOND index should still feel like a decision,
+  not a convenience.
 - **`verified` is owner-set (simulated)** — `verify-identity.tsx` captures ID + selfie **on-device, never
   uploaded**, then `submitVerification` sets `profiles/{uid}.verified` from the client. Rules permit this
   because there is no real KYC. Skippable, attenders-only. Move to server-set if real KYC lands.
@@ -595,6 +606,47 @@ strict inequalities matching `IMAGE_MAX_BYTES`/`VIDEO_MAX_BYTES` exactly.
   `.env.example` lists the keys.
 - **Google OAuth placeholder** — unset client id would be `undefined` and crash the auth screen, so
   `useGoogleAuth` substitutes `'google-auth-not-configured'`; it is never sent to Google.
+- **Blocking is SYMMETRIC on writes and ASYMMETRIC on reads, and the asymmetry is the point** —
+  `firestore.rules` `blockedEitherWay(other)` denies conversation create, message create and follow
+  create in BOTH directions, so neither party can reach the other. Read filtering only ever changes the
+  BLOCKER's view: `hooks/useBlocks.ts` (a module store, the `useUserLocation` pattern) feeds
+  `utils/blocks.ts` filters into the chat list, Discover, the guest list, connections and `member/[uid]`.
+  Symmetric read filtering would need a mirror doc at `users/{blocked}/blockedBy`, which hands the blocked
+  party an enumerable list of everyone who has blocked them — turning a private safety action into a
+  notification, which is what stops people using one. Rules can only allow or deny a whole query, never
+  filter one, so read suppression is client-side regardless.
+- **Every failure a block can cause reads identically, and says nothing** — a denied send or follow comes
+  back as `permission-denied`, indistinguishable from being offline. Both chat send paths and the follow
+  path say "This message could not be sent." / "That didn't work. Try again." Each site carries a comment
+  saying so, because the next contributor will otherwise "improve" the message and leak the block. A media
+  size rejection and a content rejection DO explain themselves — those are the caller's own file and own
+  words.
+- **`reports` is unreadable by everyone, including its author** — a report is an accusation about a third
+  party, so a readable collection would leak who reported whom. No update or delete either: an author who
+  could retract one after it was acted on makes the queue unauditable. `onReportCreated` writes a `mail/`
+  document in the *Trigger Email from Firestore* shape rather than calling a provider, because no email
+  credential exists in this project — installing the extension is a deployment step, and swapping in an
+  API call later touches one function and no callers.
+- **Deletion cascades FIRST and deletes the Auth user LAST** — `functions/src/deleteAccount.ts`. A mid-way
+  failure then leaves a recoverable, still-signed-in account rather than an unreachable orphan whose data
+  survives with nobody able to delete it. Past events survive a hoster's deletion (attendees' history and
+  points depend on them); future ones are cancelled. Thread `lastMessage*` snapshots are recomputed from
+  the newest survivor, or cleared — otherwise a thread keeps showing text whose document is gone. The
+  callable takes NO uid: it deletes its caller, and accepting one would make it a way to delete somebody
+  else's account. Tested against an in-memory Firestore double (`functions/src/testing/fakeFirestore.ts`)
+  so the functions suite stays a plain unit run with no Java and no ports.
+- **`constants/legal.ts` is the only file where a legal URL may be written** — the rule `design.ts` holds
+  over colour. Every URL derives from one `LEGAL_SITE` constant and a test fails if a second origin
+  appears. **`LEGAL_SITE` is a PLACEHOLDER until the company site ships**, and App Review opens these
+  links. Terms acceptance is stamped on `users/{uid}`, NOT `profiles/{uid}`: it happens at sign-up before
+  a profile exists, and hosters never get one. The VERSION is stored beside the timestamp because a
+  boolean cannot answer "did they accept THESE terms" once the terms change.
+- **The content filter blocks slurs and explicit sexual terms, NOT ordinary swearing** —
+  `utils/contentFilter.ts`, word-boundary matched with diacritics stripped. Blocking "damn" would annoy
+  everybody and protect nobody, and every false positive teaches members the app is broken. It runs before
+  ANY Firestore call on all four write paths, so a rejection leaves nothing behind, and it REJECTS rather
+  than silently stripping — quietly editing what somebody wrote means the message that went out was not
+  theirs. It is a compliance floor; the report queue is the real mechanism.
 - **The cloud is a FIRST-RUN feature, and "first run" means the first SESSION** — prompts
   appear during the first app session an account ever has on a device, and after that never
   again. `utils/cloudPrompts.ts` `isFirstRun()` is the whole gate and `pickPrompt()` returns
