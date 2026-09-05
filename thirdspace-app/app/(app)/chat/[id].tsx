@@ -24,6 +24,7 @@ import {
 } from '../../../services/chat'
 import { pickMedia, uploadMedia, deleteMedia, MediaLimitError, type PickedMedia } from '../../../services/media'
 import { limitMessage } from '../../../utils/media'
+import { ContentRejectedError, contentRejectedMessage } from '../../../utils/contentFilter'
 import { Conversation, MediaAsset } from '../../../types/models'
 import { Screen } from '../../../components/ui/Screen'
 import { Display, Body, Meta } from '../../../components/ui/Text'
@@ -141,14 +142,19 @@ export default function ChatThreadScreen() {
       setDraft('')
       try {
         await sendText(text.trim())
-      } catch {
+      } catch (e: unknown) {
         // Put the text back so a failed send never loses what they typed.
         setDraft((current) => (current ? current : text))
+        // A content rejection is about the sender's OWN text, so it explains itself.
         // Neutral on purpose: a message into a thread where either party has blocked the
         // other is denied by firestore.rules with permission-denied, which is
         // indistinguishable from being offline — and must stay that way. Naming the block
         // here would leak it to the person who was blocked.
-        setSendError('This message could not be sent.')
+        setSendError(
+          e instanceof ContentRejectedError
+            ? contentRejectedMessage(e.field)
+            : 'This message could not be sent.'
+        )
       }
       return
     }
@@ -188,9 +194,13 @@ export default function ChatThreadScreen() {
     } catch (e: unknown) {
       // A size/duration rejection is the caller's own file and safe to explain. Anything
       // else stays neutral for the same reason as the text path above.
-      setSendError(e instanceof MediaLimitError
-        ? limitMessage(e.result, picked.type)
-        : 'This message could not be sent.')
+      setSendError(
+        e instanceof MediaLimitError
+          ? limitMessage(e.result, picked.type)
+          : e instanceof ContentRejectedError
+            ? contentRejectedMessage(e.field)
+            : 'This message could not be sent.'
+      )
       if (uploaded) void deleteMedia(uploaded)
       // Put it back in the composer so the send can be retried without re-picking.
       setStaged(picked)

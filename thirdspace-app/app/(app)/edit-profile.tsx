@@ -17,6 +17,7 @@ import { useSocials } from '../../hooks/useSocials'
 import { updateProfile, setSocials } from '../../services/profiles'
 import { pickMedia, uploadMedia, deleteMedia, MediaLimitError, type PickedMedia } from '../../services/media'
 import { coerceLegacyVibe, limitMessage } from '../../utils/media'
+import { ContentRejectedError, contentRejectedMessage } from '../../utils/contentFilter'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body, Meta } from '../../components/ui/Text'
@@ -181,8 +182,12 @@ export default function EditProfile() {
         await setSocials(user.uid, cleanedSocials)
       }
       router.back()
-    } catch {
-      setError("Couldn't save changes. Try again.")
+    } catch (e: unknown) {
+      setError(
+        e instanceof ContentRejectedError
+          ? contentRejectedMessage(e.field)
+          : "Couldn't save changes. Try again."
+      )
     } finally {
       setBusy(false)
     }

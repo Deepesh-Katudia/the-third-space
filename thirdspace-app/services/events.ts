@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { AgeRequirement, CommunityEvent, EventCategory, MediaAsset, Registration, Venue } from '../types/models'
+import { assertClean } from '../utils/contentFilter'
 import { POINTS_PER_EVENT, tierForPoints } from '../utils/points'
 import { deleteMedia } from './media'
 
@@ -52,6 +53,10 @@ export function newEventRef(): DocumentReference {
 
 /** Extracted so the shape can be asserted without a Firestore round-trip. */
 export function buildEventDoc(venueId: string, venue: Venue, input: CreateEventInput, cover?: MediaAsset) {
+  // Here rather than in createEvent, because this is the one function every event write
+  // goes through — and it runs before the cover upload is committed to.
+  assertClean(input.title, 'title')
+  assertClean(input.description, 'description')
   return {
     title: input.title.trim(),
     description: input.description.trim(),

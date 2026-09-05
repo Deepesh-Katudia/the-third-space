@@ -12,6 +12,7 @@ import { Borough } from '../../types/models'
 import { createProfile } from '../../services/profiles'
 import { pickMedia, uploadMedia, MediaLimitError, type PickedMedia } from '../../services/media'
 import { limitMessage } from '../../utils/media'
+import { ContentRejectedError, contentRejectedMessage } from '../../utils/contentFilter'
 import { ageFromDOB } from '../../utils/profile'
 import { avatarColor, initials } from '../../utils/avatar'
 import { Screen } from '../../components/ui/Screen'
@@ -73,8 +74,12 @@ export default function CreateProfile() {
         dob
       )
       ;(router.replace as (href: string) => void)('/(app)/verify-identity')
-    } catch {
-      setError("Couldn't save your profile. Try again.")
+    } catch (e: unknown) {
+      setError(
+        e instanceof ContentRejectedError
+          ? contentRejectedMessage(e.field)
+          : "Couldn't save your profile. Try again."
+      )
     } finally {
       setBusy(false)
     }

@@ -8,6 +8,7 @@ import { useVenue } from '../../hooks/useVenue'
 import { createEvent, newEventRef } from '../../services/events'
 import { pickMedia, uploadMedia, deleteMedia, MediaLimitError } from '../../services/media'
 import { limitMessage } from '../../utils/media'
+import { ContentRejectedError, contentRejectedMessage } from '../../utils/contentFilter'
 import { MediaSlotPicker } from '../../components/MediaSlotPicker'
 import { validateEventForm, EventFormErrors } from '../../utils/eventValidation'
 import { formatEventDate } from '../../utils/eventHelpers'
@@ -110,8 +111,12 @@ export default function CreateEvent() {
         ageRequirement,
       }, cover ?? undefined)
       router.back()
-    } catch {
-      setBanner("Couldn't create the event. Check your connection and try again.")
+    } catch (e: unknown) {
+      setBanner(
+        e instanceof ContentRejectedError
+          ? contentRejectedMessage(e.field)
+          : "Couldn't create the event. Check your connection and try again."
+      )
       setSaving(false)
     }
   }

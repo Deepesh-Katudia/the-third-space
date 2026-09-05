@@ -4,8 +4,11 @@ import {
 import { db } from '../firebase/config'
 import { CreateProfileInput, Profile, Reward, SocialHandles } from '../types/models'
 import { tierForPoints } from '../utils/points'
+import { assertClean } from '../utils/contentFilter'
 
 export async function createProfile(uid: string, input: CreateProfileInput, birthdate: Date): Promise<void> {
+  assertClean(input.displayName, 'name')
+  assertClean(input.bio, 'bio')
   const batch = writeBatch(db)
   batch.set(doc(db, 'profiles', uid), {
     ...input,
@@ -20,6 +23,10 @@ export async function createProfile(uid: string, input: CreateProfileInput, birt
 }
 
 export async function updateProfile(uid: string, partial: Partial<CreateProfileInput>): Promise<void> {
+  // Partial, so only what is actually being written is checked. Passing undefined through
+  // assertClean would reject an edit that never touched the field.
+  if (partial.displayName !== undefined) assertClean(partial.displayName, 'name')
+  if (partial.bio !== undefined) assertClean(partial.bio, 'bio')
   await updateDoc(doc(db, 'profiles', uid), partial)
 }
 

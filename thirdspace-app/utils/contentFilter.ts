@@ -93,6 +93,15 @@ export class ContentRejectedError extends Error {
 }
 
 /**
+ * One sentence for a rejected field, so the four screens that can hit the content filter
+ * say the same thing. The field name comes from the error, because a form with four inputs
+ * has to point at the right one.
+ */
+export function contentRejectedMessage(field: string): string {
+  return `That ${field} contains language we don't allow here. Please edit it and try again.`
+}
+
+/**
  * Throws if the text is not postable. Empty text passes: whether a field is REQUIRED is a
  * different question, answered by the form's own validation.
  */

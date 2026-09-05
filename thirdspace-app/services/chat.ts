@@ -6,6 +6,7 @@ import {
 import { db } from '../firebase/config'
 import { ChatRead, Conversation, EventChatMeta, MediaAsset, Message } from '../types/models'
 import { mediaPreviewLabel } from '../utils/media'
+import { assertClean } from '../utils/contentFilter'
 
 const MESSAGE_PAGE = 50
 const DECLINE_BATCH_SIZE = 400
@@ -70,6 +71,9 @@ export async function sendEventMessage(
 ): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed && !media) return
+  // Before ANY write, so a rejected message leaves nothing behind: no message doc, no
+  // bumped thread metadata, no uploaded attachment orphaned by a half-done send.
+  assertClean(trimmed, 'message')
   // An attachment-only message would otherwise leave the chat list row blank.
   const preview = trimmed || mediaPreviewLabel(media)
   const batch = writeBatch(db)
@@ -137,6 +141,7 @@ export async function sendDirectMessage(
 ): Promise<SendDirectMessageResult> {
   const trimmed = text.trim()
   if (!trimmed && !media) return { created: false }
+  assertClean(trimmed, 'message')
   const preview = trimmed || mediaPreviewLabel(media)
   const body = {
     authorUid: author.uid, authorName: author.name, authorPhotoURL: author.photoURL,
