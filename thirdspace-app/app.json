@@ -14,7 +14,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thirdspace.app",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +33,17 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Your Third Space uses your location to show events happening in your borough."
+          "locationWhenInUsePermission": "Your Third Space uses your location to show events happening in your borough.",
+          "locationAlwaysAndWhenInUsePermission": "Your Third Space uses your location to show events happening in your borough.",
+          "locationAlwaysPermission": "Your Third Space uses your location to show events happening in your borough."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Your Third Space needs your photo library so you can add a profile photo, vibe photos and clips, event covers, venue photos, and attachments in chat.",
+          "cameraPermission": "Your Third Space needs your camera so you can take a profile photo, capture a clip for your profile or a chat, and photograph your ID when verifying yourself.",
+          "microphonePermission": "Your Third Space needs your microphone to record sound with the video clips you add to your profile, an event, or a chat."
         }
       ]
     ],
