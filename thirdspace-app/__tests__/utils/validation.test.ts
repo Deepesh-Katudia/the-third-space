@@ -69,9 +69,25 @@ describe('validateSignUpForm', () => {
     phone: '2125551234',
     password: 'Abcd1234!',
     confirmPassword: 'Abcd1234!',
+    termsAccepted: true,
   }
   it('returns no errors for valid form', () => {
     expect(validateSignUpForm(valid)).toEqual({})
+  })
+
+  it('requires the terms to be accepted', () => {
+    // App Store Guideline 1.2 expects agreed terms for user-generated content, and the
+    // acceptance is stamped onto the account — so an unchecked box is a real error, not a
+    // nudge.
+    expect(validateSignUpForm({ ...valid, termsAccepted: false })).toEqual({
+      termsAccepted: 'Please accept the Terms and Privacy Policy to continue.',
+    })
+  })
+
+  it('reports the terms alongside other problems rather than instead of them', () => {
+    // A form that surfaces one error at a time makes people fix things three times.
+    const errors = validateSignUpForm({ ...valid, name: '', termsAccepted: false })
+    expect(Object.keys(errors).sort()).toEqual(['name', 'termsAccepted'])
   })
   it('returns error when name is empty', () => {
     expect(validateSignUpForm({ ...valid, name: '' }).name).toBeDefined()

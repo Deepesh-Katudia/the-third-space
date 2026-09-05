@@ -15,16 +15,25 @@ interface TextProps<R extends TypeRole = TypeRole> {
   numberOfLines?: number
   /** Announce changes to screen readers — used by Toast. */
   accessibilityLiveRegion?: 'none' | 'polite' | 'assertive'
+  /**
+   * Makes this run of text tappable in place. For a link inside a sentence — the terms
+   * label at sign-up — where lifting it out into a button would break the sentence.
+   * Everything else should be a TouchableOpacity around a whole row.
+   */
+  onPress?: () => void
+  accessibilityRole?: 'link' | 'text'
   testID?: string
   children: React.ReactNode
 }
 
 function make<R extends TypeRole>(displayName: string, defaultRole: R, defaultTone: Tone) {
-  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, accessibilityLiveRegion, testID, children }: TextProps<R>) {
+  function Component({ role = defaultRole, tone = defaultTone, style, numberOfLines, accessibilityLiveRegion, onPress, accessibilityRole, testID, children }: TextProps<R>) {
     return (
       <Text
         numberOfLines={numberOfLines}
         accessibilityLiveRegion={accessibilityLiveRegion}
+        onPress={onPress}
+        accessibilityRole={accessibilityRole ?? (onPress ? 'link' : undefined)}
         testID={testID}
         style={[typeScale[role], { color: palette[tone] }, style]}
       >

@@ -516,3 +516,15 @@ test('nobody can read, update or delete a report -- not even its author', async 
   await assertFails(updateDoc(doc(me, 'reports/r4'), { reason: 'spam' }))
   await assertFails(deleteDoc(doc(me, 'reports/r4')))
 })
+
+test('owner can stamp terms acceptance without tripping the write-once role rule', async () => {
+  // The two features meet here: acceptance is merged onto users/{uid}, which is the doc
+  // whose `role` field can never change. A merge that leaves role alone must pass.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me'), { uid: 'me', role: 'attender' })
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(
+    setDoc(doc(me, 'users/me'), { termsAcceptedAt: new Date(), termsVersion: '2026-09-05' }, { merge: true })
+  )
+})

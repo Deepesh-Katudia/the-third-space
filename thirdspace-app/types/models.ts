@@ -282,3 +282,13 @@ export interface Report {
   details?: string
   createdAt: Timestamp | null
 }
+
+// -- Legal acceptance (App Store Guideline 1.2) ----------------------------
+// Stamped onto users/{uid} at sign-up, not onto profiles/{uid}: acceptance happens before a
+// profile exists, and hosters never get one at all. The VERSION is stored beside the
+// timestamp because a boolean cannot answer "did they accept these terms" once the
+// published terms change.
+export interface TermsAcceptance {
+  termsAcceptedAt: Timestamp | null
+  termsVersion: string
+}

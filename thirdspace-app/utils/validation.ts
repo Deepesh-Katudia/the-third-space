@@ -24,6 +24,7 @@ export interface SignUpFormErrors {
   phone?: string
   password?: string
   confirmPassword?: string
+  termsAccepted?: string
 }
 
 export function validateSignUpForm(fields: {
@@ -32,6 +33,8 @@ export function validateSignUpForm(fields: {
   phone: string
   password: string
   confirmPassword: string
+  /** Required: the acceptance is stamped onto the account, so it has to be given. */
+  termsAccepted: boolean
 }): SignUpFormErrors {
   const errors: SignUpFormErrors = {}
   if (!fields.name.trim()) errors.name = 'Full name is required.'
@@ -42,6 +45,7 @@ export function validateSignUpForm(fields: {
       'Use at least 8 characters with a mix of upper- and lower-case letters, numbers, or symbols — and avoid your name, email, or a common password.'
   }
   if (fields.password !== fields.confirmPassword) errors.confirmPassword = 'Passwords do not match.'
+  if (!fields.termsAccepted) errors.termsAccepted = 'Please accept the Terms and Privacy Policy to continue.'
   return errors
 }
 

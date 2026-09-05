@@ -3,6 +3,9 @@ import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Sty
 import { useRouter } from 'expo-router'
 import { createUserWithEmailAndPassword, updateProfile, signInWithCredential, OAuthProvider } from 'firebase/auth'
 import { httpsCallable } from 'firebase/functions'
+import { Ionicons } from '@expo/vector-icons'
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../../constants/legal'
+import { stampTermsAcceptance } from '../../services/account'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import * as WebBrowser from 'expo-web-browser'
 import { auth, functions } from '../../firebase/config'
@@ -28,6 +31,7 @@ export default function SignUp() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<SignUpFormErrors>({})
@@ -35,16 +39,24 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
 
   const { promptGoogleSignIn, isGoogleLoading } = useGoogleAuth({
-    onSuccess: () => router.replace('/(auth)/role-select'),
+    onSuccess: async () => {
+      // The hook reports success without handing back the credential, so the uid comes
+      // from auth.currentUser — which is set by the time onSuccess fires.
+      const uid = auth.currentUser?.uid
+      if (uid) await stampTermsAcceptance(uid)
+      router.replace('/(auth)/role-select')
+    },
     onError: setBanner,
   })
 
   const passwordEval = useMemo(() => evaluatePassword(password, { email, name }), [password, email, name])
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
-  const canSubmit = passwordEval.meetsMinimum && passwordsMatch
+  // The box gates the button as well as the validator: an inert button says "not yet"
+  // before a tap, where an error message only says it afterwards.
+  const canSubmit = passwordEval.meetsMinimum && passwordsMatch && termsAccepted
 
   const handleEmailSignUp = async () => {
-    const formErrors = validateSignUpForm({ name, email, phone, password, confirmPassword })
+    const formErrors = validateSignUpForm({ name, email, phone, password, confirmPassword, termsAccepted })
     if (Object.keys(formErrors).length > 0) { setErrors(formErrors); return }
     setErrors({})
     setLoading(true)
@@ -58,6 +70,7 @@ export default function SignUp() {
         await updateProfile(user, { displayName: name.trim() })
       }
       await httpsCallable(functions, 'completeSignUp')({ phone: toE164(phone) })
+      await stampTermsAcceptance(user.uid)
       router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
@@ -85,7 +98,10 @@ export default function SignUp() {
         nonce: hashed,
       })
       const provider = new OAuthProvider('apple.com')
-      await signInWithCredential(auth, provider.credential({ idToken: credential.identityToken!, rawNonce: raw }))
+      const signedIn = await signInWithCredential(auth, provider.credential({ idToken: credential.identityToken!, rawNonce: raw }))
+      // Apple and Google sign-ups accept the same terms as the email path: the checkbox
+      // gates all three buttons, so the acceptance is real for each of them.
+      await stampTermsAcceptance(signedIn.user.uid)
       router.replace('/(auth)/role-select')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
@@ -126,6 +142,37 @@ export default function SignUp() {
           {password.length > 0 ? <PasswordStrengthMeter evaluation={passwordEval} /> : null}
           <FormInput label="Confirm password" value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} secureTextEntry placeholder="Re-enter password" />
 
+          <TouchableOpacity
+            style={styles.termsRow}
+            onPress={() => setTermsAccepted((v) => !v)}
+            activeOpacity={0.7}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: termsAccepted }}
+            accessibilityLabel="Accept the Terms of use and Privacy policy"
+          >
+            <Ionicons
+              name={termsAccepted ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={termsAccepted ? palette.clay : palette.inkSoft}
+            />
+            <Body role="bodySm" style={styles.termsText}>
+              I agree to the{' '}
+              {/* Tappable inside the label, so reading the terms does not mean losing the
+                  form: openBrowserAsync returns to this screen with state intact. */}
+              <Body role="bodySm" tone="clay" onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}>
+                Terms of use
+              </Body>
+              {' '}and{' '}
+              <Body role="bodySm" tone="clay" onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)}>
+                Privacy policy
+              </Body>
+              .
+            </Body>
+          </TouchableOpacity>
+          {errors.termsAccepted ? (
+            <Body role="bodySm" tone="clay" style={styles.termsError}>{errors.termsAccepted}</Body>
+          ) : null}
+
           <View style={styles.buttons}>
             <AuthButton label="Create account" onPress={handleEmailSignUp} variant="primary" loading={loading || isGoogleLoading} disabled={!canSubmit} />
             <View style={styles.divider}>
@@ -154,6 +201,9 @@ const styles = StyleSheet.create({
   header: { marginBottom: space.xxl - space.xs },
   title: { marginBottom: space.sm },
   buttons: { marginTop: space.sm, gap: space.md },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, marginTop: space.sm },
+  termsText: { flex: 1 },
+  termsError: { marginTop: space.xs },
   divider: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginVertical: space.xs },
   dividerLine: { flex: 1, height: 1, backgroundColor: palette.rule },
   footer: { alignItems: 'center', marginTop: space.xl },
