@@ -12,6 +12,7 @@ import { Banner } from '../../../components/Banner'
 import { useFollowStatus } from '../../../hooks/useFollowStatus'
 import { useBlocks } from '../../../hooks/useBlocks'
 import { MemberActionSheet } from '../../../components/MemberActionSheet'
+import { ReportSheet } from '../../../components/ReportSheet'
 import { blockUser } from '../../../services/blocks'
 import { useSocials } from '../../../hooks/useSocials'
 import { SocialChips } from '../../../components/SocialChips'
@@ -36,6 +37,7 @@ export default function MemberProfile() {
   const [banner, setBanner] = useState('')
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [reporting, setReporting] = useState(false)
   const vibes = useMemo(() => coerceLegacyVibe(profile?.vibePhotos), [profile?.vibePhotos])
 
   const handleToggleFollow = async () => {
@@ -179,7 +181,21 @@ export default function MemberProfile() {
         memberName={profile.displayName}
         onClose={() => setSheetOpen(false)}
         onBlock={handleBlock}
+        onReport={() => {
+          // Close the action sheet first: two Modals open at once stack, and the second
+          // would render behind the first one's scrim.
+          setSheetOpen(false)
+          setReporting(true)
+        }}
       />
+
+      {reporting ? (
+        <ReportSheet
+          visible
+          target={{ kind: 'user', targetUid: uid }}
+          onClose={() => setReporting(false)}
+        />
+      ) : null}
 
       <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>

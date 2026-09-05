@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Image,
-  KeyboardAvoidingView, Platform, StyleSheet,
+  KeyboardAvoidingView, Platform, Pressable, StyleSheet,
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { ChatBubble } from '../../../components/ChatBubble'
+import { ReportSheet, type ReportTarget } from '../../../components/ReportSheet'
 import { MediaViewer } from '../../../components/MediaViewer'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
 import { Banner } from '../../../components/Banner'
@@ -59,6 +60,7 @@ export default function ChatThreadScreen() {
   const [staged, setStaged] = useState<PickedMedia | null>(null)
   const [pending, setPending] = useState<Pending | null>(null)
   const [viewing, setViewing] = useState<MediaAsset | null>(null)
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null)
   const scrollRef = useRef<ScrollView>(null)
   const everExisted = useRef(false)
 
@@ -254,20 +256,32 @@ export default function ChatThreadScreen() {
             const isSelf = m.authorUid === myUid
             const isAnnouncement = m.kind === 'announcement'
             return (
-              <ChatBubble
+              // Long-press to report, the convention for a message. Undefined on your own
+              // messages: reporting yourself is not a thing, and a handler that opens a
+              // sheet about you would just be confusing.
+              <Pressable
                 key={m.id}
-                message={{
-                  id: m.id,
-                  author: m.authorName,
-                  text: m.text,
-                  time: clockTime(m.createdAt ? m.createdAt.toDate() : null),
-                  media: m.media,
-                }}
-                isSelf={isSelf && !isAnnouncement}
-                isAnnouncement={isAnnouncement}
-                showAuthor={!isSelf && shouldShowAuthor(messages, i)}
-                onPressMedia={() => setViewing(m.media ?? null)}
-              />
+                onLongPress={
+                  isSelf
+                    ? undefined
+                    : () => setReportTarget({ kind: 'message', targetUid: m.authorUid, threadId: id, messageId: m.id })
+                }
+                delayLongPress={400}
+              >
+                <ChatBubble
+                  message={{
+                    id: m.id,
+                    author: m.authorName,
+                    text: m.text,
+                    time: clockTime(m.createdAt ? m.createdAt.toDate() : null),
+                    media: m.media,
+                  }}
+                  isSelf={isSelf && !isAnnouncement}
+                  isAnnouncement={isAnnouncement}
+                  showAuthor={!isSelf && shouldShowAuthor(messages, i)}
+                  onPressMedia={() => setViewing(m.media ?? null)}
+                />
+              </Pressable>
             )
           })}
           {pending ? (
@@ -333,6 +347,10 @@ export default function ChatThreadScreen() {
         )}
       </KeyboardAvoidingView>
       {toast ? <Toast message={toast} onDismiss={() => setToast('')} /> : null}
+      {reportTarget ? (
+        <ReportSheet visible target={reportTarget} onClose={() => setReportTarget(null)} />
+      ) : null}
+
       <MediaViewer media={viewing} onClose={() => setViewing(null)} />
     </Screen>
   )

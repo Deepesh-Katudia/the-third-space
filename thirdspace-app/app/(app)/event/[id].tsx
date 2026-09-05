@@ -18,6 +18,7 @@ import { Banner } from '../../../components/Banner'
 import { EmptyState } from '../../../components/EmptyState'
 import { LoadingView } from '../../../components/LoadingView'
 import { AttendeeAvatarStack } from '../../../components/AttendeeAvatarStack'
+import { ReportSheet } from '../../../components/ReportSheet'
 import { RegistrationConfirmation } from '../../../components/RegistrationConfirmation'
 import { AnnouncementBanner } from '../../../components/AnnouncementBanner'
 import { AmbientBackdrop } from '../../../components/AmbientBackdrop'
@@ -67,6 +68,7 @@ export default function EventDetail() {
   // the scroll content cannot clear it with a constant. A phone with a home indicator
   // and one without differ by ~34pt, which is the whole last line of the description.
   const [footerHeight, setFooterHeight] = useState(0)
+  const [reporting, setReporting] = useState(false)
 
   const insets = useSafeAreaInsets()
   const heroHeight = HERO_BODY + insets.top
@@ -297,8 +299,23 @@ export default function EventDetail() {
               <Body role="bodyLg" tone="ink" style={styles.description}>{event.description}</Body>
             </>
           ) : null}
+
+          {/* Last in the sheet on purpose: findable, without competing with the event. */}
+          <TouchableOpacity style={styles.reportRow} onPress={() => setReporting(true)} activeOpacity={0.7}>
+            <Body role="bodySm">Report this event</Body>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {reporting ? (
+        <ReportSheet
+          visible
+          // The host is who a bad event is about: events are owned by venueId, which is
+          // the hoster's uid.
+          target={{ kind: 'event', targetUid: event.venueId, eventId: event.id }}
+          onClose={() => setReporting(false)}
+        />
+      ) : null}
 
       {/* Sticky footer */}
       <SafeAreaView
@@ -444,6 +461,13 @@ const styles = StyleSheet.create({
   lockedText: { fontStyle: 'italic' },
 
   description: { marginBottom: space.sm },
+  reportRow: {
+    marginTop: space.xl,
+    paddingVertical: space.md,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: palette.rule,
+  },
 
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.orangeLight, borderTopWidth: 1, borderTopColor: palette.rule },
   footerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingTop: space.md + 2, paddingBottom: space.xs + 2 },
