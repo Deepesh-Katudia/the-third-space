@@ -381,3 +381,99 @@ test('a third party can neither read nor write a block list they do not own', as
   await assertFails(setDoc(doc(other, 'users/me/blocks/them'), { createdAt: new Date() }))
   await assertFails(getDoc(doc(other, 'users/me/blocks/them')))
 })
+
+// -- Blocking gates the write paths, symmetrically -------------------------
+// Symmetric on writes so neither party can reach the other; asymmetric on reads, which
+// is handled client-side. Each direction is a separate exists() in the rule, so each
+// direction gets its own test -- one direction only ever proves a one-way relationship,
+// the same reason the socials tests cover each way separately.
+async function seedBlock(blocker: string, blocked: string) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), `users/${blocker}/blocks/${blocked}`), { createdAt: new Date() })
+  })
+}
+
+const convBody = (a: string, b: string, requestedBy: string) => ({
+  participants: [a, b],
+  names: {},
+  photos: {},
+  status: 'pending',
+  requestedBy,
+  lastMessageText: 'hi',
+  lastMessageAt: new Date(),
+  lastMessageAuthor: 'A',
+  messageCount: 1,
+})
+
+test('the blocker cannot open a DM with the person they blocked', async () => {
+  await seedBlock('me', 'them')
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(setDoc(doc(me, 'conversations/me_them'), convBody('me', 'them', 'me')))
+})
+
+test('the blocked party cannot open a DM with the blocker', async () => {
+  await seedBlock('me', 'them')
+  const them = env.authenticatedContext('them').firestore()
+  await assertFails(setDoc(doc(them, 'conversations/me_them'), convBody('me', 'them', 'them')))
+})
+
+test('an unrelated pair can still open a DM', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'conversations/me_other'), convBody('me', 'other', 'me')))
+})
+
+test('an existing thread goes cold once a block lands', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'conversations/me_them'), {
+      ...convBody('me', 'them', 'them'),
+      status: 'open',
+    })
+  })
+  await seedBlock('me', 'them')
+  const them = env.authenticatedContext('them').firestore()
+  await assertFails(
+    setDoc(doc(them, 'conversations/me_them/messages/m1'), {
+      authorUid: 'them',
+      authorName: 'Them',
+      authorPhotoURL: null,
+      text: 'still here',
+      createdAt: new Date(),
+    })
+  )
+})
+
+test('an open thread between unblocked participants still takes messages', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'conversations/me_other'), {
+      ...convBody('me', 'other', 'other'),
+      status: 'open',
+    })
+  })
+  const other = env.authenticatedContext('other').firestore()
+  await assertSucceeds(
+    setDoc(doc(other, 'conversations/me_other/messages/m1'), {
+      authorUid: 'other',
+      authorName: 'Other',
+      authorPhotoURL: null,
+      text: 'hello',
+      createdAt: new Date(),
+    })
+  )
+})
+
+test('the blocked party cannot follow the blocker', async () => {
+  await seedBlock('me', 'them')
+  const them = env.authenticatedContext('them').firestore()
+  await assertFails(setDoc(doc(them, 'follows/them_me'), { follower: 'them', target: 'me', createdAt: new Date() }))
+})
+
+test('the blocker cannot follow the person they blocked', async () => {
+  await seedBlock('me', 'them')
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(setDoc(doc(me, 'follows/me_them'), { follower: 'me', target: 'them', createdAt: new Date() }))
+})
+
+test('following an unrelated member still works', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'follows/me_other'), { follower: 'me', target: 'other', createdAt: new Date() }))
+})
