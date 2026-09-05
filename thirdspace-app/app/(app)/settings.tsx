@@ -87,6 +87,16 @@ export default function Settings() {
       <Body role="bodySm" style={styles.footnote}>
         If notifications are turned off at the device level, enable them in your phone&apos;s Settings first.
       </Body>
+
+      {/* Last, and the only row in clay: destructive actions should not sit among the
+          ordinary ones looking the same. */}
+      <TouchableOpacity style={styles.dangerRow} onPress={() => router.push('/(app)/delete-account')} activeOpacity={0.7}>
+        <View style={styles.rowText}>
+          <Display tone="clay">Delete account</Display>
+          <Body role="bodySm" style={styles.rowHint}>Permanently remove your account and your data</Body>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={palette.clay} />
+      </TouchableOpacity>
     </Screen>
   )
 }
@@ -119,5 +129,17 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, paddingRight: space.md },
   rowHint: { marginTop: 3 },
   footnote: { marginHorizontal: space.xl, marginTop: space.md },
+  dangerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: space.xl,
+    marginTop: space.xl,
+    backgroundColor: palette.cream,
+    borderRadius: radius.ticket,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.clay,
+  },
   error: { marginHorizontal: space.xl, marginTop: space.sm + 2 },
 })
