@@ -259,3 +259,26 @@ export interface BlockedUser {
   uid: string
   createdAt: Timestamp | null
 }
+
+// -- Safety: reporting (App Store Guideline 1.2) ---------------------------
+// One doc per report at reports/{autoId}. Create-only in firestore.rules and readable by
+// nobody, because a report is an accusation about a third party. The optional ids narrow
+// WHAT was reported: a message needs its thread and message id to be findable at all,
+// while a user report carries neither.
+export type ReportKind = 'user' | 'message' | 'event'
+
+export type ReportReason = 'harassment' | 'spam' | 'nudity' | 'hate' | 'violence' | 'other'
+
+export interface Report {
+  id: string
+  reporterUid: string
+  kind: ReportKind
+  /** Who the report is ABOUT -- for a message or event, its author or host. */
+  targetUid: string
+  threadId?: string
+  messageId?: string
+  eventId?: string
+  reason: ReportReason
+  details?: string
+  createdAt: Timestamp | null
+}

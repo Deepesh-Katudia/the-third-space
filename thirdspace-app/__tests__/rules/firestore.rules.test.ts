@@ -477,3 +477,42 @@ test('following an unrelated member still works', async () => {
   const me = env.authenticatedContext('me').firestore()
   await assertSucceeds(setDoc(doc(me, 'follows/me_other'), { follower: 'me', target: 'other', createdAt: new Date() }))
 })
+
+// -- reports: create-only, and unreadable by everyone ----------------------
+// A report is an accusation about a third party. Making it client-readable would leak who
+// reported whom, so it is written blind and read only through the console or the Admin
+// SDK, both of which bypass rules. That is also why nobody can update or delete one --
+// not even its author, who could otherwise retract an accusation after it was acted on.
+const reportBody = (reporterUid: string) => ({
+  reporterUid,
+  kind: 'user',
+  targetUid: 'them',
+  reason: 'harassment',
+  createdAt: new Date(),
+})
+
+test('a signed-in member can file a report as themselves', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'reports/r1'), reportBody('me')))
+})
+
+test('a member cannot file a report in somebody elses name', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(setDoc(doc(me, 'reports/r2'), reportBody('someone-else')))
+})
+
+test('a signed-out visitor cannot file a report at all', async () => {
+  const anon = env.unauthenticatedContext().firestore()
+  await assertFails(setDoc(doc(anon, 'reports/r3'), reportBody('me')))
+})
+
+test('nobody can read, update or delete a report -- not even its author', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'reports/r4'), reportBody('me'))
+  })
+  const me = env.authenticatedContext('me').firestore()
+  await assertFails(getDoc(doc(me, 'reports/r4')))
+  await assertFails(getDocs(collection(me, 'reports')))
+  await assertFails(updateDoc(doc(me, 'reports/r4'), { reason: 'spam' }))
+  await assertFails(deleteDoc(doc(me, 'reports/r4')))
+})

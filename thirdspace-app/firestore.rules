@@ -98,6 +98,16 @@ service cloud.firestore {
 
     // Phone -> email lookup index for sign-in. Written only by Cloud Functions
     // via the Admin SDK (which bypasses rules); clients never touch it directly.
+    // Create-only, and readable by nobody. A report is an accusation about a third
+    // party: making it client-readable would leak who reported whom. It is read through
+    // the Firebase console or the Admin SDK, both of which bypass rules. No update or
+    // delete either -- an author who could retract one after it was acted on would make
+    // the queue unauditable, and a moderation record has to outlive second thoughts.
+    match /reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.reporterUid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+
     match /phoneIndex/{phone} {
       allow read, write: if false;
     }
