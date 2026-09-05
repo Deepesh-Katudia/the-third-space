@@ -1,5 +1,5 @@
 import { initializeTestEnvironment, RulesTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { deleteDoc, doc, getDoc, increment, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
 import { readFileSync } from 'fs'
 
 let env: RulesTestEnvironment
@@ -353,4 +353,31 @@ test('owner cannot delete their user doc, which would reset role', async () => {
 test('a stranger cannot write another user doc', async () => {
   const stranger = env.authenticatedContext('stranger').firestore()
   await assertFails(setDoc(doc(stranger, 'users/me'), { uid: 'me', role: 'hoster' }))
+})
+
+// ── users/{uid}/blocks: private, and unenumerable by the blocked party ─────
+// The privacy property IS the feature: if the blocked party could read this, a block
+// would become a notification, which is exactly what stops people using one. It stays
+// enforceable anyway because exists() inside a rule bypasses read rules, so the write
+// gates below still work without anybody being able to list them.
+test('owner can block, list and unblock', async () => {
+  const me = env.authenticatedContext('me').firestore()
+  await assertSucceeds(setDoc(doc(me, 'users/me/blocks/them'), { createdAt: new Date() }))
+  await assertSucceeds(getDocs(collection(me, 'users/me/blocks')))
+  await assertSucceeds(deleteDoc(doc(me, 'users/me/blocks/them')))
+})
+
+test('nobody can read who has blocked them', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/me/blocks/them'), { createdAt: new Date() })
+  })
+  const them = env.authenticatedContext('them').firestore()
+  await assertFails(getDoc(doc(them, 'users/me/blocks/them')))
+  await assertFails(getDocs(collection(them, 'users/me/blocks')))
+})
+
+test('a third party can neither read nor write a block list they do not own', async () => {
+  const other = env.authenticatedContext('other').firestore()
+  await assertFails(setDoc(doc(other, 'users/me/blocks/them'), { createdAt: new Date() }))
+  await assertFails(getDoc(doc(other, 'users/me/blocks/them')))
 })

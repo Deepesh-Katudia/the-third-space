@@ -76,6 +76,15 @@ service cloud.firestore {
       match /pushTokens/{token} {
         allow read, write: if signedIn() && request.auth.uid == uid;
       }
+
+      // Private, like pushTokens and chatReads. Nobody can enumerate who has blocked
+      // them, and that privacy IS the feature: a readable block list turns a private
+      // safety action into a notification, which is what stops people using one. It
+      // stays enforceable anyway because exists() inside a rule bypasses read rules,
+      // so the write gates on conversations and follows still work.
+      match /blocks/{blockedUid} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     // Phone -> email lookup index for sign-in. Written only by Cloud Functions

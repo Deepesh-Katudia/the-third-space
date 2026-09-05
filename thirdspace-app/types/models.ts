@@ -247,3 +247,15 @@ export interface Announcement {
   recipientCount: number
   createdAt: Timestamp | null
 }
+
+// -- Safety: blocking (App Store Guideline 1.2) ----------------------------
+// A block lives at users/{uid}/blocks/{blockedUid}, private to the blocker. There is
+// deliberately NO mirror doc at users/{blocked}/blockedBy: that would hand the blocked
+// party an enumerable list of everyone who has blocked them, turning a private safety
+// action into a notification. The consequence is that blocking is symmetric on WRITES
+// (rules deny both directions) and asymmetric on READS (only the blocker's view
+// changes), which is the trade the spec argues for.
+export interface BlockedUser {
+  uid: string
+  createdAt: Timestamp | null
+}
