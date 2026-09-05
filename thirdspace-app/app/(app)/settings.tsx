@@ -76,6 +76,14 @@ export default function Settings() {
         </TouchableOpacity>
       ) : null}
 
+      <TouchableOpacity style={styles.navRow} onPress={() => router.push('/(app)/blocked-users')} activeOpacity={0.7}>
+        <View style={styles.rowText}>
+          <Display>Blocked members</Display>
+          <Body role="bodySm" style={styles.rowHint}>Who you have blocked, and how to undo it</Body>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={palette.inkSoft} />
+      </TouchableOpacity>
+
       <Body role="bodySm" style={styles.footnote}>
         If notifications are turned off at the device level, enable them in your phone&apos;s Settings first.
       </Body>

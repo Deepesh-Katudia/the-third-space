@@ -62,8 +62,8 @@ export default function MemberProfile() {
           emoji="🚫"
           title="You blocked this member"
           body="They can't message or follow you. You can undo this in Settings."
-          actionLabel="Open settings"
-          onAction={() => router.push('/(app)/settings')}
+          actionLabel="Manage blocked members"
+          onAction={() => router.push('/(app)/blocked-users')}
         />
       </Screen>
     )
