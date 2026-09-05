@@ -4,7 +4,9 @@ import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../hooks/useAuth'
+import * as WebBrowser from 'expo-web-browser'
 import { getPushEnabled, setPushEnabled } from '../../services/pushTokens'
+import { PRIVACY_POLICY_URL, SUPPORT_URL, TERMS_URL } from '../../constants/legal'
 import { Screen } from '../../components/ui/Screen'
 import { Display, Body } from '../../components/ui/Text'
 import { BackButton } from '../../components/ui/BackButton'
@@ -82,6 +84,33 @@ export default function Settings() {
           <Body role="bodySm" style={styles.rowHint}>Who you have blocked, and how to undo it</Body>
         </View>
         <Ionicons name="chevron-forward" size={20} color={palette.inkSoft} />
+      </TouchableOpacity>
+
+      {/* Opened in the in-app browser rather than handed to Safari: a member reading the
+          privacy policy has not left the app, and openBrowserAsync needs no new dependency
+          — expo-web-browser is already here for OAuth. */}
+      <TouchableOpacity style={styles.navRow} onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)} activeOpacity={0.7}>
+        <View style={styles.rowText}>
+          <Display>Privacy policy</Display>
+          <Body role="bodySm" style={styles.rowHint}>What we collect, and what we do with it</Body>
+        </View>
+        <Ionicons name="open-outline" size={18} color={palette.inkSoft} />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.navRow} onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)} activeOpacity={0.7}>
+        <View style={styles.rowText}>
+          <Display>Terms of use</Display>
+          <Body role="bodySm" style={styles.rowHint}>The rules everyone here agrees to</Body>
+        </View>
+        <Ionicons name="open-outline" size={18} color={palette.inkSoft} />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.navRow} onPress={() => void WebBrowser.openBrowserAsync(SUPPORT_URL)} activeOpacity={0.7}>
+        <View style={styles.rowText}>
+          <Display>Contact support</Display>
+          <Body role="bodySm" style={styles.rowHint}>Report a problem or ask us something</Body>
+        </View>
+        <Ionicons name="open-outline" size={18} color={palette.inkSoft} />
       </TouchableOpacity>
 
       <Body role="bodySm" style={styles.footnote}>
